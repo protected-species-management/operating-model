@@ -4,70 +4,71 @@
 #' 
 #' @export
 #' 
-#' @include dsm-class.R
+#' @include om-class.R catchability.R biomass.R
 #' 
 #{{{ index()
 # generate simulated index observations
-setGeneric("index", function(.Object, ...) standardGeneric("index"))
-setMethod("index", signature = "dsm", function(.Object, stochastic = FALSE, ...) {
+setGeneric("index", function(object, ...) standardGeneric("index"))
+setMethod("index", signature = "om", function(object, stochastic = FALSE, ...) {
     
-    if(!(length(.Object@q)>0))
-        .Object <- catchability(.Object)
-    
-    index  <- .Object@empirical.data$index
-    sigmao <- .Object@empirical.data$sigmao
+    if(!(length(object@q) > 0)) {
+        object <- catchability(object)
+    }
+	
+    index  <- object@empirical_data$index
+    sigmao <- object@empirical_data$sigmao
  
-    bexp <- biomass(.Object, type = 'exploitable')
+    bexp <- biomass(object, type = 'exploitable')
     
-    q     <- .Object@q
+    q     <- object@q
     
-    time  <- .Object@empirical.data$time
-    tmax  <- length(.Object@empirical.data$time)
-    nidx  <- dim(.Object@empirical.data$index)[2]
-    niter <- .Object@iter
+    time  <- object@empirical_data$time
+    tmax  <- length(object@empirical_data$time)
+    nidx  <- dim(object@empirical_data$index)[2]
+    niter <- object@iter
     
-    predicted.index <- array(dim = c(tmax,nidx,niter), dimnames = list(time=time, index=1:nidx, iter=1:niter))
+    predicted_index <- array(dim = c(tmax,nidx,niter), dimnames = list(time=time, index=1:nidx, iter=1:niter))
     
     # scale exploitable biomass by catchability
     for(i in 1:nidx) {
-        predicted.index[,i,] <- sweep(bexp, 2, q[i,], '*')
+        predicted_index[,i,] <- sweep(bexp, 2, q[i,], '*')
     }
     
     # apply stochastic observation error
     if (stochastic) {
         for (i in 1:nidx) {
             if (niter > 1) {
-                residual.error  <- sweep(predicted.index[,i,], 1, index[,i], function(x,y) log(x/y))
-                simulated.error <- apply(residual.error, 2, function(x) .simulate.residual.error(x, sigmao[i]))
+                residual_error  <- sweep(predicted_index[,i,], 1, index[,i], function(x,y) log(x/y))
+                simulated_error <- apply(residual_error, 2, function(x) .simulate_residual_error(x, sigmao[,i]))
             } else {
-                residual.error  <- log(predicted.index[,i,]/index[,i])
-                simulated.error <- .simulate.residual.error(residual.error, sigmao[i])
+                residual_error  <- log(predicted_index[,i,]/index[,i])
+                simulated_error <- .simulate_residual_error(residual_error, sigmao[,i])
             }
-            predicted.index[,i,] <- predicted.index[,i,] * exp(-simulated.error)
+            predicted_index[,i,] <- predicted_index[,i,] * exp(-simulated_error)
         }
     }
     
     # check missing data is cleaned out
     # (should not be necessary when stochastic = TRUE)
     for (i in 1:nidx) {
-        missing.data <- .Object@empirical.data$index[,i]
-        missing.data[!is.na(missing.data)] <- 1
+        missing_data <- object@empirical_data$index[,i]
+        missing_data[!is.na(missing_data)] <- 1
         if (niter > 1) {
-            predicted.index[,i,] <- sweep(predicted.index[,i,], 1, missing.data,'*')
+            predicted_index[,i,] <- sweep(predicted_index[,i,], 1, missing_data,'*')
         } else {
-            predicted.index[,i,] <- predicted.index[,i,] * missing.data
+            predicted_index[,i,] <- predicted_index[,i,] * missing_data
         }
     }
     
-    .Object@.Data <- predicted.index
+    object@.Data <- predicted_index
     
-    .Object
+    return(object)
     
 })
 #}}}
 #{
 # simulation function for log-residual error
-.simulate.residual.error <- function(x, sigma) {
+.simulate_residual_error <- function(x, sigma) {
     
     ##########################################
     # FIT AR1 MODEL TO OBERVATION ERROR      #
@@ -115,6 +116,7 @@ setMethod("index", signature = "dsm", function(.Object, stochastic = FALSE, ...)
     
     # non-NA time series
     x.loc <- x[loc] 
+	x.sd  <- x.sd[loc]
     
     # simulate observation error residuals
     x.loc <- rnorm(length(x.loc), -(x.sd^2)/2, x.sd)

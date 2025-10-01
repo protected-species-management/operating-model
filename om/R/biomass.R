@@ -4,24 +4,25 @@
 #' 
 #' @export
 #' 
-#' @include dsm-class.R
+#' @include om-class.R
 #' 
 #{{{ biomass()
-setGeneric("biomass", function(.Object, ...) standardGeneric("biomass"))
-setMethod("biomass",signature="dsm",function(.Object, type, ...) {
+setGeneric("biomass", function(object, ...) standardGeneric("biomass"))
+setMethod("biomass",signature="om",function(object, type, ...) {
     
-    if(!(length(.Object@n)>0))
-        .Object <- pdyn(.Object)
+    if(!(length(object@n) > 0)) {
+        object <- pdyn(object)
+	}
 
-    n <- .Object@n
+    n <- object@n
 
-    selectivity <- as.matrix(.Object@selectivity)
-    maturity    <- as.matrix(.Object@lh.data$maturity)
-    mass        <- as.matrix(.Object@lh.data$mass)
+    selectivity <- as.matrix(object@selectivity)
+    maturity    <- as.matrix(object@lh_data$maturity)
+    mass        <- as.matrix(object@lh_data$mass)
 
-    time  <- .Object@empirical.data$time
-    tmax  <- length(.Object@empirical.data$time)
-    niter <- .Object@iter
+    time  <- object@empirical_data$time
+    tmax  <- length(object@empirical_data$time)
+    niter <- object@iter
     
     
     biomass <- list()

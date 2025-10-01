@@ -4,21 +4,21 @@
 #' 
 #' @export
 #' 
-#' @include dsm-class.R
+#' @include om-class.R
 #' 
 #{{{ catchability()
-setGeneric("catchability", function(.Object, ...) standardGeneric("catchability"))
-setMethod("catchability",signature="dsm",function(.Object, ...) {
+setGeneric("catchability", function(object, ...) standardGeneric("catchability"))
+setMethod("catchability",signature="om",function(object, ...) {
     
-    if(!(length(.Object@n)>0))
-        .Object <- pdyn(.Object)
+    if(!(length(object@n)>0))
+        object <- pdyn(object)
 
-    bexp <- biomass(.Object, type='exploitable')
+    bexp <- biomass(object, type='exploitable')
 
-    index <- .Object@empirical.data$index
+    index <- object@empirical_data$index
 
-    nidx  <- dim(.Object@empirical.data$index)[2]
-    niter <- .Object@iter
+    nidx  <- dim(object@empirical_data$index)[2]
+    niter <- object@iter
 
     q <- array(dim=c(nidx,niter))
 
@@ -29,9 +29,9 @@ setMethod("catchability",signature="dsm",function(.Object, ...) {
 
     dimnames(q) <- list(index=1:nidx,iter=1:niter)
     
-    .Object@q <- q
+    object@q <- q
     
-    .Object
+    object
     
 })
     

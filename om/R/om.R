@@ -1,14 +1,14 @@
-#' @title Create dsm object
+#' @title Create om object
 #' 
-#' @description Initialise Data simulation module (dsm) class object
+#' @description Initialise Data simulation module (om) class object
 #' 
 #' @export
 #' 
-#' @include dsm-initialize.R
+#' @include om-initialize.R
 #'
 #{{{
 # constructor
-dsm <- function(...) new('dsm', pdyn.function = .pdyn, iter = 1, ...)
+om <- function(...) new('om', pdyn_function = .pdyn, iter = 1, ...)
 #}}}
 #{
 # default population dynamics function

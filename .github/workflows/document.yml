@@ -1,0 +1,54 @@
+name: Document
+on:
+  workflow_dispatch:
+  push:
+    paths: ["om/R/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  document:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: om
+          extra-packages: any::roxygen2
+          needs: roxygen2
+
+      - name: Document
+        run: roxygen2::roxygenise("om")
+        shell: Rscript {0}
+        
+      - name: Update onAttach
+        run: |
+          Rscript -e 'cat(paste0(".onAttach <- function(libname, pkgname) {\n    packageStartupMessage(\"om version ", scan("om/DESCRIPTION",what=character(),skip=3,nlines=1,quiet=TRUE)[2], " (", format(Sys.Date(), format = "%d-%b-%Y"), ")\")\n}\n"), "\n.onLoad <- function(libname, pkgname) {\n  invisible(suppressPackageStartupMessages(\n    sapply(c(\"rlang\", \"dplyr\"),\n        requireNamespace, quietly = TRUE)\n  ))\n}\n" , file = "om/R/zzz.R")'
+      
+      - name: Update DESCRIPTION
+        run: |
+          Rscript -e 'DESC <- readLines("om/DESCRIPTION"); DESC[5] <- paste("Date:", Sys.Date()); writeLines(DESC, con = "om/DESCRIPTION")'
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add om/man/\* om/NAMESPACE om/DESCRIPTION
+          git add om/R/zzz.R
+          git commit -m "Update documentation" || echo "No changes to commit"
+          git merge --ff-only
+          git push origin
+          

@@ -4,14 +4,14 @@
 #' 
 #' @export
 #' 
-#' @include dsm-class.R
+#' @include om-class.R
 #' 
-#{{{ load selectivity assumption into dsm object
-setGeneric("load.selectivity", function(.Object,x, ...) standardGeneric("load.selectivity"))
-setMethod("load.selectivity",signature=c("dsm","matrix"),function(.Object,x, ...) {
+#{{{ load selectivity assumption into om object
+setGeneric("load_selectivity", function(object,x, ...) standardGeneric("load_selectivity"))
+setMethod("load_selectivity",signature=c("om","matrix"),function(object,x, ...) {
     
-    niter <- .Object@iter
-    ainf  <- .Object@ainf
+    niter <- object@iter
+    ainf  <- object@ainf
     
     # check age dimension
     x <- apply(x, 2, function(y) { if(length(y) < ainf) y[(length(y)+1):ainf] <- y[length(y)]; y}) 
@@ -25,8 +25,8 @@ setMethod("load.selectivity",signature=c("dsm","matrix"),function(.Object,x, ...
         } 
     }
     
-    .Object@selectivity <- x
+    object@selectivity <- x
     
-    .Object
+    return(object)
 })
 #}}}

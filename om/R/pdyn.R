@@ -4,37 +4,37 @@
 #' 
 #' @export
 #' 
-#' @include dsm-class.R
+#' @include om-class.R
 #' 
 #{{{ pdyn()
 # wrapper for execution of population
 # dynamics function
-# -- strips out data from dsm object and
-# -- executes .Object@pdyn for each monte-carlo
+# -- strips out data from om object and
+# -- executes object@pdyn for each monte-carlo
 # -- sample
-setGeneric("pdyn", function(.Object, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "dsm", function(.Object, ...) {
+setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
+setMethod("pdyn", signature = "om", function(object, ...) {
     
     # strip out data for speed
-    B0          <- as.numeric(.Object@B0)
-    harvest     <- as.numeric(.Object@empirical.data$harvest)
-    time        <- as.integer(.Object@empirical.data$time)
-    selectivity <- as.matrix(.Object@selectivity)
+    B0          <- as.numeric(object@B0)
+    harvest     <- as.numeric(object@empirical_data$harvest)
+    time        <- as.integer(object@empirical_data$time)
+    selectivity <- as.matrix(object@selectivity)
     
-    maturity <- as.matrix(.Object@lh.data$maturity)
-    mass     <- as.matrix(.Object@lh.data$mass)
-    size     <- as.matrix(.Object@lh.data$size)
-    h        <- as.numeric(.Object@lh.data$h)
-    M        <- as.matrix(.Object@lh.data$M)
+    maturity <- as.matrix(object@lh_data$maturity)
+    mass     <- as.matrix(object@lh_data$mass)
+    size     <- as.matrix(object@lh_data$size)
+    h        <- as.numeric(object@lh_data$h)
+    M        <- as.matrix(object@lh_data$M)
     
-    tmax   <- length(.Object@empirical.data$time)
-    ainf   <- .Object@ainf
-    niter  <- .Object@iter
+    tmax   <- length(object@empirical_data$time)
+    ainf   <- object@ainf
+    niter  <- object@iter
     
     n <- array(dim=c(ainf, tmax, niter))
     
     for(i in 1:niter) {
-        n[,,i] <- .Object@pdyn(B0 = B0[i],
+        n[,,i] <- object@pdyn(B0 = B0[i],
                                 harvest = harvest,
                                 time = time,
                                 selectivity = selectivity[,i],
@@ -50,8 +50,8 @@ setMethod("pdyn", signature = "dsm", function(.Object, ...) {
     
     dimnames(n) <- list(age = 1:ainf, time = time, iter = 1:niter)
     
-    .Object@n <- n
+    object@n <- n
     
-    .Object
+    return(object)
 })
 #}}}

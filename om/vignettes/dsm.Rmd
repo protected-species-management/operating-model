@@ -1,0 +1,59 @@
+---
+title: "Data simulation module `dsm`"
+author: "Charles T T Edwards (NIWA, Wellington, New Zealand)"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    fig_caption: yes
+    toc: no
+vignette: >
+  %\VignetteIndexEntry{dsm}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = 'fig/dsm-examples-', fig.width = 6, tidy = TRUE, tidy.opts = list(blank = TRUE, width.cutoff = 95), message = FALSE, warning = FALSE, collapse = TRUE, comment = "#>")
+```
+
+```{r}
+library(bdm)
+library(lhm)
+library(dsm)
+```
+
+```{r}
+data(haknz)
+dat <- bdmData(harvest = haknz$landings, index = cbind(haknz$survey, haknz$cpue), time = haknz$year, renormalise = FALSE)
+
+lhdat           <- lhm(ainf = 30, iter = 100)
+nmort(lhdat)    <- list(mu=0.18)
+maturity(lhdat) <- c(0.0,0.01,0.02,0.06,0.14,0.28,0.50,0.72,0.86,0.94,0.98,0.99,1.00)
+size(lhdat)     <- list(mu=list(Linf=106.5,k=0.229,t0=0.01))
+mass(lhdat)     <- list(mu=list(a=1.88e-9,b=3.305))
+sr(lhdat)       <- list(type='BH',mu=0.90)
+
+dsm.object <- dsm()
+
+dsm.object <- load.empirical.data(dsm.object, dat)
+dsm.object <- load.lh.data(dsm.object, lhdat)
+dsm.object <- load.B0(dsm.object, exp(10.5))
+dsm.object <- load.selectivity(dsm.object, matrix(c(0,0,0,0,0,0,1)))
+
+#pdyn(dsm.object)
+#biomass(dsm.object)
+#catchability(dsm.object)
+
+dsm.object <- index(dsm.object, stochastic = FALSE)
+dfr.det    <- reshape2::melt(dsm.object)
+dsm.object <- index(dsm.object, stochastic = TRUE)
+dfr        <- reshape2::melt(dsm.object)
+
+boxplot(value ~ time, subset(dfr    ,index == 1), na.action = na.pass)
+boxplot(value~time,subset(dfr.det,index==1), na.action= na.pass, add=TRUE, border=4)
+points(dsm.object@empirical.data$index[,1], col=2, pch=19, type='b')
+
+boxplot(value~time,subset(dfr    ,index==2),na.action=na.pass)
+boxplot(value~time,subset(dfr.det,index==2),na.action=na.pass,add=TRUE,border=4)
+points(dsm.object@empirical.data$index[,2], col=2, pch=19, type='b')
+```

@@ -1,0 +1,4 @@
+om
+==
+
+Operating model

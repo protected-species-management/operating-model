@@ -1,4 +1,10 @@
-.onAttach <- function(libname, pkgname)
-{
-    packageStartupMessage("dsm version 0.0.0.1002 (2018-06-14 14:42:01)")
+.onAttach <- function(libname, pkgname) {
+    packageStartupMessage("om version 0.0.1 (01-Oct-2025)")
+}
+ 
+.onLoad <- function(libname, pkgname) {
+  invisible(suppressPackageStartupMessages(
+    sapply(c("rlang", "dplyr"),
+        requireNamespace, quietly = TRUE)
+  ))
 }

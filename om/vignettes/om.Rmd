@@ -19,14 +19,14 @@ knitr::opts_chunk$set(fig.path = 'fig/om-examples-', fig.width = 6, tidy = TRUE,
 ```
 
 ```{r}
-library(bdm)
+library(edm)
 library(lhm)
 library(om)
 ```
 
 ```{r}
 data(haknz)
-dat <- bdmData(harvest = haknz$landings, index = cbind(haknz$survey, haknz$cpue), time = haknz$year, renormalise = FALSE)
+dat <- edm(harvest = haknz$landings, index = cbind(haknz$survey, haknz$cpue), time = haknz$year)
 
 lhdat           <- lhm(ainf = 30, iter = 100)
 nmort(lhdat)    <- list(mu=0.18)

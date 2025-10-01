@@ -8,6 +8,8 @@ all: document dependencies install
 dependencies: 
 	Rscript \
 	-e 'if (!requireNamespace("remotes")) install.packages("remotes")' \
+	-e 'remotes::install_github("protected-species-management/life-history-module/lhm")' \
+	-e 'remotes::install_github("protected-species-management/empirical-data-module/edm")' \
 	-e 'remotes::install_deps(dependencies = TRUE)' 
 
 document:

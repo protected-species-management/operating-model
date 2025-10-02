@@ -1,0 +1,72 @@
+---
+title: "Operating model (`om`) demonstration for blue shark"
+author: "Charles T T Edwards"
+date: "`r format(Sys.Date(), '%d-%b-%Y')`"
+output:
+  rmarkdown::html_vignette:
+    fig_caption: yes
+    toc: no
+vignette: >
+  %\VignetteIndexEntry{dsm}
+  \usepackage[utf8]{inputenc}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = 'fig/om-examples-', fig.width = 6, tidy = TRUE, tidy.opts = list(blank = TRUE, width.cutoff = 95), message = FALSE, warning = FALSE, collapse = TRUE, comment = "#>")
+```
+
+```{r}
+library(edm)
+library(lhm)
+library(om)
+```
+
+
+```{r}
+dat <- lhm::bshio
+
+lhdat           <- lhm(ainf = 30, iter = 100)
+nmort(lhdat)    <- list(mu = dat$natural_mortality[,"Female"])
+size(lhdat)     <- list(mu = lapply(dat$vbgrowth, function(x) x[1]))
+mass(lhdat)     <- list(mu = dat$mass)
+
+x <- size(lhdat)
+ff <- function(x) 1 / (1 + exp(-x + dat$maturity$lmat))
+
+maturity(lhdat) <- as.vector(apply(x, 2, ff))
+
+sr(lhdat)       <- list(type='BH', mu = 0.75)
+
+rm(dat)
+
+om_object <- om()
+
+om_object <- load_empirical_data(om_object, edm::bshio[[3]])
+om_object <- load_lh_data(om_object, lhdat)
+om_object <- load_B0(om_object, 100000)
+
+ff <- function(x) 1 / (1 + exp(-x + 150))
+om_object <- load_selectivity(om_object, apply(x, 2, ff))
+
+#pdyn(om_object)
+#biomass(om_object)
+#catchability(om_object)
+
+om_object <- index(om_object, stochastic = FALSE)
+dfr_det   <- reshape2::melt(om_object)
+om_object <- index(om_object, stochastic = TRUE)
+dfr       <- reshape2::melt(om_object)
+
+boxplot(value ~ time, reshape2::melt(biomass(om_object)$total), na.action = na.pass, outline = FALSE, ylim = range(c(0, biomass(om_object)$total)))
+
+boxplot(value ~ time, subset(dfr    , index == 1), na.action = na.pass, outline = FALSE)
+boxplot(value ~ time, subset(dfr_det, index == 1), na.action= na.pass, add=TRUE, border=4, outline = FALSE)
+points(om_object@empirical_data$index[,1], col=2, pch=19, type='b')
+
+boxplot(value ~ time,subset(dfr    , index == 2),na.action=na.pass, outline = FALSE)
+boxplot(value ~ time,subset(dfr_det, index == 2),na.action=na.pass, add=TRUE,border=4, outline = FALSE)
+points(om_object@empirical_data$index[,2], col=2, pch=19, type='b')
+```

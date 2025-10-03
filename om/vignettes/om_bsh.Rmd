@@ -1,5 +1,5 @@
 ---
-title: "Operating model (`om`) demonstration for blue shark"
+title: "Operating model demonstration for blue shark"
 author: "Charles T T Edwards"
 date: "`r format(Sys.Date(), '%d-%b-%Y')`"
 output:
@@ -7,7 +7,7 @@ output:
     fig_caption: yes
     toc: no
 vignette: >
-  %\VignetteIndexEntry{dsm}
+  %\VignetteIndexEntry{Blue shark (Indian Ocean)}
   \usepackage[utf8]{inputenc}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 

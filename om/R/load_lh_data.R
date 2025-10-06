@@ -10,11 +10,11 @@
 #{{{ load life history data into om object
 setGeneric("load_lh_data", function(object,x, ...) standardGeneric("load_lh_data"))
 #{{ lhm object
-setMethod("load_lh_data",signature=c("om","lhm"),function(object,x, ...) {
+setMethod("load_lh_data", signature = c("om", "lhm"), function(object,x, ...) {
     
     object@lh_data <- x@lhdat
     object@iter    <- x@iter
-    object@ainf    <- x@ainf
+    object@ages    <- x@ages
     object@sr      <- x@sr
     
     # match dimensions of object@B0 

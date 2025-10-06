@@ -9,7 +9,7 @@
 #{{{ load empirical data into om object
 setGeneric("load_empirical_data", function(object,x, ...) standardGeneric("load_empirical_data"))
 #{{ list object
-setMethod("load_empirical_data",signature=c("om","list"),function(object,x, ...) {
+setMethod("load_empirical_data", signature=c("om", "list"),function(object, x, ...) {
   
     if(is.list(x)) {
         loc <- match('index',names(x))

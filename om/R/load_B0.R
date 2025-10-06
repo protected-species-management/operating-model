@@ -8,7 +8,7 @@
 #' 
 #{{{ load life history data into om object
 setGeneric("load_B0", function(object,x, ...) standardGeneric("load_B0"))
-setMethod("load_B0",signature=c("om","numeric"),function(object,x, ...) {
+setMethod("load_B0", signature = c("om","numeric"), function(object, x, ...) {
     
     if(length(x) < object@iter) {
         if(length(x) > 1) {

@@ -31,7 +31,7 @@ library(ggplot2)
 ```{r}
 dat <- lhm::bshio
 
-lhdat           <- lhm(ainf = 30, iter = 1)
+lhdat           <- lhm(ainf = 30, iter = 100)
 nmort(lhdat)    <- list(mu = dat$natural_mortality[,"Female"])
 size(lhdat)     <- list(mu = lapply(dat$vbgrowth, function(x) x[1]))
 mass(lhdat)     <- list(mu = dat$mass)
@@ -42,7 +42,7 @@ ff <- function(x) 1 / (1 + exp(-x + dat$maturity$lmat))
 
 maturity(lhdat) <- as.vector(apply(x, 2, ff))
 
-sr(lhdat)       <- list(type = 'BH', mu = 0.75)
+sr(lhdat)       <- list(type = 'BH', mu = 0.75, cv = 0.1)
 ```
 
 ```{r}
@@ -50,273 +50,104 @@ sr(lhdat)       <- list(type = 'BH', mu = 0.75)
 rCalc(lhdat)@lognormal_par$`E[r]`
 
 # with correct fecundity
-lhdat@lhdat[['fecundity']] <- matrix(apply(size(lhdat), 1, function(x) { y <- -91.97 + 0.6052 * x; y[y < 0] <- 0; y}), ncol = lhdat@iter)
+lhdat@lhdat[['fecundity']] <- matrix(t(apply(size(lhdat), 1, function(x) { y <- -91.97 + 0.6052 * x; y[y < 0] <- 0; y})), ncol = lhdat@iter)
 lhdat <- alphaCalc(lhdat)
 lhdat <- rhoCalc(lhdat)
 
 (r_base <- rCalc(lhdat)@lognormal_par$`E[r]`)
 ```
 
-# Experiment 1
-
-Investigate minimum catch age limit
-```{r}
-selectivity <- list()
-selectivity[[1]] <- c(rep(0, 1), rep(1, length(lhdat@ages) - 1))
-selectivity[[2]] <- c(rep(0, 2), rep(1, length(lhdat@ages) - 2))
-selectivity[[3]] <- c(rep(0, 3), rep(1, length(lhdat@ages) - 3))
-selectivity[[4]] <- c(rep(0, 4), rep(1, length(lhdat@ages) - 4))
-selectivity[[5]] <- c(rep(0, 5), rep(1, length(lhdat@ages) - 5))
-selectivity[[6]] <- c(rep(0, 6), rep(1, length(lhdat@ages) - 6))
-selectivity[[7]] <- c(rep(0, 7), rep(1, length(lhdat@ages) - 7))
-selectivity[[8]] <- c(rep(0, 8), rep(1, length(lhdat@ages) - 8))
-selectivity[[9]] <- c(rep(0, 9), rep(1, length(lhdat@ages) - 9))
-
-# with fishing
-fmort_out <- seq(0, 1, length = 101)
-alpha_out <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-beta_out  <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-rho_out   <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-r_out     <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-sprf_out  <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-ypr_out   <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-fpr_out   <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-rec_out   <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-
-for (i in 1:length(selectivity)) {
-    for (j in 1:length(fmort_out)) {
-    
-        lhdat_tmp <- lhdat
-        fmort(lhdat_tmp) <- selectivity[[i]] * fmort_out[j]
-        
-        alpha_out[i,j] <- alphaCalc(lhdat_tmp)@lhdat$alpha
-        beta_out[i,j]  <- (5 * lhdat_tmp@lhdat$h - 1) / (1 - lhdat_tmp@lhdat$h)
-        sprf_out[i,j]  <- rhoCalc(lhdat_tmp, TRUE)@lhdat$rho
-        rec_out[i,j]   <- alpha_out[i,j] * sprf_out[i,j] / (1 + beta_out[i,j] * sprf_out[i,j])
-        rho_out[i,j]   <- rhoCalc(lhdat_tmp)@lhdat$rho
-        r_out[i,j]     <- rCalc(lhdat_tmp, TRUE)@lognormal_par$`E[r]`
-        ypr_out[i,j]   <- yprCalc(lhdat_tmp)@lhdat$ypr
-        fpr_out[i,j]   <- fprCalc(lhdat_tmp)@lhdat$fpr
-    }
-}
-```
-
-```{r}
-plot(fmort_out, r_out[1,], type = 'l', xlab = "F", ylab = expression(tilde(r)), main = "Maximum equilibrium per capita growth", ylim = c(0, r_base)); abline(v = c(0, r_base), h = c(0, r_base), lty = 2)
-lines(fmort_out, r_out[length(selectivity),], col = 2)
-```
-
-```{r}
-plot(fmort_out, r_out[1,] * sum(lhdat@lhdat$survivorship * lhdat@lhdat$mass), type = 'l', xlab = "F", ylab = expression(tilde(Y)), main = "Maximum equilibrium per capita yield"); abline(v = c(0), h = c(0), lty = 2)
-lines(fmort_out, r_out[length(selectivity),] * sum(lhdat@lhdat$survivorship * lhdat@lhdat$mass), col = 2)
-```
-
-```{r}
-lst0 <- list()
-lst1 <- list()
-lst2 <- list()
-
-for (i in 1:length(selectivity)) {
-
-    loc_max <- which.max(rec_out[i,] * ypr_out[i,])
-    yld_max <- (rec_out[i,] * ypr_out[i,])[loc_max]
-
-    dfr0 <- data.frame(fmort = fmort_out, fpr = yld_max * fpr_out[i,] / fpr_out[i,loc_max], yield = rec_out[i,] * ypr_out[i,])
-
-    dfr1 <- subset(dfr0, dfr0$yield >= dfr0$fpr)
-    dfr1 <- rbind(data.frame(fmort = dfr1$fmort, value = dfr1$fpr), data.frame(fmort = dfr1$fmort, value = dfr1$yield)[rev(order(dfr1$fmort)),])
-
-    dfr2 <- subset(dfr0, dfr0$yield < dfr0$fpr)
-    dfr2 <- rbind(data.frame(fmort = dfr2$fmort, value = dfr2$fpr), data.frame(fmort = dfr2$fmort, value = dfr2$yield)[rev(order(dfr2$fmort)),])
-    
-    lst0[[paste('min. age =', as.character(sum(selectivity[[i]] == 0)))]] <- dfr0
-    lst1[[paste('min. age =', as.character(sum(selectivity[[i]] == 0)))]] <- dfr1
-    lst2[[paste('min. age =', as.character(sum(selectivity[[i]] == 0)))]] <- dfr2
-}
-
-dfr0 <- dplyr::bind_rows(lst0, .id = "min_age")
-dfr1 <- dplyr::bind_rows(lst1, .id = "min_age")
-dfr2 <- dplyr::bind_rows(lst2, .id = "min_age")
-
-ggplot() + 
-    geom_polygon(data = dfr1, aes(fmort, value), fill = "lightgreen") + 
-    geom_polygon(data = dfr2, aes(fmort, value), fill = "tomato") +
-    geom_line(data = dfr0, aes(fmort, fpr), linewidth = 1) +
-    geom_line(data = dfr0, aes(fmort, yield), linewidth = 1) +
-    labs(x = "Fishing mortality", y = "Yield (kg per recruit)") +
-    facet_wrap(~min_age) +
-    theme_bw(base_size = 16)
-```
-
-```{r}
-dfr <- dfr0 %>% group_by(min_age) %>% filter(yield == max(yield)) 
-dfr <- dfr %>% ungroup() %>% mutate(min_age = as.character(1:9))
-
-dfr %>% ggplot() + 
-    geom_col(aes(min_age, yield, fill = fmort)) +
-    labs(x = "Min. age retained", y = "Max. Sustainable Yield (kg per recruit)", fill = "F") +
-    theme_bw(base_size = 16)
-
-dfr <- dfr0 %>% group_by(min_age) %>% filter(fmort == fmort[which.max(yield)]) 
-dfr <- dfr %>% ungroup() %>% mutate(min_age = as.character(1:9))
-
-dfr %>% ggplot() + 
-    geom_col(aes(min_age, fmort, fill = yield)) +
-    labs(x = "Min. age retained", y = "Fishing mortality", fill = "MSY\nper\nrecruit") +
-    theme_bw(base_size = 16)
-```
-
-```{r}
-#plot(fpr_out, rec_out * ypr_out, xlab = "Fishing mortality per recruit", ylab = "Yield", main = "Maximum equilibrium yield",  type = 'l')
-#
-#plot(fmort_out, sprf_out, xlab = "F", ylab = "", ylim = c(0, max(sprf_out)), type = 'l')
-#lines(fmort_out, ypr_out,  xlab = "F", lty = 2)
-#
-#plot(fmort_out, rec_out * ypr_out, xlab = "F", ylab = expression(Y), type = 'l'); abline(h = 0, v = 0, lty = 2)
-#
-#plot(ypr_out, r_out, xlab = "YPR", ylab = expression(tilde(r)), type = 'l'); abline(h = c(0, r_base), v = 0, lty = 2)
-```
-
-
-# Experiment 2
-
-Investigate maximum catch age limit
-```{r}
-selectivity <- list()
-selectivity[[1]] <- c(0, rep(1, 1), rep(0, length(lhdat@ages) -  2))
-selectivity[[2]] <- c(0, rep(1, 2), rep(0, length(lhdat@ages) -  3))
-selectivity[[3]] <- c(0, rep(1, 3), rep(0, length(lhdat@ages) -  4))
-selectivity[[4]] <- c(0, rep(1, 4), rep(0, length(lhdat@ages) -  5))
-selectivity[[5]] <- c(0, rep(1, 5), rep(0, length(lhdat@ages) -  6))
-selectivity[[6]] <- c(0, rep(1, 6), rep(0, length(lhdat@ages) -  7))
-selectivity[[7]] <- c(0, rep(1, 7), rep(0, length(lhdat@ages) -  8))
-selectivity[[8]] <- c(0, rep(1, 8), rep(0, length(lhdat@ages) -  9))
-selectivity[[9]] <- c(0, rep(1, 9), rep(0, length(lhdat@ages) - 10))
-
-# with fishing
-fmort_out <- seq(0, 1, length = 101)
-alpha_out <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-beta_out  <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-rho_out   <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-r_out     <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-sprf_out  <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-ypr_out   <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-fpr_out   <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-rec_out   <- matrix(0, nrow = length(selectivity), ncol = length(fmort_out))
-
-for (i in 1:length(selectivity)) {
-    for (j in 1:length(fmort_out)) {
-    
-        lhdat_tmp <- lhdat
-        fmort(lhdat_tmp) <- selectivity[[i]] * fmort_out[j]
-        
-        alpha_out[i,j] <- alphaCalc(lhdat_tmp)@lhdat$alpha
-        beta_out[i,j]  <- (5 * lhdat_tmp@lhdat$h - 1) / (1 - lhdat_tmp@lhdat$h)
-        sprf_out[i,j]  <- rhoCalc(lhdat_tmp, TRUE)@lhdat$rho
-        rec_out[i,j]   <- alpha_out[i,j] * sprf_out[i,j] / (1 + beta_out[i,j] * sprf_out[i,j])
-        rho_out[i,j]   <- rhoCalc(lhdat_tmp)@lhdat$rho
-        r_out[i,j]     <- rCalc(lhdat_tmp, TRUE)@lognormal_par$`E[r]`
-        ypr_out[i,j]   <- yprCalc(lhdat_tmp)@lhdat$ypr
-        fpr_out[i,j]   <- fprCalc(lhdat_tmp)@lhdat$fpr
-    }
-}
-```
-
-```{r}
-plot(fmort_out, r_out[1,], type = 'l', xlab = "F", ylab = expression(tilde(r)), main = "Maximum equilibrium per capita growth", ylim = c(0, r_base)); abline(v = c(0, r_base), h = c(0, r_base), lty = 2)
-lines(fmort_out, r_out[length(selectivity),], col = 2)
-```
-
-```{r}
-plot(fmort_out, r_out[1,] * sum(lhdat@lhdat$survivorship * lhdat@lhdat$mass), type = 'l', xlab = "F", ylab = expression(tilde(Y)), main = "Maximum equilibrium per capita yield"); abline(v = c(0), h = c(0), lty = 2)
-lines(fmort_out, r_out[length(selectivity),] * sum(lhdat@lhdat$survivorship * lhdat@lhdat$mass), col = 2)
-```
-
-```{r}
-lst0 <- list()
-lst1 <- list()
-lst2 <- list()
-
-for (i in 1:length(selectivity)) {
-
-    loc_max <- which.max(rec_out[i,] * ypr_out[i,])
-    yld_max <- (rec_out[i,] * ypr_out[i,])[loc_max]
-
-    dfr0 <- data.frame(fmort = fmort_out, fpr = yld_max * fpr_out[i,] / fpr_out[i,loc_max], ypr = ypr_out[i,], yield = rec_out[i,] * ypr_out[i,])
-
-    dfr1 <- subset(dfr0, dfr0$yield >= dfr0$fpr)
-    dfr1 <- rbind(data.frame(fmort = dfr1$fmort, value = dfr1$fpr), data.frame(fmort = dfr1$fmort, value = dfr1$yield)[rev(order(dfr1$fmort)),])
-
-    dfr2 <- subset(dfr0, dfr0$yield < dfr0$fpr)
-    dfr2 <- rbind(data.frame(fmort = dfr2$fmort, value = dfr2$fpr), data.frame(fmort = dfr2$fmort, value = dfr2$yield)[rev(order(dfr2$fmort)),])
-    
-    lst0[[paste('max. age =', as.character(sum(selectivity[[i]] == 1)))]] <- dfr0
-    lst1[[paste('max. age =', as.character(sum(selectivity[[i]] == 1)))]] <- dfr1
-    lst2[[paste('max. age =', as.character(sum(selectivity[[i]] == 1)))]] <- dfr2
-}
-
-dfr0 <- dplyr::bind_rows(lst0, .id = "max_age")
-dfr1 <- dplyr::bind_rows(lst1, .id = "max_age")
-dfr2 <- dplyr::bind_rows(lst2, .id = "max_age")
-
-ggplot() + 
-    geom_polygon(data = dfr1, aes(fmort, value), fill = "lightgreen") + 
-    geom_polygon(data = dfr2, aes(fmort, value), fill = "tomato") +
-    geom_line(data = dfr0, aes(fmort, fpr), linewidth = 1) +
-    geom_line(data = dfr0, aes(fmort, yield), linewidth = 1) +
-    labs(x = "Fishing mortality", y = "Yield (kg per recruit)") +
-    facet_wrap(~max_age) +
-    theme_bw(base_size = 16)
-```
-
-```{r}
-dfr <- dfr0 %>% group_by(max_age) %>% filter(yield == max(yield)) 
-dfr <- dfr %>% ungroup() %>% mutate(max_age = as.character(1:9))
-
-dfr %>% ggplot() + 
-    geom_col(aes(max_age, yield, fill = fmort)) +
-    labs(x = "Max. age retained", y = "Max. Sustainable Yield (kg per recruit)", fill = "F") +
-    theme_bw(base_size = 16)
-
-dfr <- dfr0 %>% group_by(max_age) %>% filter(fmort == fmort[which.max(yield)]) 
-dfr <- dfr %>% ungroup() %>% mutate(max_age = as.character(1:9))
-
-dfr %>% ggplot() + 
-    geom_col(aes(max_age, fmort, fill = yield)) +
-    labs(x = "Max. age retained", y = "Fishing mortality", fill = "MSY\nper\nrecruit") +
-    theme_bw(base_size = 16)
-```
-
 # Simulations
 ```{r}
+# default population dynamics function
+# (should accept single monte-carlo sample only)
+bsh_pdyn <- function(B0, harvest, time, selectivity, maturity, mass, fecundity, size, h, M, tmax, ages) {
+    
+    nage <- length(ages)
+    n    <- array(dim = c(nage, tmax))
+    bmat <- vector("numeric", length = tmax)
+    bfec <- vector("numeric", length = tmax)
+    bexp <- vector("numeric", length = tmax)
+    hr   <- vector("numeric", length = tmax)
+    p    <- vector("numeric", length = nage)
+    
+    trim <- function(x) min(max(x, 0), 1)
+    
+    # set up equilibrium population
+    p[1] <- 1
+    for(a in 2:nage)
+        p[a] <- p[a-1]*exp(-M[a-1])
+    p[nage] <- p[nage]/(1-exp(-M[nage]))
+    rho <- sum(p * maturity * fecundity)
+    R0 <- B0 / rho
+    n[,1] <- R0 * p
+    bmat[1] <- sum(n[,1] * maturity * mass)
+    bfec[1] <- sum(n[,1] * maturity * fecundity)
+    bexp[1] <- sum(n[,1] * selectivity * mass)
+    hr[1]   <- trim(harvest[1] / bexp[1])
+    
+    # set up S-R parameters
+    alp <- (4 * h * R0) / (B0 * (1 - h))
+    bet <- (5 * h - 1)  / (B0 * (1 - h))
+    
+    for(y in 2:tmax) {
+        
+        n[1,y] <- alp * bfec[y-1]/(bet + bfec[y-1])
+        #n[1,y] <- n[1,y] * srr[y]
+        for(a in 2:nage)
+            n[a,y] <- n[a-1,y-1]*exp(-M[a-1])*(1-selectivity[a-1]*hr[y-1])
+        n[nage,y] <- n[nage,y] + n[nage,y-1]*exp(-M[a-1])*(1-selectivity[nage]*hr[y-1])
+        bexp[y] <- sum(n[,y] * selectivity * mass)
+        hr[y]   <- trim(harvest[y] / bexp[y])
+        bexp[y] <- harvest[y] / hr[y]
+        bmat[y] <- sum(n[,y] * maturity * mass)
+        bfec[y] <- sum(n[,y] * maturity * fecundity)
+    }
+    
+    # retun numbers at age
+    return(array(n, dim = dim(n), dimnames = list(age = ages, time = time)))
+}
 
-rm(dat)
+```
 
-om_object <- om()
 
-om_object <- load_empirical_data(om_object, edm::bshio[[3]])
+```{r}
+
+#rm(dat)
+
+om_object <- om(pdyn_function = bsh_pdyn, iter = lhdat@iter)
+
+om_object <- load_empirical_data(om_object, edm::bshio[[1]])
 om_object <- load_lh_data(om_object, lhdat)
-om_object <- load_B0(om_object, 100000)
+om_object <- load_B0(om_object, 9e5)
 
 ff <- function(x) 1 / (1 + exp(-x + 150))
-om_object <- load_selectivity(om_object, apply(x, 2, ff))
+om_object <- load_selectivity(om_object, apply(om_object@lh_data$size, 2, ff))
 
-#pdyn(om_object)
-#biomass(om_object)
-#catchability(om_object)
+om_object <- pdyn(om_object)
 
+boxplot(value ~ time, reshape2::melt(biomass(om_object)$mature), na.action = na.pass, outline = FALSE, ylim = range(c(0, biomass(om_object)$total)))
+```
+
+```{r}
 om_object <- index(om_object, stochastic = FALSE)
 dfr_det   <- reshape2::melt(om_object)
-om_object <- index(om_object, stochastic = TRUE)
-dfr       <- reshape2::melt(om_object)
 
-boxplot(value ~ time, reshape2::melt(biomass(om_object)$total), na.action = na.pass, outline = FALSE, ylim = range(c(0, biomass(om_object)$total)))
+boxplot(value ~ time, subset(dfr_det, index == 1), na.action = na.pass, border = 4, outline = FALSE, ylim = range(om_object@empirical_data$index[,1], na.rm = TRUE))
+points(om_object@empirical_data$index[,1], col = 2, pch = 19, type = 'b')
 
-boxplot(value ~ time, subset(dfr    , index == 1), na.action = na.pass, outline = FALSE)
-boxplot(value ~ time, subset(dfr_det, index == 1), na.action= na.pass, add=TRUE, border=4, outline = FALSE)
-points(om_object@empirical_data$index[,1], col=2, pch=19, type='b')
+boxplot(value ~ time,subset(dfr_det, index == 2), na.action = na.pass, border = 4, outline = FALSE, ylim = range(om_object@empirical_data$index[,2], na.rm = TRUE))
+points(om_object@empirical_data$index[,2], col = 2, pch = 19, type = 'b')
 
-boxplot(value ~ time,subset(dfr    , index == 2),na.action=na.pass, outline = FALSE)
-boxplot(value ~ time,subset(dfr_det, index == 2),na.action=na.pass, add=TRUE,border=4, outline = FALSE)
-points(om_object@empirical_data$index[,2], col=2, pch=19, type='b')
+boxplot(value ~ time,subset(dfr_det, index == 3), na.action = na.pass, border = 4, outline = FALSE, ylim = range(om_object@empirical_data$index[,3], na.rm = TRUE))
+points(om_object@empirical_data$index[,3], col = 2, pch = 19, type = 'b')
+
+boxplot(value ~ time,subset(dfr_det, index == 4), na.action = na.pass, border = 4, outline = FALSE, ylim = range(om_object@empirical_data$index[,4], na.rm = TRUE))
+points(om_object@empirical_data$index[,4], col = 2, pch = 19, type = 'b')
+
+boxplot(value ~ time,subset(dfr_det, index == 5), na.action = na.pass, border = 4, outline = FALSE, ylim = range(om_object@empirical_data$index[,5], na.rm = TRUE))
+points(om_object@empirical_data$index[,5], col = 2, pch = 19, type = 'b')
+
+boxplot(value ~ time,subset(dfr_det, index == 6), na.action = na.pass, border = 4, outline = FALSE, ylim = range(om_object@empirical_data$index[,6], na.rm = TRUE))
+points(om_object@empirical_data$index[,6], col = 2, pch = 19, type = 'b')
 ```

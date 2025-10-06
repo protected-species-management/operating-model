@@ -8,26 +8,27 @@
 #' 
 #{{{ catchability()
 setGeneric("catchability", function(object, ...) standardGeneric("catchability"))
-setMethod("catchability",signature="om",function(object, ...) {
+setMethod("catchability", signature = "om", function(object, ...) {
     
-    if(!(length(object@n)>0))
+    if(!(length(object@n) > 0)) {
         object <- pdyn(object)
+    }
 
-    bexp <- biomass(object, type='exploitable')
+    bexp <- biomass(object, type = 'exploitable')
 
     index <- object@empirical_data$index
 
     nidx  <- dim(object@empirical_data$index)[2]
     niter <- object@iter
 
-    q <- array(dim=c(nidx,niter))
+    q <- array(dim = c(nidx,niter))
 
     for(i in 1:nidx) {
-        index.tmp <- matrix(rep(index[,i],niter),ncol=niter)
-        q[i,] <- apply(sweep(index.tmp,1:2,bexp,'/'),2,function(x) exp(mean(log(x),na.rm=TRUE)))
+        index.tmp <- matrix(rep(index[,i], niter), ncol = niter)
+        q[i,] <- apply(sweep(index.tmp, 1:2, bexp, '/'), 2, function(x) exp(mean(log(x), na.rm=TRUE)))
     }
 
-    dimnames(q) <- list(index=1:nidx,iter=1:niter)
+    dimnames(q) <- list(index = 1:nidx, iter = 1:niter)
     
     object@q <- q
     

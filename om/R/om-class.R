@@ -4,9 +4,9 @@
 #'
 #{{{
 # class definition
-setClass("om",contains="array",
+setClass("om", contains="array",
          slots=list(
-                    ainf           = 'numeric',
+                    ages           = 'numeric',
                     iter           = 'numeric',
                     empirical_data = 'list',
                     lh_data        = 'list',

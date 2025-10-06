@@ -21,17 +21,19 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     time        <- as.integer(object@empirical_data$time)
     selectivity <- as.matrix(object@selectivity)
     
-    maturity <- as.matrix(object@lh_data$maturity)
-    mass     <- as.matrix(object@lh_data$mass)
-    size     <- as.matrix(object@lh_data$size)
-    h        <- as.numeric(object@lh_data$h)
-    M        <- as.matrix(object@lh_data$M)
+    maturity  <- as.matrix(object@lh_data$maturity)
+    mass      <- as.matrix(object@lh_data$mass)
+    fecundity <- as.matrix(object@lh_data$fecundity)
+    size      <- as.matrix(object@lh_data$size)
+    h         <- as.numeric(object@lh_data$h)
+    M         <- as.matrix(object@lh_data$M)
     
     tmax   <- length(object@empirical_data$time)
-    ainf   <- object@ainf
+    ages   <- object@ages
     niter  <- object@iter
+    nage   <- length(ages)
     
-    n <- array(dim=c(ainf, tmax, niter))
+    n <- array(dim = c(nage, tmax, niter))
     
     for(i in 1:niter) {
         n[,,i] <- object@pdyn(B0 = B0[i],
@@ -40,15 +42,16 @@ setMethod("pdyn", signature = "om", function(object, ...) {
                                 selectivity = selectivity[,i],
                                 maturity = maturity[,i],
                                 mass = mass[,i],
+                                fecundity = fecundity[,i],
                                 size = size[,i],
                                 h = h[i],
                                 M = M[,i],
                                 tmax = tmax,
-                                ainf = ainf
+                                ages = ages
                                 )
     }
     
-    dimnames(n) <- list(age = 1:ainf, time = time, iter = 1:niter)
+    dimnames(n) <- list(age = ages, time = time, iter = 1:niter)
     
     object@n <- n
     

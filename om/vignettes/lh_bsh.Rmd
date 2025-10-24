@@ -47,14 +47,14 @@ sr(lhdat)       <- list(type = 'BH', mu = 0.75)
 
 ```{r}
 # base case
-rCalc(lhdat)@lognormal_par$`E[r]`
+rCalc(lhdat)@lognormal_par$`E[x]`
 
 # with correct fecundity
 lhdat@lhdat[['fecundity']] <- matrix(apply(size(lhdat), 1, function(x) { y <- -91.97 + 0.6052 * x; y[y < 0] <- 0; y}), ncol = lhdat@iter)
 lhdat <- alphaCalc(lhdat)
 lhdat <- rhoCalc(lhdat)
 
-(r_base <- rCalc(lhdat)@lognormal_par$`E[r]`)
+(r_base <- rCalc(lhdat)@lognormal_par$`E[x]`)
 ```
 
 # Experiment 1
@@ -94,7 +94,7 @@ for (i in 1:length(selectivity)) {
         sprf_out[i,j]  <- rhoCalc(lhdat_tmp, TRUE)@lhdat$rho
         rec_out[i,j]   <- alpha_out[i,j] * sprf_out[i,j] / (1 + beta_out[i,j] * sprf_out[i,j])
         rho_out[i,j]   <- rhoCalc(lhdat_tmp)@lhdat$rho
-        r_out[i,j]     <- rCalc(lhdat_tmp, TRUE)@lognormal_par$`E[r]`
+        r_out[i,j]     <- rCalc(lhdat_tmp, TRUE)@lognormal_par$`E[x]`
         ypr_out[i,j]   <- yprCalc(lhdat_tmp)@lhdat$ypr
         fpr_out[i,j]   <- fprCalc(lhdat_tmp)@lhdat$fpr
     }
@@ -215,7 +215,7 @@ for (i in 1:length(selectivity)) {
         sprf_out[i,j]  <- rhoCalc(lhdat_tmp, TRUE)@lhdat$rho
         rec_out[i,j]   <- alpha_out[i,j] * sprf_out[i,j] / (1 + beta_out[i,j] * sprf_out[i,j])
         rho_out[i,j]   <- rhoCalc(lhdat_tmp)@lhdat$rho
-        r_out[i,j]     <- rCalc(lhdat_tmp, TRUE)@lognormal_par$`E[r]`
+        r_out[i,j]     <- rCalc(lhdat_tmp, TRUE)@lognormal_par$`E[x]`
         ypr_out[i,j]   <- yprCalc(lhdat_tmp)@lhdat$ypr
         fpr_out[i,j]   <- fprCalc(lhdat_tmp)@lhdat$fpr
     }

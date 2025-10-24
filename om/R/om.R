@@ -8,12 +8,12 @@
 #'
 #{{{
 # constructor
-om <- function(pdyn_function, iter, ...) new('om', pdyn_function = .pdyn, iter = 1, ...)
+om <- function(pdyn_function = .pdyn, iter = 1, ...) new('om', pdyn_function, iter, ...)
 #}}}
 #{
 # default population dynamics function
 # (should accept single monte-carlo sample only)
-.pdyn <- function(B0, harvest, time, selectivity, maturity, mass, fecundity, size, h, M, tmax, ages) {
+.pdyn <- function(B0, harvest, harvest_rate, time, selectivity, maturity, mass, fecundity, size, h, M, tmax, ages) {
     
     nage <- length(ages)
     n    <- array(dim = c(nage, tmax))
@@ -43,7 +43,6 @@ om <- function(pdyn_function, iter, ...) new('om', pdyn_function = .pdyn, iter =
     for(y in 2:tmax) {
         
         n[1,y] <- alp * bmat[y-1]/(bet + bmat[y-1])
-        #n[1,y] <- n[1,y] * srr[y]
         for(a in 2:nage)
             n[a,y] <- n[a-1,y-1]*exp(-M[a-1])*(1-selectivity[a-1]*hr[y-1])
         n[nage,y] <- n[nage,y] + n[nage,y-1]*exp(-M[a-1])*(1-selectivity[nage]*hr[y-1])

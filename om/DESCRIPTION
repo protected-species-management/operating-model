@@ -17,6 +17,7 @@ Suggests:
     kableExtra (>= 1.3)
 Collate: 
     'om-class.R'
+    'age_frequency.R'
     'biomass.R'
     'catchability.R'
     'index.R'

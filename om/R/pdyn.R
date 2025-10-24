@@ -16,10 +16,11 @@ setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
 setMethod("pdyn", signature = "om", function(object, ...) {
     
     # strip out data for speed
-    B0          <- as.numeric(object@B0)
-    harvest     <- as.numeric(object@empirical_data$harvest)
-    time        <- as.integer(object@empirical_data$time)
-    selectivity <- as.matrix(object@selectivity)
+    B0           <- as.numeric(object@B0)
+    harvest      <- as.numeric(object@empirical_data$harvest)
+    time         <- as.integer(object@empirical_data$time)
+    selectivity  <- as.matrix(object@selectivity)
+    harvest_rate <- as.matrix(object@harvest_rate)
     
     maturity  <- as.matrix(object@lh_data$maturity)
     mass      <- as.matrix(object@lh_data$mass)
@@ -38,6 +39,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     for(i in 1:niter) {
         n[,,i] <- object@pdyn(B0 = B0[i],
                                 harvest = harvest,
+                                harvest_rate = harvest_rate[,i],
                                 time = time,
                                 selectivity = selectivity[,i],
                                 maturity = maturity[,i],
@@ -53,7 +55,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     
     dimnames(n) <- list(age = ages, time = time, iter = 1:niter)
     
-    object@n <- n
+    object@.Data <- n
     
     return(object)
 })

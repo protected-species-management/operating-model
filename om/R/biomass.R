@@ -10,11 +10,11 @@
 setGeneric("biomass", function(object, ...) standardGeneric("biomass"))
 setMethod("biomass",signature="om",function(object, type, ...) {
     
-    if(!(length(object@n) > 0)) {
+    if(!(length(object@.Data) > 0)) {
         object <- pdyn(object)
 	}
 
-    n <- object@n
+    n <- object@.Data
 
     selectivity <- as.matrix(object@selectivity)
     maturity    <- as.matrix(object@lh_data$maturity)
@@ -30,9 +30,9 @@ setMethod("biomass",signature="om",function(object, type, ...) {
     biomass[['mature']]      <- array(dim=c(tmax,niter),dimnames=list(time=time,iter=1:niter))
     biomass[['exploitable']] <- array(dim=c(tmax,niter),dimnames=list(time=time,iter=1:niter))
     for(i in 1:niter) {
-        biomass[['total']][,i]       <- apply(sweep(n[,,i],1:2,mass[,i]                  ,'*'),2,sum)
-        biomass[['mature']][,i]      <- apply(sweep(n[,,i],1:2,mass[,i] * maturity[,i]   ,'*'),2,sum)
-        biomass[['exploitable']][,i] <- apply(sweep(n[,,i],1:2,mass[,i] * selectivity[,i],'*'),2,sum)
+        biomass[['total']][,i]       <- apply(sweep(n[,,i], 1:2, mass[,i]                  ,'*'), 2, sum, na.rm = TRUE)
+        biomass[['mature']][,i]      <- apply(sweep(n[,,i], 1:2, mass[,i] * maturity[,i]   ,'*'), 2, sum, na.rm = TRUE)
+        biomass[['exploitable']][,i] <- apply(sweep(n[,,i], 1:2, mass[,i] * selectivity[,i],'*'), 2, sum, na.rm = TRUE)
     }
     
     if(!missing(type)) {

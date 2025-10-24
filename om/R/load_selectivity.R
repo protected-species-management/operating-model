@@ -26,6 +26,8 @@ setMethod("load_selectivity", signature = c("om", "matrix"), function(object, x,
         } 
     }
     
+    dimnames(x) <- list(age = ages, iter = 1:niter)
+    
     object@selectivity <- x
     
     return(object)

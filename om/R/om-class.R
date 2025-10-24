@@ -14,8 +14,8 @@ setClass("om", contains="array",
                     sr             = 'character',
                     B0             = 'numeric',
                     selectivity    = 'matrix',
-                    q              = 'matrix',
-                    n              = 'array'
+                    harvest_rate   = 'matrix',
+                    q              = 'matrix'
                     )
 )
 #}}}

@@ -4,7 +4,7 @@
 \alias{om}
 \title{Create om object}
 \usage{
-om(pdyn_function, iter, ...)
+om(pdyn_function = .pdyn, iter = 1, ...)
 }
 \description{
 Initialise Data simulation module (om) class object

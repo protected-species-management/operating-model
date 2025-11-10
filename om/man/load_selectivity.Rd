@@ -2,10 +2,10 @@
 % Please edit documentation in R/load_selectivity.R
 \name{load_selectivity}
 \alias{load_selectivity}
-\title{load.selectivity}
+\title{load_selectivity}
 \usage{
 load_selectivity(object, x, ...)
 }
 \description{
-Load selectivity ogives
+Load selectivity ogives into \code{om-class} object.
 }

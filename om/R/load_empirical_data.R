@@ -12,24 +12,24 @@ setGeneric("load_empirical_data", function(object,x, ...) standardGeneric("load_
 setMethod("load_empirical_data", signature=c("om", "list"),function(object, x, ...) {
   
     if(is.list(x)) {
-        loc <- match('index',names(x))
+        loc <- match('index', names(x))
         if(!is.na(loc)) {
-            object@empirical_data$index <- as.matrix(x[[loc]])
-            object@empirical_data$index[object@empirical_data$index <= 0] <- NA
+            object@fishing$index <- as.matrix(x[[loc]])
+            object@fishing$index[object@fishing$index <= 0] <- NA
         }
-        loc <- match('sigmao',names(x))
+        loc <- match('sigmao', names(x))
         if(!is.na(loc)) {
-            object@empirical_data$sigmao <- as.matrix(x[[loc]])
-			object@empirical_data$sigmao[object@empirical_data$sigmao <= 0] <- NA
+            object@fishing$sigmao <- as.matrix(x[[loc]])
+			object@fishing$sigmao[object@fishing$sigmao <= 0] <- NA
         }
-        loc <- match('harvest',names(x))
+        loc <- match('harvest', names(x))
         if(!is.na(loc)) {
-            object@empirical_data$harvest <- as.numeric(x[[loc]])
+            object@fishing$harvest <- as.numeric(x[[loc]])
         }
-        loc <- match('time',names(x))
+        loc <- match('time', names(x))
         if(!is.na(loc)) {
-            object@empirical_data$time <- as.integer(x[[loc]])
-        } else object@empirical_data$time <- 1:length(object@empirical_data$harvest)
+            object@time <- as.integer(x[[loc]])
+        } else object@time <- 1:length(object@fishing$harvest)
     } else  
         stop('empirical data should be a list of harvest and index values\n')
     

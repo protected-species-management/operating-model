@@ -4,7 +4,7 @@
 \alias{initialize,om-method}
 \title{Initialize om object}
 \usage{
-\S4method{initialize}{om}(.Object, pdyn_function, iter, ...)
+\S4method{initialize}{om}(.Object, pdyn_function, iter, time, ...)
 }
 \description{
 Method to initialize om class object

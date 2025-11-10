@@ -16,7 +16,7 @@ setMethod("age_frequency", signature = "om", function(object, type, ...) {
 
     n <- object@.Data
 
-    selectivity <- as.matrix(object@selectivity)
+    selectivity <- as.matrix(object@fishing$selectivity)
     
     niter <- object@iter
     

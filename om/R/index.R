@@ -15,16 +15,16 @@ setMethod("index", signature = "om", function(object, stochastic = FALSE, ...) {
         object <- catchability(object)
     }
 	
-    index  <- object@empirical_data$index
-    sigmao <- object@empirical_data$sigmao
+    index  <- object@fishing$index
+    sigmao <- object@fishing$sigmao
  
     bexp <- biomass(object, type = 'exploitable')
     
     q     <- object@q
     
-    time  <- object@empirical_data$time
-    tmax  <- length(object@empirical_data$time)
-    nidx  <- dim(object@empirical_data$index)[2]
+    time  <- object@fishing$time
+    tmax  <- length(object@fishing$time)
+    nidx  <- dim(object@fishing$index)[2]
     niter <- object@iter
     
     predicted_index <- array(dim = c(tmax,nidx,niter), dimnames = list(time=time, index=1:nidx, iter=1:niter))

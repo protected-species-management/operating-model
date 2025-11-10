@@ -1,6 +1,6 @@
-#' @title load.selectivity
+#' @title load_selectivity
 #' 
-#' @description Load selectivity ogives
+#' @description Load selectivity ogives into \code{om-class} object.
 #' 
 #' @export
 #' 
@@ -28,7 +28,7 @@ setMethod("load_selectivity", signature = c("om", "matrix"), function(object, x,
     
     dimnames(x) <- list(age = ages, iter = 1:niter)
     
-    object@selectivity <- x
+    object@fishing$selectivity <- x
     
     return(object)
 })

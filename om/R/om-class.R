@@ -8,14 +8,16 @@ setClass("om", contains="array",
          slots=list(
                     ages           = 'numeric',
                     iter           = 'numeric',
-                    empirical_data = 'list',
-                    lh_data        = 'list',
-                    pdyn           = 'function',
-                    sr             = 'character',
-                    B0             = 'numeric',
-                    selectivity    = 'matrix',
-                    harvest_rate   = 'matrix',
-                    q              = 'matrix'
+                    time           = 'numeric',
+                    productivity   = 'list',
+                    fishing        = 'list',
+                    life_history        = 'list',
+                    population_dynamics = 'function'#,
+                    #sr             = 'character',
+                    #B0             = 'numeric',
+                    #selectivity    = 'matrix',
+                    #harvest_rate   = 'matrix',
+                    #q              = 'matrix'
                     )
 )
 #}}}

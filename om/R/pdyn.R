@@ -15,29 +15,31 @@
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
 setMethod("pdyn", signature = "om", function(object, ...) {
     
-    # strip out data for speed
-    B0           <- as.numeric(object@B0)
-    harvest      <- as.numeric(object@empirical_data$harvest)
-    time         <- as.integer(object@empirical_data$time)
-    selectivity  <- as.matrix(object@selectivity)
-    harvest_rate <- as.matrix(object@harvest_rate)
+    # allowed input values
+    # (must be arguments to population dynamics function)
+    B0           <- tryCatch(as.numeric(object@productivity$B0), error = function(e) NULL)
+    pars         <- tryCatch(as.matrix(object@productivity$pars), error = function(e) NULL)
+    harvest      <- tryCatch(as.numeric(object@fishing$harvest), error = function(e) NULL)
+    selectivity  <- tryCatch(as.matrix(object@fishing$selectivity), error = function(e) NULL)
+    harvest_rate <- tryCatch(as.matrix(object@fishing$harvest_rate), error = function(e) NULL)
     
-    maturity  <- as.matrix(object@lh_data$maturity)
-    mass      <- as.matrix(object@lh_data$mass)
-    fecundity <- as.matrix(object@lh_data$fecundity)
-    size      <- as.matrix(object@lh_data$size)
-    h         <- as.numeric(object@lh_data$h)
-    M         <- as.matrix(object@lh_data$M)
+    maturity  <- tryCatch(as.matrix(object@life_history$maturity), error = function(e) NULL)
+    mass      <- tryCatch(as.matrix(object@life_history$mass), error = function(e) NULL)
+    fecundity <- tryCatch(as.matrix(object@life_history$fecundity), error = function(e) NULL)
+    size      <- tryCatch(as.matrix(object@life_history$size), error = function(e) NULL)
+    h         <- tryCatch(as.numeric(object@life_history$h), error = function(e) NULL)
+    M         <- tryCatch(as.matrix(object@life_history$M), error = function(e) NULL)
     
-    tmax   <- length(object@empirical_data$time)
+    tmax   <- length(object@time)
     ages   <- object@ages
+    time   <- object@time
     niter  <- object@iter
     nage   <- length(ages)
     
     n <- array(dim = c(nage, tmax, niter))
     
     for(i in 1:niter) {
-        n[,,i] <- object@pdyn(B0 = B0[i],
+        n[,,i] <- object@population_dynamics(B0 = B0[i],
                                 harvest = harvest,
                                 harvest_rate = harvest_rate[,i],
                                 time = time,
@@ -46,7 +48,8 @@ setMethod("pdyn", signature = "om", function(object, ...) {
                                 mass = mass[,i],
                                 fecundity = fecundity[,i],
                                 size = size[,i],
-                                h = h[i],
+                                #h = h[i],
+                                pars = pars[,i],
                                 M = M[,i],
                                 tmax = tmax,
                                 ages = ages

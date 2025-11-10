@@ -13,7 +13,7 @@ om <- function(pdyn_function = .pdyn, iter = 1, ...) new('om', pdyn_function, it
 #{
 # default population dynamics function
 # (should accept single monte-carlo sample only)
-.pdyn <- function(B0, harvest, harvest_rate, time, selectivity, maturity, mass, fecundity, size, h, M, tmax, ages) {
+.pdyn <- function(B0, harvest, harvest_rate, time, selectivity, maturity, mass, fecundity, size, pars, M, tmax, ages) {
     
     nage <- length(ages)
     n    <- array(dim = c(nage, tmax))
@@ -37,14 +37,15 @@ om <- function(pdyn_function = .pdyn, iter = 1, ...) new('om', pdyn_function, it
     hr[1]   <- trim(harvest[1] / bexp[1])
     
     # set up S-R parameters
-    alp <- (4*h*R0) / (5*h-1)
-    bet <- B0*(1-h) / (5*h-1)
+    alp <- pars[1]
+    bet <- pars[2]
     
     for(y in 2:tmax) {
         
         n[1,y] <- alp * bmat[y-1]/(bet + bmat[y-1])
-        for(a in 2:nage)
+        for(a in 2:nage) {
             n[a,y] <- n[a-1,y-1]*exp(-M[a-1])*(1-selectivity[a-1]*hr[y-1])
+        }
         n[nage,y] <- n[nage,y] + n[nage,y-1]*exp(-M[a-1])*(1-selectivity[nage]*hr[y-1])
         bexp[y] <- sum(n[,y] * selectivity * mass)
         hr[y]   <- trim(harvest[y] / bexp[y])
@@ -52,7 +53,7 @@ om <- function(pdyn_function = .pdyn, iter = 1, ...) new('om', pdyn_function, it
         bmat[y] <- sum(n[,y] * maturity * mass)
     }
     
-    # retun numbers at age
+    # return numbers at age
     return(array(n, dim = dim(n), dimnames = list(age = ages, time = time)))
 }
 #}

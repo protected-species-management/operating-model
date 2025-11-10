@@ -16,9 +16,9 @@ setMethod("catchability", signature = "om", function(object, ...) {
 
     bexp <- biomass(object, type = 'exploitable')
 
-    index <- object@empirical_data$index
+    index <- object@fishing$index
 
-    nidx  <- dim(object@empirical_data$index)[2]
+    nidx  <- dim(object@fishing$index)[2]
     niter <- object@iter
 
     q <- array(dim = c(nidx,niter))
@@ -32,7 +32,6 @@ setMethod("catchability", signature = "om", function(object, ...) {
     
     object@q <- q
     
-    object
-    
+    return(object)
 })
     

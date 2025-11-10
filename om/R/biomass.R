@@ -16,12 +16,12 @@ setMethod("biomass",signature="om",function(object, type, ...) {
 
     n <- object@.Data
 
-    selectivity <- as.matrix(object@selectivity)
-    maturity    <- as.matrix(object@lh_data$maturity)
-    mass        <- as.matrix(object@lh_data$mass)
+    selectivity <- as.matrix(object@fishing$selectivity)
+    maturity    <- as.matrix(object@life_history$maturity)
+    mass        <- as.matrix(object@life_history$mass)
 
-    time  <- object@empirical_data$time
-    tmax  <- length(object@empirical_data$time)
+    time  <- object@time
+    tmax  <- length(object@time)
     niter <- object@iter
     
     

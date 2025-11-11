@@ -3,7 +3,7 @@
 \docType{class}
 \name{om-class}
 \alias{om-class}
-\title{om-class definition}
+\title{Operating model class}
 \description{
-Data simulation module (om) class definition
+Operating model class definition.
 }

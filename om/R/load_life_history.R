@@ -2,20 +2,18 @@
 #' 
 #' @description Load life-history data into \code{om-class} object from \code{lhm-class} object.
 #' 
-#' @export
-#' @importClassesFrom lhm lhm
+#' @import lhm
 #' 
 #' @include om-class.R
-#' 
+#' @export
 #{{{ load life history data into om object
 setGeneric("load_life_history", function(object, x, ...) standardGeneric("load_life_history"))
 #{{ lhm object
 setMethod("load_life_history", signature = c("om", "lhm"), function(object, x, ...) {
     
-    object@life_history    <- x@lhdat
-    object@iter            <- x@iter
-    object@ages            <- x@ages
-    object@productivity$name <- x@sr
+    object@life_history      <- x@lhdat
+    object@iter              <- x@iter
+    object@ages              <- x@ages
     
     # match dimensions of object@B0 
     # to object@iter
@@ -36,6 +34,14 @@ setMethod("load_life_history", signature = c("om", "lhm"), function(object, x, .
             } else object@fishing$selectivity <- matrix(rep(object@fishing$selectivity, object@iter), ncol = object@iter)    
         }
     }
+	
+	# calculate rmax
+	object@pst$rmax <- rCalc(x)@.Data
+	
+	# tidy
+	stopifnot(all(object@life_history$F == 0))
+	object@life_history$F <- NULL
     
+	# return    
     return(object)
 })

@@ -2,10 +2,10 @@
 % Please edit documentation in R/om.R
 \name{om}
 \alias{om}
-\title{Create om object}
+\title{Create \code{om-class} object}
 \usage{
 om(pdyn_function = .pdyn, iter = 1, ...)
 }
 \description{
-Initialise Data simulation module (om) class object
+Initialise operating model class object
 }

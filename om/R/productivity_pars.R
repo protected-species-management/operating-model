@@ -12,7 +12,7 @@ setMethod("productivity_pars", signature = c("om"), function(object, ...) {
     
     nage  <- length(object@ages)
     niter <- object@iter
-    p    <- vector("numeric", length = nage)
+    p     <- vector("numeric", length = nage)
     
     pars <- matrix(0, ncol = niter, nrow = 2)
     

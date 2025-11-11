@@ -1,23 +1,33 @@
-#' @title om-class definition
+#' @title Operating model class
 #' 
-#' @description Data simulation module (om) class definition
+#' @description 
+#' Operating model class definition.
 #'
 #{{{
 # class definition
-setClass("om", contains="array",
-         slots=list(
-                    ages           = 'numeric',
-                    iter           = 'numeric',
-                    time           = 'numeric',
-                    productivity   = 'list',
-                    fishing        = 'list',
+setClass("om", contains = "array", slots = list(ages = 'numeric',
+                    iter                = 'numeric',
+                    time                = 'numeric',
+                    productivity        = 'list',
+                    fishing             = 'list',
                     life_history        = 'list',
-                    population_dynamics = 'function'#,
-                    #sr             = 'character',
-                    #B0             = 'numeric',
-                    #selectivity    = 'matrix',
-                    #harvest_rate   = 'matrix',
-                    #q              = 'matrix'
+                    population_dynamics = 'function',
+                    pst                 = 'list'
                     )
+)
+#}}}
+
+#{{{
+# class definition
+setClass("omIter", contains = "matrix",
+         slots=list(
+             ages                = 'numeric',
+             time                = 'numeric',
+             productivity        = 'list',
+             fishing             = 'list',
+             life_history        = 'list',
+             population_dynamics = 'function',
+             pst                 = 'list'
+         )
 )
 #}}}

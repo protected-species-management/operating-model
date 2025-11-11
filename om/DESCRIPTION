@@ -20,7 +20,9 @@ Collate:
     'age_frequency.R'
     'biomass.R'
     'catchability.R'
+    'get_dim.R'
     'index.R'
+    'productivity_pars.R'
     'load_B0.R'
     'load_empirical_data.R'
     'load_life_history.R'
@@ -28,7 +30,6 @@ Collate:
     'om-initialize.R'
     'om.R'
     'pdyn.R'
-    'productivity_pars.R'
     'zzz.R'
 RoxygenNote: 7.3.3
 Encoding: UTF-8

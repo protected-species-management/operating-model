@@ -2,10 +2,10 @@
 % Please edit documentation in R/load_B0.R
 \name{load_B0}
 \alias{load_B0}
-\title{load.B0}
+\title{load_B0}
 \usage{
 load_B0(object, x, ...)
 }
 \description{
-Load initial mature biomass (B0) into om object
+Load initial mature biomass (B0) into \code{om-class} object.
 }

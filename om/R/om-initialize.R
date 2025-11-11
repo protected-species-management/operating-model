@@ -19,6 +19,10 @@ setMethod("initialize", "om", function(.Object, pdyn_function, iter, time, ...) 
     if(!missing(time)) {
         .Object@time <- time
     }
+    
+    # default reference point
+    # tuning parameter
+    .Object@pst$phi <- 1
 	
     return(.Object)
 })

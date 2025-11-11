@@ -1,6 +1,6 @@
-#' @title Create om object
+#' @title Create \code{om-class} object
 #' 
-#' @description Initialise Data simulation module (om) class object
+#' @description Initialise operating model class object
 #' 
 #' @export
 #' 
@@ -12,26 +12,26 @@ om <- function(pdyn_function = .pdyn, iter = 1, ...) new('om', pdyn_function, it
 #}}}
 #{
 # default population dynamics function
-# (should accept single monte-carlo sample only)
-.pdyn <- function(B0, harvest, harvest_rate, time, selectivity, maturity, mass, fecundity, size, pars, M, tmax, ages) {
+# (can use any values returned by get_values() and get_dim())
+.pdyn <- function() {
     
-    nage <- length(ages)
-    n    <- array(dim = c(nage, tmax))
-    bmat <- vector("numeric", length = tmax)
-    bexp <- vector("numeric", length = tmax)
-    hr   <- vector("numeric", length = tmax)
-    p    <- vector("numeric", length = nage)
+    n    <- array(dim = c(nages, ntime))
+    bmat <- vector("numeric", length = ntime)
+    bexp <- vector("numeric", length = ntime)
+    hr   <- vector("numeric", length = ntime)
+    p    <- vector("numeric", length = nages)
     
     trim <- function(x) min(max(x, 0), 1)
     
     # set up equilibrium population
     p[1] <- 1
-    for(a in 2:nage)
-        p[a] <- p[a-1]*exp(-M[a-1])
-    p[nage] <- p[nage]/(1-exp(-M[nage]))
+    for(a in 2:nages)
+        p[a] <- p[a-1] * exp(-M[a-1])
+    p[nages] <- p[nages] / (1 - exp(-M[nages]))
     rho <- sum(p * maturity * mass)
     R0 <- B0 / rho
-    n[,1] <- R0 * p
+    
+    n[,1]   <- R0 * p
     bmat[1] <- sum(n[,1] * maturity * mass)
     bexp[1] <- sum(n[,1] * selectivity * mass)
     hr[1]   <- trim(harvest[1] / bexp[1])
@@ -40,17 +40,17 @@ om <- function(pdyn_function = .pdyn, iter = 1, ...) new('om', pdyn_function, it
     alp <- pars[1]
     bet <- pars[2]
     
-    for(y in 2:tmax) {
+    for(y in 2:ntime) {
         
-        n[1,y] <- alp * bmat[y-1]/(bet + bmat[y-1])
-        for(a in 2:nage) {
-            n[a,y] <- n[a-1,y-1]*exp(-M[a-1])*(1-selectivity[a-1]*hr[y-1])
+        n[1, y] <- alp * bmat[y - 1]/(bet + bmat[y - 1])
+        for(a in 2:nages) {
+            n[a, y] <- n[a - 1, y - 1] * exp(-M[a - 1]) * (1 - selectivity[a - 1] * hr[y - 1])
         }
-        n[nage,y] <- n[nage,y] + n[nage,y-1]*exp(-M[a-1])*(1-selectivity[nage]*hr[y-1])
-        bexp[y] <- sum(n[,y] * selectivity * mass)
-        hr[y]   <- trim(harvest[y] / bexp[y])
-        bexp[y] <- harvest[y] / hr[y]
-        bmat[y] <- sum(n[,y] * maturity * mass)
+        n[nages, y] <- n[nages, y] + n[nages, y - 1] * exp(-M[a - 1]) * (1 - selectivity[nages] * hr[y - 1])
+        bexp[y]     <- sum(n[, y] * selectivity * mass)
+        hr[y]       <- trim(harvest[y] / bexp[y])
+        bexp[y]     <- harvest[y] / hr[y]
+        bmat[y]     <- sum(n[, y] * maturity * mass)
     }
     
     # return numbers at age

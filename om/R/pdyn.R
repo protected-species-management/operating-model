@@ -34,6 +34,16 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         # per iteration using values and dimensions
         # within function environment
         n[,,i] <- object@population_dynamics()
+        
+        # calculate total numbers and PST
+        # reference point
+        
+        
+        # calculate diagnostics
+        # (catch > PST)
+        
+        # (H > rmax / 2)
+        
     }
     
     dimnames(n) <- list(age = ages, time = time, iter = 1:niter)

@@ -10,12 +10,10 @@
 setGeneric("load_selectivity", function(object,x, ...) standardGeneric("load_selectivity"))
 setMethod("load_selectivity", signature = c("om", "matrix"), function(object, x, ...) {
     
-    niter <- object@iter
-    ages  <- object@ages
-    nage  <- length(ages)
+    get_dims(object)
     
     # check age dimension
-    x <- apply(x, 2, function(y) { if(length(y) < nage) y[(length(y)+ 1):nage] <- y[length(y)]; y}) 
+    x <- apply(x, 2, function(y) { if(length(y) < nages) y[(length(y) + 1):nages] <- y[length(y)]; y}) 
     
     # check iteration dimension
     if(dim(x)[2] < niter) {

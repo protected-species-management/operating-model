@@ -11,9 +11,27 @@ setGeneric("load_life_history", function(object, x, ...) standardGeneric("load_l
 #{{ lhm object
 setMethod("load_life_history", signature = c("om", "lhm"), function(object, x, ...) {
     
-    object@life_history      <- x@lhdat
-    object@iter              <- x@iter
-    object@ages              <- x@ages
+    object@life_history <- x@lhdat
+    
+    if (is.na(object@iter)) {
+        object@iter <- x@iter
+    } else {
+        if (object@iter != x@iter) {
+            stop("'iter' does not match")
+        } else {
+            object@iter <- x@iter
+        }
+    }
+    
+    if (is.na(object@ages)) {
+        object@ages <- x@ages
+    } else {
+        if (any(object@ages != x@ages)) {
+            stop("'ages' does not match")
+        } else {
+            object@ages <- x@ages
+        }
+    }
     
     # match dimensions of object@B0 
     # to object@iter

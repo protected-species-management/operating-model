@@ -1,2 +1,5 @@
 ^vignettes/om_hak.Rmd
 ^vignettes/lh_bsh.Rmd
+^R/catchability.R
+^R/index.R
+^R/age_frequency.R

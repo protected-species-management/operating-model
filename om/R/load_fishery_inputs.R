@@ -44,6 +44,15 @@ setMethod("load_fishery_inputs", signature = c("om", "fim"), function(object, va
         }
     }
     
+    # add dimensions to 
+    # reference point
+    object@pst$numbers <- matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
+    object@pst$value   <- matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
+    
+    # add dimensions to 
+    # diagnostics
+    object@diagnostics <- lapply(object@diagnostics, function() matrix(NA_real_, nrow = length(object@time), ncol = object@iter))
+    
 	# return    
     return(object)
 })

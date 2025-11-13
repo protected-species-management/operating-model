@@ -43,10 +43,12 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         
         # calculate total numbers and PST
         # reference point
-        
+        object@pst$numbers[,i] <- apply(n[,,i], 2, sum)
+        object@pst$value[,i]   <- object@pst$phi * object@pst$rmax[i] * object@pst$numbers[,i] / 2
         
         # calculate diagnostics
         # (catch > PST)
+        object@diagnostics$catch_pst[,i] <- object@fishing_inputs$catch[,i] > object@pst$value[,i]
         
         # (H > rmax / 2)
         

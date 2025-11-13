@@ -46,9 +46,13 @@ setMethod("load_life_history", signature = c("om", "lhm"), function(object, valu
     #    }
     #}
 	
-	# calculate rmax
-	object@pst$rmax <- rCalc(value)@.Data
-    
+	# calculate rmax and 
+    # add dimensions to 
+    # reference point
+	object@pst$rmax    <- rCalc(value)@.Data
+	object@pst$numbers <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
+	object@pst$value   <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
+	
 	# return    
     return(object)
 })

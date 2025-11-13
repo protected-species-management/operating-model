@@ -2,12 +2,9 @@
 
 S3method(get_dim,om)
 S3method(get_values,om)
-export(age_frequency)
 export(biomass)
-export(catchability)
 export(get_dim)
 export(get_values)
-export(index)
 export(load_empirical_data)
 export(load_fishery_inputs)
 export(load_life_history)

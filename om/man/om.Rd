@@ -4,7 +4,7 @@
 \alias{om}
 \title{Create \code{om-class} object}
 \usage{
-om(pdyn_function = .pdyn, iter = 1L, ...)
+om(pdyn_function = .pdyn, ...)
 }
 \description{
 Initialise operating model class object

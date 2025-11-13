@@ -26,7 +26,7 @@ om <- function(pdyn_function = .pdyn, iter = 1, ...) new('om', pdyn_function, it
     # set up equilibrium population
     p[1] <- 1
     for(a in 2:nages)
-        p[a] <- p[a-1] * exp(-M[a-1])
+        p[a] <- p[a-1] * exp(-M[a - 1])
     p[nages] <- p[nages] / (1 - exp(-M[nages]))
     rho <- sum(p * maturity * mass)
     R0 <- B0 / rho
@@ -34,22 +34,23 @@ om <- function(pdyn_function = .pdyn, iter = 1, ...) new('om', pdyn_function, it
     n[,1]   <- R0 * p
     bmat[1] <- sum(n[,1] * maturity * mass)
     bexp[1] <- sum(n[,1] * selectivity * mass)
-    hr[1]   <- trim(harvest[1] / bexp[1])
+    hr[1]   <- trim(catch[1] / bexp[1])
     
     # set up S-R parameters
-    alp <- pars[1]
-    bet <- pars[2]
+    # (alpha)
+    alp <- (4 * h * R0) / (5 * h - 1)
+    # (beta)
+    bet <- B0 * (1 - h) / (5 * h - 1)
     
     for(y in 2:ntime) {
         
-        n[1, y] <- alp * bmat[y - 1]/(bet + bmat[y - 1])
+        n[1, y] <- alp * bmat[y - 1] / (bet + bmat[y - 1])
         for(a in 2:nages) {
             n[a, y] <- n[a - 1, y - 1] * exp(-M[a - 1]) * (1 - selectivity[a - 1] * hr[y - 1])
         }
         n[nages, y] <- n[nages, y] + n[nages, y - 1] * exp(-M[a - 1]) * (1 - selectivity[nages] * hr[y - 1])
         bexp[y]     <- sum(n[, y] * selectivity * mass)
-        hr[y]       <- trim(harvest[y] / bexp[y])
-        bexp[y]     <- harvest[y] / hr[y]
+        hr[y]       <- trim(catch[y] / bexp[y])
         bmat[y]     <- sum(n[, y] * maturity * mass)
     }
     

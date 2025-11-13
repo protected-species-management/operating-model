@@ -1,6 +1,7 @@
-#' @title get_dim
+#' @title Get dimensions and values stored in \code{\link{om-class}} object.
+#' @aliases get_values
 #' @description
-#' Extract dimensions from object for use within a function call.
+#' Extract dimensions and/or values from object for use within a function call.
 #' @include om-class.R
 #' @export
 get_dim <- function(object, ...) UseMethod("get_dim")

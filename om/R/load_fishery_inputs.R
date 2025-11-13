@@ -7,39 +7,40 @@
 #' @include om-class.R
 #' @export
 #{{{ load fishery inputs into om object
-setGeneric("load_fishery_inputs", function(object, x, ...) standardGeneric("load_fishery_inputs"))
+setGeneric("load_fishery_inputs", function(object, value, ...) standardGeneric("load_fishery_inputs"))
 #{{ fim object
-setMethod("load_fishery_inputs", signature = c("om", "fim"), function(object, x, ...) {
+setMethod("load_fishery_inputs", signature = c("om", "fim"), function(object, value, ...) {
     
-    object@fishery_inputs <- x@.Data
+    object@fishery_inputs <- value@.Data
+    names(object@fishery_inputs) <- names(value)
     
     if (is.na(object@iter)) {
-        object@iter <- as.integer(x@iter)
+        object@iter <- as.integer(value@iter)
     } else {
-        if (object@iter != x@iter) {
+        if (object@iter != value@iter) {
             stop("'iter' does not match")
         } else {
-            object@iter <- as.integer(x@iter)
+            object@iter <- as.integer(value@iter)
         }
     }
     
-    if (is.na(object@ages)) {
-        object@ages <- as.integer(x@ages)
+    if (any(is.na(object@ages))) {
+        object@ages <- as.integer(value@ages)
     } else {
-        if (any(object@ages != x@ages)) {
+        if (any(object@ages != value@ages)) {
             stop("'ages' does not match")
         } else {
-            object@ages <- as.integer(x@ages)
+            object@ages <- as.integer(value@ages)
         }
     }
     
     if (is.na(object@time)) {
-        object@time <- as.integer(x@time)
+        object@time <- as.integer(value@time)
     } else {
-        if (any(object@time != x@time)) {
+        if (any(object@time != value@time)) {
             stop("'time' does not match")
         } else {
-            object@time <- as.integer(x@time)
+            object@time <- as.integer(value@time)
         }
     }
     

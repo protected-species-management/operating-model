@@ -13,22 +13,28 @@
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
 setMethod("pdyn", signature = "om", function(object, ...) {
     
+    # check environment for function call is
+    # consistent with current environment
+    environment(object@population_dynamics) <- environment()
+    
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object)
+    get_dim(object, env = environment())
     
+    # setup numbers array
     n <- array(dim = c(nages, ntime, niter))
     
+    # iterate dynamics
     for(i in 1:niter) {
         
         # load values stored in:
-        # - object@productivity
-        # - object@fishing
+        # - object@pars
+        # - object@fishery_inputs
         # - object@life_history
         # into function environment
         # per iteration
-        get_values(object, i)
+        get_values(object, iter = i, env = environment())
         
         # call population dynamics function
         # per iteration using values and dimensions

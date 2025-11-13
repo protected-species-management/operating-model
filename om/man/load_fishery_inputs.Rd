@@ -4,7 +4,7 @@
 \alias{load_fishery_inputs}
 \title{Load fishery inputs}
 \usage{
-load_fishery_inputs(object, x, ...)
+load_fishery_inputs(object, value, ...)
 }
 \description{
 Load fishery inputs data into \code{om-class} object from \code{fim-class} object. Checks ensure that 'iter', 'time' and 'ages' arguments match.

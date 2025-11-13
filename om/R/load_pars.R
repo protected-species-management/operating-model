@@ -12,11 +12,23 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
     # match dimensions
     # to object@iter
     value <- lapply(value, function(x) {
-        if (length(x) < object@iter) {
-            if (length(x) > 1) {
-                stop('conflict between value dimension and number of mc-samples\n')
-            } else {
-                x <- rep(x, object@iter)
+        if (is.null(dim(x))) {
+            # vector
+            if (length(x) < object@iter) {
+                if (length(x) > 1) {
+                    stop('conflict between value dimension and number of mc-samples\n')
+                } else {
+                    x <- matrix(rep(x, object@iter), ncol = object@iter)
+                }
+            }
+        } else {
+            # matrix
+            if (dim(x)[2] < object@iter) {
+                if(dim(x)[2] > 1) {
+                    stop('conflict between value dimension and number of mc-samples\n')
+                } else {
+                    x <- matrix(rep(x, object@iter), ncol = object@iter)
+                }
             }
         }
     })

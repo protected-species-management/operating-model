@@ -2,7 +2,7 @@
 % Please edit documentation in R/biomass.R
 \name{biomass}
 \alias{biomass}
-\title{biomass}
+\title{Return population biomass}
 \usage{
 biomass(object, ...)
 }

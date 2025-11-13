@@ -14,22 +14,22 @@ setMethod("load_life_history", signature = c("om", "lhm"), function(object, x, .
     object@life_history <- x@lhdat
     
     if (is.na(object@iter)) {
-        object@iter <- x@iter
+        object@iter <- as.integer(x@iter)
     } else {
         if (object@iter != x@iter) {
             stop("'iter' does not match")
         } else {
-            object@iter <- x@iter
+            object@iter <- as.integer(x@iter)
         }
     }
     
     if (is.na(object@ages)) {
-        object@ages <- x@ages
+        object@ages <- as.integer(x@ages)
     } else {
         if (any(object@ages != x@ages)) {
             stop("'ages' does not match")
         } else {
-            object@ages <- x@ages
+            object@ages <- as.integer(x@ages)
         }
     }
     

@@ -24,12 +24,14 @@ setMethod("initialize", "om", function(.Object, pdyn_function, iter, time, ages,
     }
     
     if(missing(time)) {
-        .Object@time <- NA_real_
+        .Object@time <- NA_integer_
     } else {
         .Object@time <- time
     }
     
-    if(!missing(ages)) {
+    if(missing(ages)) {
+        .Object@ages <- NA_integer_
+    } else {
         .Object@ages <- ages
     }
     

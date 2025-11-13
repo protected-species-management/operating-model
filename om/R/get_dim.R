@@ -28,7 +28,7 @@ get_dim.om <- function(object, env = globalenv()) {
 }
 #' @export
 get_values <- function(object, ...) UseMethod("get_values")
-#' @rdname get_values
+#' @rdname get_dim
 #' @export
 get_values.om <- function(object, iter = 1, env = globalenv()) {
     

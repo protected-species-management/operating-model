@@ -8,7 +8,7 @@
 #'
 #{{{
 # constructor
-om <- function(pdyn_function = .pdyn, ...) new('om', pdyn_function, ...)
+om <- function(ages, pdyn_function = .pdyn, ...) new('om', ages, pdyn_function, ...)
 #}}}
 #{
 # default population dynamics function

@@ -4,7 +4,7 @@
 \alias{load_life_history}
 \title{load_life_history}
 \usage{
-load_life_history(object, x, ...)
+load_life_history(object, value, ...)
 }
 \description{
 Load life-history data into \code{om-class} object from \code{lhm-class} object.

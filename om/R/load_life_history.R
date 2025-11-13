@@ -7,38 +7,47 @@
 #' @include om-class.R
 #' @export
 #{{{ load life history data into om object
-setGeneric("load_life_history", function(object, x, ...) standardGeneric("load_life_history"))
+setGeneric("load_life_history", function(object, value, ...) standardGeneric("load_life_history"))
 #{{ lhm object
-setMethod("load_life_history", signature = c("om", "lhm"), function(object, x, ...) {
+setMethod("load_life_history", signature = c("om", "lhm"), function(object, value, ...) {
     
-    object@life_history <- x@lhdat
+    if (!is.null(object@ages)) {
+        
+        stopifnot(all(value@lhdat$F == 0))
+        
+        loc <- match(object@ages, value@ages)
+        stopifnot(!any(is.na(loc)))
+        
+        object@life_history <- lapply(value@lhdat, function(x) {
+            if (nrow(x) > 1) {
+                x[loc,]
+            } else {
+                x
+            }})
+    }
     
     if (is.na(object@iter)) {
-        object@iter <- as.integer(x@iter)
+        object@iter <- as.integer(value@iter)
     } else {
-        if (object@iter != x@iter) {
+        if (object@iter != value@iter) {
             stop("'iter' does not match")
         } else {
-            object@iter <- as.integer(x@iter)
+            object@iter <- as.integer(value@iter)
         }
     }
     
-    if (any(is.na(object@ages))) {
-        object@ages <- as.integer(x@ages)
-    } else {
-        if (any(object@ages != x@ages)) {
-            stop("'ages' does not match")
-        } else {
-            object@ages <- as.integer(x@ages)
-        }
-    }
+    #if (any(is.na(object@ages))) {
+    #    object@ages <- as.integer(value@ages)
+    #} else {
+    #    if (any(object@ages != value@ages)) {
+    #        stop("'ages' does not match")
+    #    } else {
+    #        object@ages <- as.integer(value@ages)
+    #    }
+    #}
 	
 	# calculate rmax
-	object@pst$rmax <- rCalc(x)@.Data
-	
-	# tidy
-	stopifnot(all(object@life_history$F == 0))
-	object@life_history$F <- NULL
+	object@pst$rmax <- rCalc(value)@.Data
     
 	# return    
     return(object)

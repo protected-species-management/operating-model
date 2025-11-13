@@ -2,7 +2,6 @@
 #' 
 #' @description Load selectivity ogives into \code{om-class} object.
 #' 
-#' @export
 #' 
 #' @include om-class.R
 #' 

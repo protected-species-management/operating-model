@@ -2,7 +2,6 @@
 #' 
 #' @description Load empirical catch and abundance data into om object
 #' 
-#' @export
 #' 
 #' @include om-class.R
 #' 

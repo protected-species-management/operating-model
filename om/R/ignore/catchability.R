@@ -2,7 +2,6 @@
 #' 
 #' @description Calculate catchability using empirical abundance data and reconstructed exploitable biomass trajectory
 #' 
-#' @export
 #' 
 #' @include om-class.R
 #' 

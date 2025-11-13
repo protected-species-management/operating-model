@@ -8,7 +8,7 @@
 #'
 #{{{
 # constructor
-om <- function(ages, pdyn_function = .pdyn, ...) new('om', ages, pdyn_function, ...)
+om <- function(ages, pdyn_function = if (is.null(ages)) function() NA_real_ else .pdyn, ...) new('om', ages, pdyn_function, ...)
 #}}}
 #{
 # default population dynamics function

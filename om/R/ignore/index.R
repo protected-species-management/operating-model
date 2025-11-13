@@ -2,7 +2,6 @@
 #' 
 #' @description Generate simualated abundance index values
 #' 
-#' @export
 #' 
 #' @include om-class.R catchability.R biomass.R
 #' 

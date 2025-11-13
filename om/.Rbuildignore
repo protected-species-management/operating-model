@@ -3,3 +3,5 @@
 ^R/catchability.R
 ^R/index.R
 ^R/age_frequency.R
+^R/load_empirical_data.R
+^R/load_selectivity.R

@@ -2,7 +2,6 @@
 #' 
 #' @description Reconstruct biomass trajectory based on input data
 #' 
-#' @export
 #' 
 #' @include om-class.R
 #' 

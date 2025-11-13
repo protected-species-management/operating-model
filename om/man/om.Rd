@@ -4,7 +4,11 @@
 \alias{om}
 \title{Create \code{om-class} object}
 \usage{
-om(ages, pdyn_function = .pdyn, ...)
+om(
+  ages,
+  pdyn_function = if (is.null(ages)) function() NA_real_ else .pdyn,
+  ...
+)
 }
 \description{
 Initialise operating model class object

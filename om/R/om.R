@@ -4,7 +4,7 @@
 #' 
 #' @export
 #' 
-#' @include om-initialize.R
+#' @include om-class.R
 #'
 #{{{
 # constructor

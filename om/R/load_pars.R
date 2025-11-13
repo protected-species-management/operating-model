@@ -19,7 +19,7 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
                 x <- rep(x, object@iter)
             }
         }
-    }
+    })
     
     # assign
     object@pars <- value

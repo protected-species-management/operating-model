@@ -2,13 +2,14 @@
 % Please edit documentation in R/get_dim.R
 \name{get_dim}
 \alias{get_dim}
+\alias{get_values}
 \alias{get_dim.om}
-\title{get_dim}
+\title{Get dimensions and values stored in \code{\link{om-class}} object.}
 \usage{
 get_dim(object, ...)
 
 \method{get_dim}{om}(object, env = globalenv())
 }
 \description{
-Extract dimensions from object for use within a function call.
+Extract dimensions and/or values from object for use within a function call.
 }

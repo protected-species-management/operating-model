@@ -1,19 +1,19 @@
-#' @title Create \code{om-class} object
+#' @title Create \code{\link{om-class}} object
 #' 
 #' @description Initialise operating model class object
 #' 
 #' @export
-#' 
+#' @seealso [om-class]
 #' @include om-class.R
 #'
 #{{{
 # constructor
-om <- function(ages, pdyn_function = if (is.null(ages)) function() NA_real_ else .pdyn, ...) new('om', ages, pdyn_function, ...)
+om <- function(ages, pdyn_function = if (is.null(ages)) .logistic else .aspm, ...) new('om', ages, pdyn_function, ...)
 #}}}
-#{
-# default population dynamics function
+#{{{
+# default population dynamics functions
 # (can use any values returned by get_values() and get_dim())
-.pdyn <- function() {
+.aspm <- function() {
     
     n    <- array(dim = c(nages, ntime))
     bmat <- vector("numeric", length = ntime)
@@ -56,5 +56,25 @@ om <- function(ages, pdyn_function = if (is.null(ages)) function() NA_real_ else
     
     # return numbers at age
     return(array(n, dim = dim(n), dimnames = list(age = ages, time = time)))
+}
+
+.logistic <- function() {
+    
+    x    <- numeric(ntime)
+    x[1] <- 1
+    
+    for (t in 2:ntime) {
+        
+        x[t] <- x[t - 1] + rmax * x[t - 1] * (1 - x[t - 1]) - catch[t - 1] / K    
+    }
+    
+    # record catches and depletion
+    # in parent environment
+    assign('catch',                  catch, envir = parent.frame(1))
+    assign('depletion',                  x, envir = parent.frame(1))
+    assign('harvest_rate', catch / (x * K), envir = parent.frame(1))
+    
+    # return cohort aggregated numbers
+    return(array(x, dim = c(1, ntime), dimnames = list(age = NA_character_, time = time)))
 }
 #}

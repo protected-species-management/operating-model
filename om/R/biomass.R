@@ -37,9 +37,9 @@ setMethod("biomass", signature = "om",function(object, type, ...) {
     } else {
         
         for(i in 1:niter) {
-            biomass[['total']][,i]       <- n[,,i]
-            biomass[['mature']][,i]      <- n[,,i]
-            biomass[['exploitable']][,i] <- n[,,i]
+            biomass[['total']][,i]       <- n[1,,i]
+            biomass[['mature']][,i]      <- n[1,,i]
+            biomass[['exploitable']][,i] <- n[1,,i]
         }
     }
     

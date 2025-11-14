@@ -11,7 +11,7 @@ setGeneric("load_life_history", function(object, value, ...) standardGeneric("lo
 #{{ lhm object
 setMethod("load_life_history", signature = c("om", "lhm"), function(object, value, ...) {
     
-    if (!is.null(object@ages)) {
+    if (!any(is.na(object@ages))) {
         
         stopifnot(all(value@lhdat$F == 0))
         

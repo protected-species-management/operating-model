@@ -23,7 +23,17 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     get_dim(object, env = environment())
     
     # setup numbers array
-    n <- array(dim = c(nages, ntime, niter))
+    if (any(is.na(ages))) {
+        n <- array(dim = c(1, ntime, niter))
+    } else {
+        n <- array(dim = c(nages, ntime, niter))
+    }
+    
+    # arrays to record catch
+    # and depletion
+    x <- array(dim = c(ntime, niter))
+    y <- array(dim = c(ntime, niter))
+    z <- array(dim = c(ntime, niter))
     
     # iterate dynamics
     for(i in 1:niter) {
@@ -41,21 +51,44 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         # within function environment
         n[,,i] <- object@population_dynamics()
         
+        # record depletion
+        # (updated by function call)
+        x[,i] <- depletion
+        
+        # record catch
+        # (updated by function call)
+        y[,i] <- catch
+        
+        # record harvest_rate
+        # (updated by function call)
+        z[,i] <- harvest_rate
+        
         # calculate total numbers and PST
         # reference point
-        object@pst$numbers[,i] <- apply(n[,,i], 2, sum)
+        object@pst$numbers[,i] <- apply(n[,,i, drop = FALSE], 2, sum)
         object@pst$value[,i]   <- object@pst$phi * object@pst$rmax[i] * object@pst$numbers[,i] / 2
         
         # calculate diagnostics
-        # (catch > PST)
-        object@diagnostics$catch_pst[,i] <- object@fishing_inputs$catch[,i] > object@pst$value[,i]
-        
-        # (H > rmax / 2)
-        
+        # (catch)
+        object@diagnostics$catch[,i] <- y[,i]
+        # (catch)
+        object@diagnostics$depletion[,i] <- x[,i]
+        # (catch)
+        object@diagnostics$harvest_rate[,i] <- z[,i]
     }
     
-    dimnames(n) <- list(age = ages, time = time, iter = 1:niter)
+    # calculate objectives
+    object@objectives$catch        <- apply(sweep(object@diagnostics$catch,        2, object@targets$catch * (1 + 1e-4), '<='), 1, mean)
+    object@objectives$depletion    <- apply(sweep(object@diagnostics$depletion,    2, object@targets$depletion * (1 - 1e-3), '>='), 1, mean)
+    object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 2, object@targets$harvest_rate * (1 + 1e-7), '<='), 1, mean)
     
+    # dimnames (after calculations)
+    dimnames(n) <- list(age = ages, time = time, iter = 1:niter)
+    object@targets     <- lapply(object@targets,     function(x) { y <- data.frame(iter = 1:niter, value = x[1,]);  as_tibble(y) })
+    object@diagnostics <- lapply(object@diagnostics, function(x) { dimnames(x) <- list(time = time, iter = 1:niter);  y <- array2DF(x, responseName = "value"); y$iter <- as.integer(y$iter); y$time <- as.integer(y$time); as_tibble(y)})
+    object@objectives  <- lapply(object@objectives,  function(x) { y <- data.frame(time = time, value = x);  as_tibble(y) })
+    
+    # assign data
     object@.Data <- n
     
     return(object)

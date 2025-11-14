@@ -7,3 +7,30 @@
 \description{
 Operating model class definition.
 }
+\details{
+Each list entry in \code{life_history}, \code{fishery_inputs} and \code{pars} slots should be an array with \code{dim(x)[length(dim(x))] == iter} (i.e., length of the last dimension should be equal to the number of iterations).
+}
+\section{Slots}{
+
+\describe{
+\item{\code{ages}}{integer vector of ages assumed by operating model. Set to \code{NA} when a cohort aggregated model is assumed.}
+
+\item{\code{time}}{integer vector times used for operating model projection.}
+
+\item{\code{iter}}{integer value indicating number of stochastic iterations.}
+
+\item{\code{life_history}}{names list of life history inputs. See \code{\link{load_life_history}}.}
+
+\item{\code{fishery_inputs}}{named list of fishery inputs. See \code{\link{load_fishery_inputs}}.}
+
+\item{\code{pars}}{list of values used by the operating model. See \code{\link{load_pars}}.}
+
+\item{\code{population_dynamics}}{function containing the operating model. Can take any value stored in the \code{life_history}, \code{fishery_inputs} and \code{pars} slots.}
+
+\item{\code{pst}}{list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.}
+
+\item{\code{targets}}{list containing \code{catch}, \code{depletion} and \code{harvest_rate} target reference points. These should be set at the appropriate level for the operating model being assumed. See \code{load_targets}.}
+
+\item{\code{objectives}}{list containing probability values indicating whether management target has been reached (i.e., the realised objective values) for comparison with the probabilistic management objective.}
+}}
+

@@ -1,13 +1,17 @@
-#' @title Load parameters into \code{\link{om-class}} object. 
+#' @title Load targets into \code{\link{om-class}} object. 
 #' 
-#' @description Load parameters for use within the \code{\link{population_dynamics}} function.
-#' @param value named list object containing parameters
+#' @description Load management targets required for evaluation of PST reference point. These should be the Maximum Net Productivity Level (MNPL) and corresponding harvest rate and depletion values. 
+#' @param value named list object containing target reference points. List elements must be \code{catch}, \code{depletion} and \code{harvest_rate}.
+#' @details Targets are assumed to be known without error, including those derived from biological parameters (e.g., $$r$$ or $$H_{MNPL}$$). 
 #' 
 #' @include om-class.R
 #' @export
 #{{{
-setGeneric("load_pars", function(object, value, ...) standardGeneric("load_pars"))
-setMethod("load_pars", signature = c("om", "list"), function(object, value, ...) {
+setGeneric("load_targets", function(object, value, ...) standardGeneric("load_targets"))
+setMethod("load_targets", signature = c("om", "list"), function(object, value, ...) {
+    
+    # check that required targets are included
+    stopifnot(all(c("catch", "depletion", "harvest_rate") %in% names(value)))
     
     # match dimensions
     # to object@iter
@@ -31,12 +35,14 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
                 } else {
                     x <- matrix(rep(x, object@iter), ncol = object@iter)
                 }
+            } else {
+                x
             }
         }
     })
     
     # assign
-    object@pars <- value
+    object@targets <- value
     
     # return
     return(object)

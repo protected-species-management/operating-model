@@ -2,14 +2,13 @@
 % Please edit documentation in R/om.R
 \name{om}
 \alias{om}
-\title{Create \code{om-class} object}
+\title{Create \code{\link{om-class}} object}
 \usage{
-om(
-  ages,
-  pdyn_function = if (is.null(ages)) function() NA_real_ else .pdyn,
-  ...
-)
+om(ages, pdyn_function = if (is.null(ages)) .logistic else .aspm, ...)
 }
 \description{
 Initialise operating model class object
+}
+\seealso{
+[om-class]
 }

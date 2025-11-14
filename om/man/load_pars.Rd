@@ -10,5 +10,5 @@ load_pars(object, value, ...)
 \item{value}{named list object containing parameters}
 }
 \description{
-Load parameters for use within the \code{population_dynamics()} function.
+Load parameters for use within the \code{\link{population_dynamics}} function.
 }

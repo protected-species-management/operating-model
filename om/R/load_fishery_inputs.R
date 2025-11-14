@@ -25,16 +25,18 @@ setMethod("load_fishery_inputs", signature = c("om", "fim"), function(object, va
     }
     
     if (any(is.na(object@ages))) {
-        object@ages <- as.integer(value@ages)
+        if (!any(is.na(value@ages))) {
+            stop("attempting to apply age-based data to non-age-based model")
+        }
     } else {
-        if (any(object@ages != value@ages)) {
-            stop("'ages' does not match")
+        if (all(object@ages %in% value@ages) & all(value@ages %in% object@ages)) {
+            message("'ages' match")
         } else {
-            object@ages <- as.integer(value@ages)
+            stop("'ages' do not match")
         }
     }
     
-    if (is.na(object@time)) {
+    if (any(is.na(object@time))) {
         object@time <- as.integer(value@time)
     } else {
         if (any(object@time != value@time)) {
@@ -51,7 +53,7 @@ setMethod("load_fishery_inputs", signature = c("om", "fim"), function(object, va
     
     # add dimensions to 
     # diagnostics
-    object@diagnostics <- lapply(object@diagnostics, function() matrix(NA_real_, nrow = length(object@time), ncol = object@iter))
+    object@diagnostics <- lapply(object@diagnostics, function(x) matrix(NA_real_, nrow = length(object@time), ncol = object@iter))
     
 	# return    
     return(object)

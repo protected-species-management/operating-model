@@ -3,7 +3,8 @@
 #' @description Population dynamics function
 #' 
 #' @export
-#' 
+#' @importFrom tibble as_tibble
+#' @importFrom dplyr filter
 #' @include om-class.R
 #' 
 #{{{ pdyn()
@@ -65,8 +66,8 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         
         # calculate total numbers and PST
         # reference point
-        object@pst$numbers[,i] <- apply(n[,,i, drop = FALSE], 2, sum)
-        object@pst$value[,i]   <- object@pst$phi * object@pst$rmax[i] * object@pst$numbers[,i] / 2
+        #object@pst$numbers[,i] <- apply(n[,,i, drop = FALSE], 2, sum)
+        object@pst$value[,i] <- pst_value
         
         # calculate diagnostics
         # (catch)
@@ -84,6 +85,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     
     # dimnames (after calculations)
     dimnames(n) <- list(age = ages, time = time, iter = 1:niter)
+    
     object@targets     <- lapply(object@targets,     function(x) { y <- data.frame(iter = 1:niter, value = x[1,]);  as_tibble(y) })
     object@diagnostics <- lapply(object@diagnostics, function(x) { dimnames(x) <- list(time = time, iter = 1:niter);  y <- array2DF(x, responseName = "value"); y$iter <- as.integer(y$iter); y$time <- as.integer(y$time); as_tibble(y)})
     object@objectives  <- lapply(object@objectives,  function(x) { y <- data.frame(time = time, value = x);  as_tibble(y) })

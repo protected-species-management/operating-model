@@ -2,23 +2,21 @@
 #' 
 #' @description Load life-history data into \code{om-class} object from \code{lhm-class} object.
 #' 
-#' @import lhm
+#' @import lhmSimple
 #' 
 #' @include om-class.R
 #' @export
 #{{{ load life history data into om object
 setGeneric("load_life_history", function(object, value, ...) standardGeneric("load_life_history"))
-#{{ lhm object
-setMethod("load_life_history", signature = c("om", "lhm"), function(object, value, ...) {
+#{{ lhmSimple object
+setMethod("load_life_history", signature = c("om", "lhmSimple"), function(object, value, ...) {
     
     if (!any(is.na(object@ages))) {
-        
-        stopifnot(all(value@lhdat$F == 0))
         
         loc <- match(object@ages, value@ages)
         stopifnot(!any(is.na(loc)))
         
-        object@life_history <- lapply(value@lhdat, function(x) {
+        object@life_history <- lapply(value@.Data, function(x) {
             if (nrow(x) > 1) {
                 x[loc,]
             } else {
@@ -35,24 +33,40 @@ setMethod("load_life_history", signature = c("om", "lhm"), function(object, valu
             object@iter <- as.integer(value@iter)
         }
     }
-    
-    #if (any(is.na(object@ages))) {
-    #    object@ages <- as.integer(value@ages)
-    #} else {
-    #    if (any(object@ages != value@ages)) {
-    #        stop("'ages' does not match")
-    #    } else {
-    #        object@ages <- as.integer(value@ages)
-    #    }
-    #}
 	
 	# calculate rmax and 
     # add dimensions to 
     # reference point
-	object@pst$rmax    <- rCalc(value)@.Data
-	object@pst$numbers <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
-	object@pst$value   <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
+	object@pst$rmax  <- rCalc(value)@.Data
+	object@pst$value <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
 	
 	# return    
     return(object)
 })
+
+#{{ prior object
+setMethod("load_life_history", signature = c("om", "prior"), function(object, value, ...) {
+    
+    if (is.na(object@iter)) {
+        object@iter     <- as.integer(value@iter)
+        object@pst$rmax <- value@.Data
+    } else {
+        if (object@iter == value@iter) {
+            object@pst$rmax <- value@.Data
+        } else {
+            if (value@iter == 1) {
+                object@pst$rmax <- rep(value@.Data, object@iter)
+            } else {
+                stop("'iter' does not match")
+            }
+        }
+    }
+    
+    # add dimensions to 
+    # reference point
+    object@pst$value <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
+    
+    # return    
+    return(object)
+})
+

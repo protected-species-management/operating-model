@@ -2,9 +2,12 @@
 % Please edit documentation in R/load_targets.R
 \name{load_targets}
 \alias{load_targets}
+\alias{load_targets,om,list-method}
 \title{Load targets into \code{\link{om-class}} object.}
 \usage{
 load_targets(object, value, ...)
+
+\S4method{load_targets}{om,list}(object, value)
 }
 \arguments{
 \item{value}{named list object containing target reference points. List elements must be \code{catch}, \code{depletion} and \code{harvest_rate}.}

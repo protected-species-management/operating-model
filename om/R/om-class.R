@@ -54,7 +54,6 @@ setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time,
     # reference point
     .Object@pst$phi     <- 1
     .Object@pst$rmax    <- NA_real_
-    .Object@pst$numbers <- NA_real_
     .Object@pst$value   <- NA_real_
     
     # setup management
@@ -69,7 +68,7 @@ setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time,
     .Object@diagnostics$depletion    <- NA_real_
     .Object@diagnostics$harvest_rate <- NA_real_
     
-    # set up diagnostics
+    # set up objectives
     .Object@objectives$catch        <- NA_real_
     .Object@objectives$depletion    <- NA_real_
     .Object@objectives$harvest_rate <- NA_real_

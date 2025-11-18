@@ -17,14 +17,16 @@ Suggests:
     kableExtra (>= 1.3)
 Collate: 
     'om-class.R'
-    'biomass.R'
     'get_dim.R'
+    'accessors.R'
+    'biomass.R'
     'load_fishery_inputs.R'
     'load_life_history.R'
     'load_pars.R'
     'load_targets.R'
     'om.R'
     'pdyn.R'
+    'update_pars.R'
     'zzz.R'
 RoxygenNote: 7.3.3
 Encoding: UTF-8

@@ -8,7 +8,9 @@
 #' @export
 #{{{
 setGeneric("load_targets", function(object, value, ...) standardGeneric("load_targets"))
-setMethod("load_targets", signature = c("om", "list"), function(object, value, ...) {
+# assignment function
+#' @rdname load_targets
+setMethod("load_targets", signature = c("om", "list"), function(object, value) {
     
     # check that required targets are included
     stopifnot(all(c("catch", "depletion", "harvest_rate") %in% names(value)))
@@ -48,7 +50,6 @@ setMethod("load_targets", signature = c("om", "list"), function(object, value, .
     return(object)
 })
 #}}}
-
 
 
 

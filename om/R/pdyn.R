@@ -3,8 +3,6 @@
 #' @description Population dynamics function
 #' 
 #' @export
-#' @importFrom tibble as_tibble
-#' @importFrom dplyr filter
 #' @include om-class.R
 #' 
 #{{{ pdyn()
@@ -64,9 +62,8 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         # (updated by function call)
         z[,i] <- harvest_rate
         
-        # calculate total numbers and PST
+        # record PST
         # reference point
-        #object@pst$numbers[,i] <- apply(n[,,i, drop = FALSE], 2, sum)
         object@pst$value[,i] <- pst_value
         
         # calculate diagnostics
@@ -79,16 +76,15 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     }
     
     # calculate objectives
+    # (catch is less than that required to meet MNPL)
     object@objectives$catch        <- apply(sweep(object@diagnostics$catch,        2, object@targets$catch * (1 + 1e-4), '<='), 1, mean)
+    # (depletion is greater than the depletion at MNPL)
     object@objectives$depletion    <- apply(sweep(object@diagnostics$depletion,    2, object@targets$depletion * (1 - 1e-3), '>='), 1, mean)
+    # (harvest rate is less than that required to meet MNPL)
     object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 2, object@targets$harvest_rate * (1 + 1e-7), '<='), 1, mean)
     
     # dimnames (after calculations)
     dimnames(n) <- list(age = ages, time = time, iter = 1:niter)
-    
-    object@targets     <- lapply(object@targets,     function(x) { y <- data.frame(iter = 1:niter, value = x[1,]);  as_tibble(y) })
-    object@diagnostics <- lapply(object@diagnostics, function(x) { dimnames(x) <- list(time = time, iter = 1:niter);  y <- array2DF(x, responseName = "value"); y$iter <- as.integer(y$iter); y$time <- as.integer(y$time); as_tibble(y)})
-    object@objectives  <- lapply(object@objectives,  function(x) { y <- data.frame(time = time, value = x);  as_tibble(y) })
     
     # assign data
     object@.Data <- n

@@ -1,17 +1,18 @@
-#' @title Load parameters into \code{\link{om-class}} object. 
+#' @title Update parameters in \code{\link{om-class}} object. 
 #' 
-#' @description Load parameters for use within the \code{\link{population_dynamics}} function.
+#' @description Update parameters already loaded in \code{\link{om-class}} object for use within the \code{\link{population_dynamics}} function.
 #' @param value named list object containing parameters
-#' 
+#' @seealso [load_pars()]
 #' @include om-class.R
 #' @export
 #{{{
-setGeneric("load_pars", function(object, value, ...) standardGeneric("load_pars"))
-setMethod("load_pars", signature = c("om", "list"), function(object, value, ...) {
+setGeneric("update_pars", function(object, value, ...) standardGeneric("update_pars"))
+setMethod("update_pars", signature = c("om", "list"), function(object, value, ...) {
     
-    # match dimensions
-    # to object@iter
-    value <- lapply(value, function(x) {
+    # check names
+    lapply(names(value), function(a) stopifnot(a %in% names(object@pars)))
+
+    ff <- function(x) {
         if (is.null(dim(x))) {
             # vector
             if (length(x) < object@iter) {
@@ -34,10 +35,12 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
             }
         }
         return(x)
-    })
+    }
     
     # assign
-    object@pars <- value
+    for (i in 1:length(value)) {
+        object@pars[[which(names(object@pars) %in% names(value)[i])]] <- ff(value[[i]])
+    }
     
     # return
     return(object)

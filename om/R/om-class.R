@@ -22,7 +22,7 @@ setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'intege
 #}}}
 #{{{
 # initialisation function
-setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time, ...) {
+setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time, phi = 1, ...) {
     
     if(missing(pdyn_function) | missing(ages)) {
         .Object@population_dynamics <- function() NA_real_
@@ -52,7 +52,7 @@ setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time,
     
     # setup PST limit
     # reference point
-    .Object@pst$phi     <- 1
+    .Object@pst$phi     <- phi
     .Object@pst$rmax    <- NA_real_
     .Object@pst$value   <- NA_real_
     

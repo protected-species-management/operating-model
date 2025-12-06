@@ -77,11 +77,11 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     
     # calculate objectives
     # (catch is less than that required to meet MNPL)
-    object@objectives$catch        <- apply(sweep(object@diagnostics$catch,        2, object@targets$catch * (1 + 1e-4), '<='), 1, mean)
+    object@objectives$catch        <- apply(sweep(object@diagnostics$catch,        2, object@targets$catch, '<='), 1, mean, na.rm = TRUE)
     # (depletion is greater than the depletion at MNPL)
-    object@objectives$depletion    <- apply(sweep(object@diagnostics$depletion,    2, object@targets$depletion * (1 - 1e-3), '>='), 1, mean)
+    object@objectives$depletion    <- apply(sweep(object@diagnostics$depletion,    2, object@targets$depletion, '>='), 1, mean, na.rm = TRUE)
     # (harvest rate is less than that required to meet MNPL)
-    object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 2, object@targets$harvest_rate * (1 + 1e-7), '<='), 1, mean)
+    object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 2, object@targets$harvest_rate, '<='), 1, mean, na.rm = TRUE)
     
     # dimnames (after calculations)
     dimnames(n) <- list(age = ages, time = time, iter = 1:niter)

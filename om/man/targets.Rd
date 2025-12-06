@@ -2,12 +2,24 @@
 % Please edit documentation in R/accessors.R
 \name{targets}
 \alias{targets}
+\alias{diagnostics}
+\alias{pst}
+\alias{objectives}
 \alias{targets,om-method}
+\alias{diagnostics,om-method}
+\alias{pst,om-method}
+\alias{objectives,om-method}
 \title{Access outputs from \code{\link{om-class}} object.}
 \usage{
 targets(object, ...)
 
 \S4method{targets}{om}(object)
+
+\S4method{diagnostics}{om}(object)
+
+\S4method{pst}{om}(object)
+
+\S4method{objectives}{om}(object)
 }
 \arguments{
 \item{object}{\code{\link{om-class}} object.}

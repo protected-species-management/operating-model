@@ -1,6 +1,6 @@
 
 #' @title Access outputs from \code{\link{om-class}} object. 
-#' 
+#' @aliases targets diagnostics pst objectives
 #' @description Access outputs stored in \code{\link{om-class}} object following call to [pdyn()].
 #' @param object \code{\link{om-class}} object. 
 #' @importFrom tibble as_tibble
@@ -21,7 +21,7 @@ setMethod("targets", signature = c("om"), function(object) {
 #' @export
 setGeneric("diagnostics", function(object, ...) standardGeneric("diagnostics"))
 # accessor function
-#' @rdname diagnostics
+#' @rdname targets
 setMethod("diagnostics", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
@@ -32,7 +32,7 @@ setMethod("diagnostics", signature = c("om"), function(object) {
 #' @export
 setGeneric("pst", function(object, ...) standardGeneric("pst"))
 # accessor function
-#' @rdname pst
+#' @rdname targets
 setMethod("pst", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
@@ -45,7 +45,7 @@ setMethod("pst", signature = c("om"), function(object) {
 #' @export
 setGeneric("objectives", function(object, ...) standardGeneric("objectives"))
 # accessor function
-#' @rdname objectives
+#' @rdname targets
 setMethod("objectives", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: probability of reaching management target :::"))

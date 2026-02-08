@@ -3,11 +3,12 @@
 #' @description 
 #' Operating model class definition.
 #' @slot ages integer vector of ages assumed by operating model. Set to \code{NA} when a cohort aggregated model is assumed.
-#' @slot time integer vector times used for operating model projection.
+#' @slot time integer vector of times used for operating model projection or single value given the number of time steps.
 #' @slot iter integer value indicating number of stochastic iterations.
 #' @slot life_history names list of life history inputs. See \code{\link{load_life_history}}.
 #' @slot fishery_inputs named list of fishery inputs. See \code{\link{load_fishery_inputs}}.
-#' @slot pars list of values used by the operating model. See \code{\link{load_pars}}.
+#' @slot pars list of estimated values used by the operating model. See \code{\link{load_pars}}.
+#' @slot pars list of data values used by the operating model. See \code{\link{load_data}}.
 #' @slot population_dynamics function containing the operating model. Can take any value stored in the \code{life_history}, \code{fishery_inputs} and \code{pars} slots.
 #' @slot pst list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.
 #' @slot targets list containing \code{catch}, \code{depletion} and \code{harvest_rate} target reference points. These should be set at the appropriate level for the operating model being assumed. See \code{load_targets}.
@@ -18,7 +19,7 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', pars = 'list', fishery_inputs = 'list', life_history = 'list', population_dynamics = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
+setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', pars = 'list', data = 'list', fishery_inputs = 'list', life_history = 'list', population_dynamics = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
 #}}}
 #{{{
 # initialisation function
@@ -33,15 +34,19 @@ setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time,
     if (grepl("\\(i\\ ", deparse1(pdyn_function))) stop("'pdyn_function' cannot contain 'i' index")
     
     if(missing(iter)) {
-        .Object@iter <- NA_integer_
+        stop("'iter' is a required input")
     } else {
         .Object@iter <- iter
     }
     
     if(missing(time)) {
-        .Object@time <- NA_integer_
+        stop("'time' is a required input")
     } else {
-        .Object@time <- time
+        if (length(time) > 1) {
+            .Object@time <- time
+        } else {
+            .Object@time <- 1:time
+        }
     }
     
     if(missing(ages) | is.null(ages)) {
@@ -61,7 +66,7 @@ setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time,
     # (MNPL values)
     .Object@targets$catch        <- NA_real_
     .Object@targets$harvest_rate <- NA_real_
-    .Object@targets$depletion    <- 0.5
+    .Object@targets$depletion    <- NA_real_
     
     # set up diagnostics
     .Object@diagnostics$catch        <- NA_real_
@@ -72,6 +77,15 @@ setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time,
     .Object@objectives$catch        <- NA_real_
     .Object@objectives$depletion    <- NA_real_
     .Object@objectives$harvest_rate <- NA_real_
+    
+    # add dimensions to 
+    # reference point
+    #.Object@pst$numbers <- matrix(NA_real_, nrow = length(.Object@time), ncol = .Object@iter)
+    #.Object@pst$value   <- matrix(NA_real_, nrow = length(.Object@time), ncol = .Object@iter)
+    
+    # add dimensions to 
+    # diagnostics
+    #.Object@diagnostics <- lapply(.Object@diagnostics, function(x) matrix(NA_real_, nrow = length(.Object@time), ncol = .Object@iter))
     
     # return
     return(.Object)

@@ -15,7 +15,7 @@ Each list entry in \code{life_history}, \code{fishery_inputs} and \code{pars} sl
 \describe{
 \item{\code{ages}}{integer vector of ages assumed by operating model. Set to \code{NA} when a cohort aggregated model is assumed.}
 
-\item{\code{time}}{integer vector times used for operating model projection.}
+\item{\code{time}}{integer vector of times used for operating model projection or single value given the number of time steps.}
 
 \item{\code{iter}}{integer value indicating number of stochastic iterations.}
 
@@ -23,7 +23,9 @@ Each list entry in \code{life_history}, \code{fishery_inputs} and \code{pars} sl
 
 \item{\code{fishery_inputs}}{named list of fishery inputs. See \code{\link{load_fishery_inputs}}.}
 
-\item{\code{pars}}{list of values used by the operating model. See \code{\link{load_pars}}.}
+\item{\code{pars}}{list of estimated values used by the operating model. See \code{\link{load_pars}}.}
+
+\item{\code{pars}}{list of data values used by the operating model. See \code{\link{load_data}}.}
 
 \item{\code{population_dynamics}}{function containing the operating model. Can take any value stored in the \code{life_history}, \code{fishery_inputs} and \code{pars} slots.}
 

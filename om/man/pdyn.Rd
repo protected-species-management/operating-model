@@ -2,10 +2,10 @@
 % Please edit documentation in R/pdyn.R
 \name{pdyn}
 \alias{pdyn}
-\title{pdyn}
+\title{Population dynamics function}
 \usage{
 pdyn(object, ...)
 }
 \description{
-Population dynamics function
+The population dynamics function is called per-iteration.
 }

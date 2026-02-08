@@ -10,5 +10,5 @@ load_fishery_inputs(object, value, ...)
 Load fishery inputs data into \code{om-class} object from \code{fim-class} object. Checks ensure that 'iter', 'time' and 'ages' arguments match.
 }
 \details{
-The \code{fim-class} object can store any relevant information necessary for the operating model projection. These values are accessible within the \code{populations_dynamics} function stored in the \code{om-class} object.
+The \code{fim-class} object can store any relevant information necessary for the operating model projection. Once loaded, these values are accessible within the \code{populations_dynamics} function stored in the \code{om-class} object.
 }

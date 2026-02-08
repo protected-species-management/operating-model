@@ -7,5 +7,8 @@
 load_life_history(object, value, ...)
 }
 \description{
-Load life-history data into \code{om-class} object from \code{lhm-class} object.
+Load life-history data into \code{om-class} object from \code{lhmSimple-class} object. If required, the maximum intrinsic growth is calculated.
+}
+\details{
+The \code{lhmSimple-class} object can store any relevant information necessary for the operating model projection. Once loaded, these values are accessible within the \code{populations_dynamics} function stored in the \code{om-class} object.
 }

@@ -23,10 +23,10 @@ Suggests:
     kableExtra (>= 1.3),
     bslib (>= 0.0)
 Collate: 
+    'array2dfr.R'
     'om-class.R'
     'get_dim.R'
     'accessors.R'
-    'array2dfr.R'
     'biomass.R'
     'load_data.R'
     'load_fishery_inputs.R'
@@ -35,6 +35,7 @@ Collate:
     'load_targets.R'
     'om.R'
     'pdyn.R'
+    'rp.R'
     'update_pars.R'
     'run_mnpl.R'
     'zzz.R'

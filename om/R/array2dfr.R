@@ -2,6 +2,7 @@
 #' @param object \code{array} class object
 #' @param value_to column header for array value
 #' @param dim.names list of dimension names
+#' @importFrom tibble as_tibble
 #' @export
 array2dfr <- function(object, value_to = "value", dim.names = list()) {
     
@@ -14,5 +15,5 @@ array2dfr <- function(object, value_to = "value", dim.names = list()) {
     class(object[,which(grepl("iter", colnames(object)))]) <- "integer"
     
     # return
-    return(object)
+    return(as_tibble(object))
 }

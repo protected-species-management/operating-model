@@ -151,7 +151,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     
     # PST
     object@pst$r     <- apply(post, 1, \(x) obj$report(x)$r)
-    object@pst$value <- apply(post, 1, \(x) obj$report(x)$pst) |> t() %>% array2dfr(dim.names = list(iteration = 1:object@iter, time = object@time))
+    object@pst$value <- apply(post, 1, \(x) obj$report(x)$pst) |> t() #%>% array2dfr(dim.names = list(iteration = 1:object@iter, time = object@time))
     
     # diagnostics
     # (catch)
@@ -166,9 +166,9 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     # (catch)
     object@targets$catch <- apply(post, 1, \(x) obj$report(x)$target_catch) 
     # (depletion)
-    object@targets$depletion <- apply(post, 1, \(x) obj$report(x)$target_depletion) #|> t() %>% array2dfr(dim.names = list(iteration = 1:object@iter, time = object@time))
+    object@targets$depletion <- apply(post, 1, \(x) obj$report(x)$target_depletion)
     # (harvest rate)
-    object@targets$harvest_rate <- apply(post, 1, \(x) obj$report(x)$target_harvest_rate)# |> t() %>% array2dfr(dim.names = list(iteration = 1:object@iter, time = object@time))
+    object@targets$harvest_rate <- apply(post, 1, \(x) obj$report(x)$target_harvest_rate)
     
     
     # calculate objectives

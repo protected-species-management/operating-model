@@ -5,6 +5,7 @@
 \alias{get_values}
 \alias{get_dim.om}
 \alias{get_values.om}
+\alias{get_data.om}
 \title{Get dimensions and values stored in \code{\link{om-class}} object.}
 \usage{
 get_dim(object, ...)
@@ -12,6 +13,8 @@ get_dim(object, ...)
 \method{get_dim}{om}(object, env)
 
 \method{get_values}{om}(object, iter = 1, env)
+
+\method{get_data}{om}(object, env)
 }
 \description{
 Extract dimensions and/or values from object for use within a function call.

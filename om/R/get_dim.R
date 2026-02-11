@@ -47,3 +47,18 @@ get_values.om <- function(object, iter = 1, env) {
     
     invisible()
 }
+#' @export
+get_data <- function(object, ...) UseMethod("get_data")
+#' @rdname get_dim
+#' @export
+get_data.om <- function(object, env) {
+    
+    if (is.environment(env)) {
+        lapply(names(object@data), function(x) assign(x, slot(get("object"), "data")[[x]], envir = env))
+    } else {
+        warning("not a valid environment!")    
+    }
+    
+    invisible()
+}
+

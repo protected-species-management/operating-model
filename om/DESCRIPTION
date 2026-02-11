@@ -35,6 +35,8 @@ Collate:
     'load_targets.R'
     'om.R'
     'pdyn.R'
+    'prior-class.R'
+    'prior.R'
     'rp.R'
     'update_pars.R'
     'run_mnpl.R'

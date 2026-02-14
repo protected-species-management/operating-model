@@ -3,9 +3,11 @@
 #' Calculate the stochastic Maximum Net Productivity reference points.
 #' 
 #' @export
-#' @include om-class.R
+#' @include om-class.R distribution-class.R distribution.R sample.distribution.R
 #' @import RTMB
 #' @import tmbstan
+#' @import cli
+#' @importFrom glue glue
 #{{{ rp()
 # wrapper for execution of function
 setGeneric("rp", function(object, ...) standardGeneric("rp"))
@@ -30,19 +32,28 @@ setMethod("rp", signature = "om", function(object, ...) {
         n <- array(dim = c(nages, ntime, niter))
     }
     
+    # reset targets
+    # (catch)
+    object@targets$catch <- c()
+    # (depletion)
+    object@targets$depletion <- c()
+    # (harvest rate)
+    object@targets$harvest_rate <- c()
+    
     # error term
     sigmap <- sqrt(log(1 + object@data$cv_dynamics^2))
     
     # accessor functions
-    get_r <- function() exp(get("pars", envir = ENV)[1])
-    get_K <- function() exp(get("pars", envir = ENV)[2])
-    get_p <- function()     get("pars", envir = ENV)[3]
+    get_K <- function() exp(get("pars", envir = ENV)[1])
+    get_r <- function() exp(get("pars", envir = ENV)[2])
     
     get_process_error <- function() get("perr", envir = ENV)
     
     # initial values
-    perr <- matrix(rnorm(object@data$equ_time * object@data$n_iter, 0 - (sigmap^2) / 2, sigmap), nrow = object@data$n_iter, ncol = object@data$equ_time)
-    pars <- c(object@pars$log_r$pars[1], mean(object@pars$log_K$pars), object@data$shape)
+    # (process error)
+    perr <- matrix(rnorm(object@data$equ_time * object@data$equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = object@data$equ_iter, ncol = object@data$equ_time)
+    # (parameter values - check order)
+    pars <- unlist(lapply(object@pars, sample, n = 1))
     
     # AD objective function
     obj_fun <- function(x) { 
@@ -54,91 +65,111 @@ setMethod("rp", signature = "om", function(object, ...) {
         # inputs
         r <- DataEval(get_r)
         K <- DataEval(get_K)
-        p <- DataEval(get_p)
+        p <- object@data$shape
         e <- DataEval(get_process_error)
         
         # AD matrix
-        b <- AD(matrix(nrow = object@data$n_iter, ncol = object@data$equ_time))
+        b <- AD(matrix(nrow = object@data$equ_iter, ncol = object@data$equ_time))
         
         # dynamics
-        for (i in 1:object@data$n_iter) {
+        for (i in 1:object@data$equ_iter) {
             b[i,1] <- (K * (1 / (p + 1))^(1 / p)) * exp(e[i,1])
             for (j in 2:object@data$equ_time) {
                 b[i,j] <- (b[i, j - 1] + r / p * b[i, j - 1] * (1 - (b[i, j - 1] / K)^p) - h * b[i, j - 1]) * exp(e[i,j])  
             }
         }
         
-        # catch
-        catch <- mean(b[,object@data$equ_time] * h)
+        # mean equilibrium catch
+        # over most recent 10%
+        # of the projection period
+        recent_time <- ceiling(0.9 * object@data$equ_time):object@data$equ_time
+        catch <- mean(b[,recent_time] * h)
         
         # return catch with penalty if
-        # harvest rate is greater than r / 2
-        return(-1 * catch + max(x - log(r / 2), 0))
+        # harvest rate is greater than 
+        # deterministic rate
+        return(-1 * catch + max(x - log(r / (p + 1)), 0))
     }
+    
+    cli_progress_message("Compiling model...")
     
     # initialise with 
-    # parameter values
-    #g <- MakeTape(obj_fun, c(object@pars$log_r - log(2), object@pars$log_r, object@pars$log_K, object@data$shape))
-    message("Compiling model...")
-    g <- MakeTape(obj_fun, object@pars$log_r$pars[1] - log(2) - 1)
-    # get minimum over
-    # first argument
+    # parameter value
+    g <- MakeTape(obj_fun, object@pars$log_r@pars[1] - log(object@data$shape + 1))
+    # function to 
+    # estimate minimum
+    # over first argument
     # (harvest rate)
     ff <- g$newton(1)
-    # return value at minimum
-    #ff(numeric())
-    
-    
-    
-    #object_data   <- object@data
-    #object_data$r <- exp(object@pars$log_r)
-    #object_data$K <- exp(object@pars$log_K)
-    #    
-    #object_pars <- object@pars
-    #object_pars$log_K <- NULL
-    #object_pars$log_r <- NULL
-    
-    #input_vector <- c(exp(object@pars$log_r), exp(object@pars$log_K), object@data$shape, rnorm(equ_time * n_iter, 0 - (sigmap^2) / 2, sigmap))
-    
-    # iterate
-    #values1 <- c()
-    #values2 <- c()
-    #svalues <- seq(0.01, 0.2, length = 101)
-    message("Estimating the harvest rate at MNPL")
-    pb <- txtProgressBar(min = 0, max = object@data$n_iter, style = 3, width = 50, char = "=")
-    
-    iter <- 0
-    
-    values <- c()
-    
-    for (i in 1:object@data$n_iter) {
+
+    msg <- ""
+    cli_progress_step("Estimating the harvest rate at MNPL{msg}", spinner = TRUE, msg_done = "Estimated MNPL reference points")
+
+    for (i in 1:object@iter) {
+        
+        # progress iteration
+        msg <- glue(", iteration {i}/", object@iter)
+        
+        # spin spinner
+        cli_progress_update()
         
         # sample
-        perr    <- matrix(rnorm(object@data$equ_time * object@data$n_iter, 0 - (sigmap^2) / 2, sigmap), nrow = object@data$n_iter, ncol = object@data$equ_time)
-        pars[1] <- rnorm(1, object@pars$log_r$pars[1] - (object@pars$log_r$pars[2]^2) / 2, object@pars$log_r$pars[2])
+        perr <- matrix(rnorm(object@data$equ_time * object@data$equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = object@data$equ_iter, ncol = object@data$equ_time)
+        pars <- unlist(lapply(object@pars, sample, n = 1))
+
+        # minimise
+        h_mnpl <- exp(ff(numeric()))
         
-        values <- c(values, ff(numeric()))
+        # spin spinner
+        cli_progress_update()
         
-        # progress bar
-        iter <- iter + 1
-        setTxtProgressBar(pb, iter)
+        # project under harvest rate
+        # at MNPL
+        # {{{
+        b <- matrix(nrow = object@data$equ_iter, ncol = object@data$equ_time)
+        
+        # dynamics
+        for (i in 1:object@data$equ_iter) {
+            b[i,1] <- (exp(pars[1]) * (1 / (object@data$shape + 1))^(1 / object@data$shape)) * exp(perr[i,1])
+            for (j in 2:object@data$equ_time) {
+                b[i,j] <- (b[i, j - 1] + exp(pars[2]) / object@data$shape * b[i, j - 1] * (1 - (b[i, j - 1] / exp(pars[1]))^object@data$shape) - h_mnpl * b[i, j - 1]) * exp(perr[i,j])  
+            }
+        }
+        #}}}
+        
+        # spin spinner
+        cli_progress_update()
+        
+        # update targets
+        recent_time <- ceiling(0.9 * object@data$equ_time):object@data$equ_time
+        # (catch)
+        object@targets$catch <- c(object@targets$catch, mean(b[,recent_time] * h_mnpl))
+        # (depletion)
+        object@targets$depletion <- c(object@targets$depletion, mean(b[,recent_time] / exp(pars[1]))) 
+        # (harvest rate)
+        object@targets$harvest_rate <- c(object@targets$harvest_rate, h_mnpl)
+        
+        # spin spinner
+        cli_progress_update()
     }
-    close(pb)
     
-    windows()
-    hist(values); abline(v = c(mean(values), object@pars$log_r$pars[1] - log(2)), lty = c(1,2))
+    # plot relative to
+    # deterministic
+    # equivalents
+    #windows(width = 21)
+    #par(mfrow = c(1,3))
+    #hist(object@targets$harvest_rate); abline(v = c(mean(object@targets$harvest_rate), object@pars$log_r$pars[1] - log(object@data$shape + 1)), lty = c(1,2))
+    #hist(object@targets$catch);
+    #hist(object@targets$depletion);
     
-    message("Done!")
-    
-    # targets
-    # (catch)
-    object@targets$catch <- rep(NA_real_, length(values)) 
+    # create distributions
+    object@targets$catch <- distribution(list(value = object@targets$catch, distribution = "lognormal"))
     # (depletion)
-    object@targets$depletion <- rep(NA_real_, length(values)) 
+    object@targets$depletion <- distribution(list(value = object@targets$depletion, distribution = "lognormal"))
     # (harvest rate)
-    object@targets$harvest_rate <- values
+    object@targets$harvest_rate <- distribution(list(value = object@targets$harvest_rate, distribution = "lognormal"))
     
-    
+    # return
     return(object)
 })
 #}}}

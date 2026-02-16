@@ -9,7 +9,7 @@
 #' @slot fishery_inputs named list of fishery inputs. See \code{\link{load_fishery_inputs}}.
 #' @slot pars list of estimated values used by the operating model. See \code{\link{load_pars}}.
 #' @slot pars list of data values used by the operating model. See \code{\link{load_data}}.
-#' @slot population_dynamics function containing the operating model. Can take any value stored in the \code{life_history}, \code{fishery_inputs} and \code{pars} slots.
+#' @slot harvest_rate function containing the harvest rate function.
 #' @slot pst list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.
 #' @slot targets list containing \code{catch}, \code{depletion} and \code{harvest_rate} target reference points. These should be set at the appropriate level for the operating model being assumed. See \code{load_targets}.
 #' @slot objectives list containing probability values indicating whether management target has been reached (i.e., the realised objective values) for comparison with the probabilistic management objective. 
@@ -19,19 +19,19 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', pars = 'list', data = 'list', fishery_inputs = 'list', life_history = 'list', population_dynamics = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
+setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', pars = 'list', data = 'list', fishery_inputs = 'list', life_history = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
 #}}}
 #{{{
 # initialisation function
-setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time, phi = 1, ...) {
+setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, time, phi = 1, ...) {
     
-    if(missing(pdyn_function) | missing(ages)) {
-        .Object@population_dynamics <- function() NA_real_
+    if(missing(harvest_function) | missing(ages)) {
+        .Object@harvest_rate <- function() NA_real_
     } else {
-        .Object@population_dynamics <- pdyn_function
+        .Object@harvest_rate <- harvest_function
     }
     
-    if (grepl("\\(i\\ ", deparse1(pdyn_function))) stop("'pdyn_function' cannot contain 'i' index")
+    if (!grepl("object", deparse1(harvest_function))) stop("'harvest_function' must contain 'object' as its first argument")
     
     if(missing(iter)) {
         stop("'iter' is a required input")
@@ -105,8 +105,10 @@ setMethod("show", "om",
               message("fishery_inputs: ", if (length(object@fishery_inputs) > 0)  paste0(names(object@fishery_inputs), collapse = ", ") else red("EMPTY"))
               message("life_history: ", if (length(object@life_history) > 0)  paste0(names(object@life_history), collapse = ", ") else red("EMPTY"))
               message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
-              message("\npopulation dynamics function:")
-              message(writeLines(deparse(object@population_dynamics)))
+              message("\nharvest rate function:")
+              message(writeLines(deparse(object@harvest_rate)))
+              message("\nrmax:")
+              distribution(list(value = om_object@pst$rmax, distribution = "lognormal"))
               message("population dynamics:")
               print(object@.Data)
           })

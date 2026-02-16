@@ -45,8 +45,8 @@ setMethod("load_life_history", signature = c("om", "lhmSimple"), function(object
     return(object)
 })
 
-#{{ prior object
-setMethod("load_life_history", signature = c("om", "prior"), function(object, value, ...) {
+#{{ distribution object
+setMethod("load_life_history", signature = c("om", "distribution"), function(object, value, ...) {
     
     if (is.na(object@iter)) {
         object@iter     <- as.integer(value@iter)
@@ -65,7 +65,7 @@ setMethod("load_life_history", signature = c("om", "prior"), function(object, va
     
     # add dimensions to 
     # reference point
-    object@pst$value <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
+    #object@pst$value <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
     
     # return    
     return(object)

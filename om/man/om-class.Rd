@@ -27,7 +27,7 @@ Each list entry in \code{life_history}, \code{fishery_inputs} and \code{pars} sl
 
 \item{\code{pars}}{list of data values used by the operating model. See \code{\link{load_data}}.}
 
-\item{\code{population_dynamics}}{function containing the operating model. Can take any value stored in the \code{life_history}, \code{fishery_inputs} and \code{pars} slots.}
+\item{\code{harvest_rate}}{function containing the harvest rate function.}
 
 \item{\code{pst}}{list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.}
 

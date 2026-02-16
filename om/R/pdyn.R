@@ -16,6 +16,11 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     # current environment
     ENV <- environment()
     
+    # make sure harvest rate
+    # function has correct
+    # environment
+    environment(object@harvest_rate) <- ENV
+    
     # load time, age and
     # iteration dimensions
     # into function environment
@@ -34,11 +39,6 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     # error term
     sigmap <- sqrt(log(1 + object@data$cv_dynamics^2))
     
-    harvest_rate <- function(object, i) {
-        
-        object@targets$harvest_rate[i]
-    }
-    
     # setup diagnostics
     # (catch)
     object@diagnostics$catch <- matrix(NA_real_, nrow = iter, ncol = ntime)
@@ -47,10 +47,17 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     # (harvest rate)
     object@diagnostics$harvest_rate <- matrix(NA_real_, nrow = iter, ncol = ntime)
     
+    # pst
+    object@pst$value <- matrix(NA_real_, nrow = iter, ncol = ntime)
+    
+    # progress
     msg <- ""
     cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
     
     for (i in 1:niter) {
+        
+        # spin spinner
+        cli_progress_update()
         
         # set seed
         set.seed(rng_seed[i])
@@ -84,7 +91,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             
             for (k in 2:ntime) {
                 
-                h[j, k - 1] <- harvest_rate(object, i)
+                h[j, k - 1] <- object@harvest_rate(object, i)
                 
                 b[j, k] <- (b[j, k - 1] + r / p * b[j, k - 1] * (1 - (b[j, k - 1] / K)^p) - h[j, k - 1] * b[j, k - 1]) * exp(perr[j, k])  
             }
@@ -104,6 +111,12 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         
         # spin spinner
         cli_progress_update()
+        
+        # population
+        n[1, i, ] <- apply(b, 2, mean)
+        
+        # pst
+        object@pst$value[i, ] <- (1 / 2) * object@pst$phi * object@pst$rmax[i] * apply(b, 2, mean)
     }
 
     # calculate objectives as the probability

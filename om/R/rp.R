@@ -129,8 +129,8 @@ setMethod("rp", signature = "om", function(object, ...) {
         perr <- matrix(rnorm(equ_time * equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = equ_iter, ncol = equ_time)
         pars <- unlist(lapply(object@pars, sample, n = 1))
 
-        # estimate h_mnpl per
-        # monte-carlo sample
+        # estimate stochastic h_mnpl
+        # per monte-carlo sample
         h_mnpl <- exp(ff(numeric()))
         
         # spin spinner
@@ -146,7 +146,9 @@ setMethod("rp", signature = "om", function(object, ...) {
         
         # dynamics
         for (j in 1:equ_iter) {
+            
             b[j, 1] <- (K * (1 / (p + 1))^(1 / p)) * exp(perr[j, 1])
+            
             for (k in 2:equ_time) {
                 b[j, k] <- (b[j, k - 1] + r / p * b[j, k - 1] * (1 - (b[j, k - 1] / K)^p) - h_mnpl * b[j, k - 1]) * exp(perr[j, k])  
             }
@@ -168,23 +170,6 @@ setMethod("rp", signature = "om", function(object, ...) {
         # spin spinner
         cli_progress_update()
     }
-    
-    # plot relative to
-    # deterministic
-    # equivalents
-    #windows(width = 21)
-    #par(mfrow = c(1,3))
-    #hist(object@targets$harvest_rate); abline(v = c(mean(object@targets$harvest_rate), object@pars$log_r$pars[1] - log(object@data$shape + 1)), lty = c(1,2))
-    #hist(object@targets$catch);
-    #hist(object@targets$depletion);
-    
-    # create distributions
-    # (catch)
-    #object@targets$catch <- distribution(list(value = object@targets$catch, distribution = "lognormal"))
-    # (depletion)
-    #object@targets$depletion <- distribution(list(value = object@targets$depletion, distribution = "lognormal"))
-    # (harvest rate)
-    #object@targets$harvest_rate <- distribution(list(value = object@targets$harvest_rate, distribution = "lognormal"))
     
     # return
     return(object)

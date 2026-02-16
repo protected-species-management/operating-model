@@ -34,6 +34,7 @@ Collate:
     'load_fishery_inputs.R'
     'load_life_history.R'
     'load_pars.R'
+    'load_rmax.R'
     'load_targets.R'
     'om.R'
     'pdyn.R'

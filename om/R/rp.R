@@ -5,7 +5,6 @@
 #' @export
 #' @include om-class.R distribution-class.R distribution.R sample.distribution.R
 #' @import RTMB
-#' @import tmbstan
 #' @import cli
 #' @importFrom glue glue
 #{{{ rp()
@@ -23,13 +22,15 @@ setMethod("rp", signature = "om", function(object, ...) {
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, env = environment())
+    get_dim(object, env = ENV)
+    
+    get_data(object, env = ENV)
     
     # setup numbers array
     if (any(is.na(ages))) {
-        n <- array(dim = c(1, ntime, niter))
+        n <- array(dim = c(1, niter, ntime))
     } else {
-        n <- array(dim = c(nages, ntime, niter))
+        n <- array(dim = c(nages, niter, ntime))
     }
     
     # reset targets
@@ -41,17 +42,17 @@ setMethod("rp", signature = "om", function(object, ...) {
     object@targets$harvest_rate <- c()
     
     # error term
-    sigmap <- sqrt(log(1 + object@data$cv_dynamics^2))
+    sigmap <- sqrt(log(1 + cv_dynamics^2))
     
     # accessor functions
     get_K <- function() exp(get("pars", envir = ENV)[1])
     get_r <- function() exp(get("pars", envir = ENV)[2])
     
-    get_process_error <- function() get("perr", envir = ENV)
+    get_perr <- function() get("perr", envir = ENV)
     
     # initial values
     # (process error)
-    perr <- matrix(rnorm(object@data$equ_time * object@data$equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = object@data$equ_iter, ncol = object@data$equ_time)
+    perr <- matrix(rnorm(equ_time * equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = equ_iter, ncol = equ_time)
     # (parameter values - check order)
     pars <- unlist(lapply(object@pars, sample, n = 1))
     
@@ -62,28 +63,32 @@ setMethod("rp", signature = "om", function(object, ...) {
         # value
         h <- exp(x)
 
+        # fixed input
+        p <- shape
+
+        # monte-carlo
         # inputs
         r <- DataEval(get_r)
         K <- DataEval(get_K)
-        p <- object@data$shape
-        e <- DataEval(get_process_error)
+        e <- DataEval(get_perr)
         
         # AD matrix
-        b <- AD(matrix(nrow = object@data$equ_iter, ncol = object@data$equ_time))
+        b <- AD(matrix(nrow = equ_iter, ncol = equ_time))
         
+        # stochastic 
         # dynamics
-        for (i in 1:object@data$equ_iter) {
-            b[i,1] <- (K * (1 / (p + 1))^(1 / p)) * exp(e[i,1])
-            for (j in 2:object@data$equ_time) {
-                b[i,j] <- (b[i, j - 1] + r / p * b[i, j - 1] * (1 - (b[i, j - 1] / K)^p) - h * b[i, j - 1]) * exp(e[i,j])  
+        for (i in 1:equ_iter) {
+            b[i, 1] <- (K * (1 / (p + 1))^(1 / p)) * exp(e[i, 1])
+            for (j in 2:equ_time) {
+                b[i, j] <- (b[i, j - 1] + r / p * b[i, j - 1] * (1 - (b[i, j - 1] / K)^p) - h * b[i, j - 1]) * exp(e[i, j])  
             }
         }
         
         # mean equilibrium catch
         # over most recent 10%
         # of the projection period
-        recent_time <- ceiling(0.9 * object@data$equ_time):object@data$equ_time
-        catch <- mean(b[,recent_time] * h)
+        recent_time <- ceiling(0.9 * equ_time):equ_time
+        catch <- mean(b[, recent_time] * h)
         
         # return catch with penalty if
         # harvest rate is greater than 
@@ -91,6 +96,7 @@ setMethod("rp", signature = "om", function(object, ...) {
         return(-1 * catch + max(x - log(r / (p + 1)), 0))
     }
     
+    # progress message
     cli_progress_message("Compiling model...")
     
     # initialise with 
@@ -102,22 +108,29 @@ setMethod("rp", signature = "om", function(object, ...) {
     # (harvest rate)
     ff <- g$newton(1)
 
+    # progress message
     msg <- ""
     cli_progress_step("Estimating the harvest rate at MNPL{msg}", spinner = TRUE, msg_done = "Estimated MNPL reference points")
 
-    for (i in 1:object@iter) {
+    # loop over monte-carlo
+    # samples
+    for (i in 1:niter) {
+        
+        # set seed
+        set.seed(rng_seed[i])
         
         # progress iteration
-        msg <- glue(", iteration {i}/", object@iter)
+        msg <- glue(", iteration {i}/", niter)
         
         # spin spinner
         cli_progress_update()
         
         # sample
-        perr <- matrix(rnorm(object@data$equ_time * object@data$equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = object@data$equ_iter, ncol = object@data$equ_time)
+        perr <- matrix(rnorm(equ_time * equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = equ_iter, ncol = equ_time)
         pars <- unlist(lapply(object@pars, sample, n = 1))
 
-        # minimise
+        # estimate h_mnpl per
+        # monte-carlo sample
         h_mnpl <- exp(ff(numeric()))
         
         # spin spinner
@@ -126,13 +139,16 @@ setMethod("rp", signature = "om", function(object, ...) {
         # project under harvest rate
         # at MNPL
         # {{{
-        b <- matrix(nrow = object@data$equ_iter, ncol = object@data$equ_time)
+        b <- matrix(nrow = equ_iter, ncol = equ_time)
+        K <- exp(pars[1])
+        r <- exp(pars[2])
+        p <- shape
         
         # dynamics
-        for (i in 1:object@data$equ_iter) {
-            b[i,1] <- (exp(pars[1]) * (1 / (object@data$shape + 1))^(1 / object@data$shape)) * exp(perr[i,1])
-            for (j in 2:object@data$equ_time) {
-                b[i,j] <- (b[i, j - 1] + exp(pars[2]) / object@data$shape * b[i, j - 1] * (1 - (b[i, j - 1] / exp(pars[1]))^object@data$shape) - h_mnpl * b[i, j - 1]) * exp(perr[i,j])  
+        for (j in 1:equ_iter) {
+            b[j, 1] <- (K * (1 / (p + 1))^(1 / p)) * exp(perr[j, 1])
+            for (k in 2:equ_time) {
+                b[j, k] <- (b[j, k - 1] + r / p * b[j, k - 1] * (1 - (b[j, k - 1] / K)^p) - h_mnpl * b[j, k - 1]) * exp(perr[j, k])  
             }
         }
         #}}}
@@ -141,11 +157,11 @@ setMethod("rp", signature = "om", function(object, ...) {
         cli_progress_update()
         
         # update targets
-        recent_time <- ceiling(0.9 * object@data$equ_time):object@data$equ_time
+        recent_time <- ceiling(0.9 * equ_time):equ_time
         # (catch)
-        object@targets$catch <- c(object@targets$catch, mean(b[,recent_time] * h_mnpl))
+        object@targets$catch <- c(object@targets$catch, mean(b[, recent_time] * h_mnpl))
         # (depletion)
-        object@targets$depletion <- c(object@targets$depletion, mean(b[,recent_time] / exp(pars[1]))) 
+        object@targets$depletion <- c(object@targets$depletion, mean(b[, recent_time] / K)) 
         # (harvest rate)
         object@targets$harvest_rate <- c(object@targets$harvest_rate, h_mnpl)
         
@@ -163,11 +179,12 @@ setMethod("rp", signature = "om", function(object, ...) {
     #hist(object@targets$depletion);
     
     # create distributions
-    object@targets$catch <- distribution(list(value = object@targets$catch, distribution = "lognormal"))
+    # (catch)
+    #object@targets$catch <- distribution(list(value = object@targets$catch, distribution = "lognormal"))
     # (depletion)
-    object@targets$depletion <- distribution(list(value = object@targets$depletion, distribution = "lognormal"))
+    #object@targets$depletion <- distribution(list(value = object@targets$depletion, distribution = "lognormal"))
     # (harvest rate)
-    object@targets$harvest_rate <- distribution(list(value = object@targets$harvest_rate, distribution = "lognormal"))
+    #object@targets$harvest_rate <- distribution(list(value = object@targets$harvest_rate, distribution = "lognormal"))
     
     # return
     return(object)

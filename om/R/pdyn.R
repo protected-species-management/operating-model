@@ -13,174 +13,112 @@
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
 setMethod("pdyn", signature = "om", function(object, ...) {
     
-    # check environment for function call is
-    # consistent with current environment
-    environment(object@population_dynamics) <- environment()
+    # current environment
+    ENV <- environment()
     
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, env = environment())
+    get_dim(object, env = ENV)
+    
+    # get data
+    get_data(object, env = ENV)
     
     # setup numbers array
     if (any(is.na(ages))) {
-        n <- array(dim = c(1, ntime, niter))
+        n <- array(dim = c(1, niter, ntime))
     } else {
-        n <- array(dim = c(nages, ntime, niter))
+        n <- array(dim = c(nages, niter, ntime))
     }
     
-    # function for generating
-    # mc realisations of the
-    # operating model
-    rng <- function(a, cv) {
-        exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+    # error term
+    sigmap <- sqrt(log(1 + object@data$cv_dynamics^2))
+    
+    harvest_rate <- function(object, i) {
+        
+        object@targets$harvest_rate[i]
     }
     
-    pow <- function(x, y) x^y
-    
-    # reference point
-    # estimator
-    g <- MakeTape(function(x) { 
-        
-        # harvest rate
-        h <- x[1]
-        r <- x[2] 
-        p <- x[3]
-        
-        htarget <- r / (p + 1)
-        
-        (htarget - h)^2 
-        
-    }, numeric(3))
-    ff <- g$newton(1)
-    
-    # RTMB function
-    fun <- function(parameters, data) {
-        
-        # load all available parameters
-        # and data
-        getAll(parameters, data, warn = FALSE)
-        
-        # back transform estimated
-        # values
-        r <- exp(log_r)
-        K <- exp(log_K)
-        
-        # biomass vectors
-        b_predict <- c(K * initial_depletion, exp(log_b_predict))
-        b_target  <- c(K * initial_depletion, exp(log_b_target))
-        
-        # target harvest rate
-        # (stochastic MNPL)
-        target_harvest_rate <- ff(c(r, shape))
-        
-        # error term
-        sigmap <- sqrt(log(1 + cv_dynamics^2))
-        
-        # AD vectors
-        sp_predict   <- AD(numeric(n_time))
-        sp_target    <- AD(numeric(n_time))
-        mu           <- AD(numeric(n_time))
-        xi           <- AD(numeric(n_time))
-        pst          <- AD(numeric(n_time))
-        catch        <- AD(numeric(n_time))
-        depletion    <- AD(numeric(n_time))
-        harvest_rate <- AD(numeric(n_time))
-        
-        # surplus production
-        sp_predict <- r / shape * b_predict * (1 - (b_predict / K)^shape)
-        sp_predict <- r / shape * b_target  * (1 - (b_target  / K)^shape)
-        
-        # expected annual dynamics
-        # (input harvest rate)
-        mu[1] <- b_predict[1]
-        for (t in 2:n_time) {
-            mu[t] <- b_predict[t - 1] + sp_predict[t - 1] - input_harvest_rate * b_predict[t - 1]
-        }
-        # (target harvest rate)
-        xi[1] <- b_target[1]
-        for (t in 2:n_time) {
-            xi[t] <- b_target[t - 1] + sp_target[t - 1] - target_harvest_rate * b_target[t - 1]
-        }
-        
-        # state equations
-        log(b_predict) %~% dnorm(log(mu) - (sigmap^2) / 2, sigmap)
-        log(b_target)  %~% dnorm(log(xi) - (sigmap^2) / 2, sigmap)
-        
-        # priors
-        log_r %~% dnorm(log(0.35) - 0.005, 0.10)
-        log_K %~% dnorm(log(1500) - 0.005, 0.10)
-        
-        # PST reference point
-        pst <- phi * r * b_predict * K / 2
-        
-        # diagnostics
-        catch        <- input_harvest_rate * b_predict
-        depletion    <- b_predict / K
-        harvest_rate <- catch / b_predict
-        
-        # reference points
-        target_depletion <- b_target[n_time] / K
-        target_catch     <- b_target[n_time] * target_harvest_rate
-        
-        # AD reports
-        REPORT(r)
-        REPORT(pst)
-        REPORT(catch)
-        REPORT(depletion)
-        REPORT(harvest_rate)
-        REPORT(target_harvest_rate)
-        REPORT(target_catch)
-        REPORT(target_depletion)
-    }
-    
-    # set up objective function
-    cmb <- function(f, d) function(p) f(p, d)
-    obj <- MakeADFun(cmb(fun, object@data), object@pars)
-    
-    # initialise
-    invisible(nlminb(start = obj$par, objective = obj$fn, gradient = obj$gr))
-    
-    # run stan
-    suppressWarnings({
-        opt_stan <- tmbstan::tmbstan(obj, init = "last.par.best", chains = 1, iter = object@iter * 2)
-    })
-    
-    # get generated quantities
-    post <- as.data.frame(opt_stan)
-    
-    # PST
-    object@pst$r     <- apply(post, 1, \(x) obj$report(x)$r)
-    object@pst$value <- apply(post, 1, \(x) obj$report(x)$pst) |> t() #%>% array2dfr(dim.names = list(iteration = 1:object@iter, time = object@time))
-    
-    # diagnostics
+    # setup diagnostics
     # (catch)
-    object@diagnostics$catch <- apply(post, 1, \(x) obj$report(x)$catch) |> t() #%>% array2dfr(dim.names = list(iteration = 1:object@iter, time = object@time))
+    object@diagnostics$catch <- matrix(NA_real_, nrow = iter, ncol = ntime)
     # (depletion)
-    object@diagnostics$depletion <- apply(post, 1, \(x) obj$report(x)$depletion) |> t() #%>% array2dfr(dim.names = list(iteration = 1:object@iter, time = object@time))
+    object@diagnostics$depletion <- matrix(NA_real_, nrow = iter, ncol = ntime)
     # (harvest rate)
-    object@diagnostics$harvest_rate <- apply(post, 1, \(x) obj$report(x)$harvest_rate) |> t()# %>% array2dfr(dim.names = list(iteration = 1:object@iter, time = object@time))
+    object@diagnostics$harvest_rate <- matrix(NA_real_, nrow = iter, ncol = ntime)
     
+    msg <- ""
+    cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
+    
+    for (i in 1:niter) {
+        
+        # set seed
+        set.seed(rng_seed[i])
+        
+        # progress iteration
+        msg <- glue(", iteration {i}/", niter)
+        
+        # spin spinner
+        cli_progress_update()
+        
+        # sample
+        perr <- matrix(rnorm(ntime * equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = equ_iter, ncol = ntime)
+        pars <- unlist(lapply(object@pars, sample, n = 1))
+        
+        # spin spinner
+        cli_progress_update()
+        
+        # project under harvest rate
+        # at MNPL
+        # {{{
+        b <- matrix(NA_real_, nrow = equ_iter, ncol = ntime)
+        K <- exp(pars[1])
+        r <- exp(pars[2])
+        p <- object@data$shape
+        h <- matrix(NA_real_, nrow = equ_iter, ncol = ntime)
+        
+        # dynamics
+        for (j in 1:equ_iter) {
+            
+            b[j, 1] <- (K * initial_depletion) * exp(perr[j, 1])
+            
+            for (k in 2:ntime) {
+                
+                h[j, k - 1] <- harvest_rate(object, i)
+                
+                b[j, k] <- (b[j, k - 1] + r / p * b[j, k - 1] * (1 - (b[j, k - 1] / K)^p) - h[j, k - 1] * b[j, k - 1]) * exp(perr[j, k])  
+            }
+        }
+        #}}}
+        
+        # spin spinner
+        cli_progress_update()
+        
+        # update diagnostics
+        # (catch)
+        object@diagnostics$catch[i,] <- apply(b * h, 2, mean)
+        # (depletion)
+        object@diagnostics$depletion[i,] <- apply(b / K, 2, mean)
+        # (harvest rate)
+        object@diagnostics$harvest_rate[i,] <- apply(h, 2, mean)
+        
+        # spin spinner
+        cli_progress_update()
+    }
 
-    # targets
-    # (catch)
-    object@targets$catch <- apply(post, 1, \(x) obj$report(x)$target_catch) 
-    # (depletion)
-    object@targets$depletion <- apply(post, 1, \(x) obj$report(x)$target_depletion)
-    # (harvest rate)
-    object@targets$harvest_rate <- apply(post, 1, \(x) obj$report(x)$target_harvest_rate)
-    
-    
-    # calculate objectives
-    # (catch is less than that required to meet MNPL)
-    object@objectives$catch        <- apply(sweep(object@diagnostics$catch,        1, object@targets$catch, '<='), 1, mean, na.rm = TRUE)
-    # (depletion is greater than the depletion at MNPL)
-    object@objectives$depletion    <- apply(sweep(object@diagnostics$depletion,    1, object@targets$depletion, '>='), 1, mean, na.rm = TRUE)
-    # (harvest rate is less than that required to meet MNPL)
-    object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 1, object@targets$harvest_rate, '<='), 1, mean, na.rm = TRUE)
+    # calculate objectives as the probability
+    # of a desirable outcome
+    p_higher <- function(x, y) ifelse(x > y, 1, ifelse(x < y, 0, 0.5))
+    p_lower  <- function(x, y) ifelse(x < y, 1, ifelse(x > y, 0, 0.5))
+    # (prob. that catch is less than that required to meet MNPL)
+    object@objectives$catch        <- apply(sweep(object@diagnostics$catch,        1, object@targets$catch, p_lower),        1, mean, na.rm = TRUE)
+    # (prob. that depletion is greater than the depletion at MNPL)
+    object@objectives$depletion    <- apply(sweep(object@diagnostics$depletion,    1, object@targets$depletion, p_higher),   1, mean, na.rm = TRUE)
+    # (prob. that harvest rate is less than that required to meet MNPL)
+    object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 1, object@targets$harvest_rate, p_lower), 1, mean, na.rm = TRUE)
     
     # dimnames (after calculations)
-    dimnames(n) <- list(age = ages, time = time, iter = 1:niter)
+    dimnames(n) <- list(age = ages, iter = 1:niter, time = time)
     
     # assign data
     object@.Data <- n

@@ -129,6 +129,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         proj_h         <- array(dim = c(equ_iter, time))
         proj_catch     <- array(dim = c(equ_iter, time))
         proj_depletion <- array(dim = c(equ_iter, time))
+        proj_n         <- array(dim = c(equ_iter, nages, time))
         
         # set-up birth function
         birth <- function(y) {
@@ -215,6 +216,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
                 # equilibrium values
                 proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum) * proj_h[j,]
                 proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
+                proj_n[j,,]        <- n
                 
                 # spin spinner
                 cli_progress_update()
@@ -227,6 +229,12 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             object@diagnostics$depletion[i,] <- apply(proj_depletion, 2, mean)
             # (harvest rate)
             object@diagnostics$harvest_rate[i,] <- apply(proj_h, 2, mean)
+            
+            # numbers
+            N[i,,] <- apply(proj_n, 2:3, mean)
+            
+            # pst
+            object@pst$value[i,] <- (1 / 2) * object@pst$phi * object@pst$rmax[i] * apply(sweep(N[i,,], 1, mat, "*"), 2, sum)
             
             # spin spinner
             cli_progress_update()
@@ -250,6 +258,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     # assign data
     object@.Data <- N
     
+    # return
     return(object)
 })
 #}}}

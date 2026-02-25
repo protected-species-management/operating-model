@@ -114,17 +114,3 @@ setMethod("show", "om",
           })
 # }}}
 
-#{{{
-# class definition
-#setClass("omIter", contains = "matrix",
-#         slots=list(
-#             ages                = 'numeric',
-#             time                = 'numeric',
-#             productivity        = 'list',
-#             fishing             = 'list',
-#             life_history        = 'list',
-#             population_dynamics = 'function',
-#             pst                 = 'list'
-#         )
-#)
-#}}}

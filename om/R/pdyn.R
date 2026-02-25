@@ -36,7 +36,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     }
     
     # error term
-    sigmap <- sqrt(log(1 + object@data$cv_dynamics^2))
+    sigmap <- sqrt(log(1 + cv_dynamics^2))
     
     # setup diagnostics
     # (catch)
@@ -49,13 +49,13 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     # pst
     object@pst$value <- matrix(NA_real_, nrow = iter, ncol = ntime)
     
+    # progress
+    msg <- ""
+    cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
+    
     # {{{
     # PT model
     if (all(is.na(object@ages)) | !(length(object@ages) > 1)) {
-    
-        # progress
-        msg <- ""
-        cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
         
         for (i in 1:niter) {
             
@@ -121,15 +121,24 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             object@pst$value[i, ] <- (1 / 2) * object@pst$phi * object@pst$rmax[i] * N[i, 1, ]
         }
     } else {
+    # {{{
+    # AGE-STRUCTURED MODEL
+        
+        # vectors from age = 0 to age = nages - 1
+        mat    <- c(rep(0, age_mat + 1), rep(1, nages - age_mat - 1))
+        pat    <- c(rep(0, age_pat + 1), rep(1, nages - age_pat - 1))
+        sel    <- c(rep(0, age_sel + 1), rep(1, nages - age_sel - 1))
+        S      <- c(S0, rep(S1, nages - 1))
+        M      <- -log(S)
         
         # set-up arrays
-        n <- array(dim = c(nages, time))
+        n <- array(dim = c(nages, ntime))
         p <- vector("numeric", length = nages)
         
-        proj_h         <- array(dim = c(equ_iter, time))
-        proj_catch     <- array(dim = c(equ_iter, time))
-        proj_depletion <- array(dim = c(equ_iter, time))
-        proj_n         <- array(dim = c(equ_iter, nages, time))
+        proj_h         <- array(dim = c(equ_iter, ntime))
+        proj_catch     <- array(dim = c(equ_iter, ntime))
+        proj_depletion <- array(dim = c(equ_iter, ntime))
+        proj_n         <- array(dim = c(equ_iter, nages, ntime))
         
         # set-up birth function
         birth <- function(y) {

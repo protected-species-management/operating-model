@@ -222,7 +222,7 @@ setMethod("rp", signature = "om", function(object, ...) {
             # at equilibrium
             n_init <- b_eq * p
             
-            # initial conditions
+            # carrying capacity
             # (1+ depletion = 1)
             k <- K * n_init / sum(n_init[-1])
             
@@ -235,7 +235,8 @@ setMethod("rp", signature = "om", function(object, ...) {
             for (i in 1:equ_iter) {
                 
                 # initialise
-                n[, 1] <- k * exp(e[i, 1]) 
+                # at K / 2
+                n[, 1] <- 0.5 * k * exp(e[i, 1]) 
                 
                 # project
                 for (y in 2:equ_time) {
@@ -341,7 +342,7 @@ setMethod("rp", signature = "om", function(object, ...) {
             # at equilibrium
             n_init <- b_eq * p
             
-            # initial conditions
+            # carrying capacity
             # (1+ depletion = 1)
             k <- K * n_init / sum(n_init[-1])
             
@@ -355,7 +356,8 @@ setMethod("rp", signature = "om", function(object, ...) {
             for (i in 1:equ_iter) {
                 
                 # initialise
-                n[, 1] <- k * exp(e[i, 1]) 
+                # at K / 2
+                n[, 1] <- 0.5 * k * exp(e[i, 1]) 
                 
                 # project
                 for (y in 2:equ_time) {

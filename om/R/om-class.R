@@ -108,7 +108,7 @@ setMethod("show", "om",
               message("\nharvest rate function:")
               message(writeLines(deparse(object@harvest_rate)))
               message("\nrmax:")
-              distribution(list(value = om_object@pst$rmax, distribution = "lognormal"))
+              distribution(list(value = object@pst$rmax, distribution = "lognormal"))
               message("population dynamics:")
               print(object@.Data)
           })

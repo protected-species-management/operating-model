@@ -15,6 +15,6 @@ om <- function(ages, harvest_function = .harvest_rate, ...) new('om', ages, harv
 .harvest_rate <- function(object, i) {
     
     # return target harvest rate
-    object@targets$harvest_rate[i]
+    ifelse(all(is.na(object@targets$harvest_rate)), 0, object@targets$harvest_rate[i])
 }
 #}}}

@@ -203,7 +203,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             for (j in 1:equ_iter) {
                 
                 # initialise
-                n[, 1] <- k * exp(e[i, 1]) 
+                n[, 1] <- k * exp(e[j, 1]) 
                 
                 # project
                 for (y in 2:ntime) {

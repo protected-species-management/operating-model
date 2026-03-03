@@ -39,7 +39,6 @@ Collate:
     'load_targets.R'
     'om.R'
     'pdyn.R'
-    'pdyn2.R'
     'plot.distribution.R'
     'sample.distribution.R'
     'rp.R'

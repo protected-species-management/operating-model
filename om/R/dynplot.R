@@ -57,9 +57,9 @@ dynplot.om <- function(object, pars = 'depletion') {
 #'
 #' @rdname dynplot
 #' @export
-dynplot.list <- function(object, ..., par = 'depletion', labels = character()) {
+dynplot.list <- function(object, pars = 'depletion', labels = character()) {
     
-    y <- c(object, list(...))
+    y <- object #c(object, list(...))
     
     is.labelled <- ifelse(length(labels) > 0, TRUE, FALSE)
     
@@ -77,7 +77,7 @@ dynplot.list <- function(object, ..., par = 'depletion', labels = character()) {
     
     for (par in pars) {
         
-        dfr <- bind_rows(lapply(y, function(x) array2dfr(slot(x, 'diagnostics')[[par]], dim.names = list(iter = 1:object@iter, time = object@time))), .id = 'label')
+        dfr <- bind_rows(lapply(y, function(x) array2dfr(slot(x, 'diagnostics')[[par]], dim.names = list(iter = 1:object[[1]]@iter, time = object[[1]]@time))), .id = 'label')
         
         if (is.labelled) {
             dfr$label <- factor(dfr$label, levels = labels)
@@ -91,7 +91,7 @@ dynplot.list <- function(object, ..., par = 'depletion', labels = character()) {
     
     dfr <- bind_rows(lst, .id = 'par')    
     
-    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate"), par2 = c("Depletion", "Harvest rate")))
+    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate"), par2 = c("Depletion", "Harvest rate")), by = "par")
     
     if (length(y) > 1) {
         gg <- ggplot(dfr, aes(.data$time, .data$value, col = .data$label, fill = .data$label))# + labs(x = 'Time', y = 'Predicted Value', col = 'Model\nrun', fill = 'Model\nrun')

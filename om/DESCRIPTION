@@ -30,6 +30,7 @@ Collate:
     'biomass.R'
     'distribution-class.R'
     'distribution.R'
+    'dynplot.R'
     'load_data.R'
     'load_fishery_inputs.R'
     'load_life_history.R'

@@ -196,14 +196,14 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             
             # initial conditions
             # (1+ depletion = 1)
-            k <- initial_depletion * K * n_init / sum(n_init[-1])
+            k <- K * n_init / sum(n_init[-1])
             
             # loop over process
             # error iterations
             for (j in 1:equ_iter) {
                 
                 # initialise
-                n[, 1] <- k * exp(e[j, 1]) 
+                n[, 1] <- initial_depletion * k * exp(e[j, 1]) 
                 
                 # project
                 for (y in 2:ntime) {
@@ -222,7 +222,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
                     n[1, y] <- birth(y)
                 }
                 
-                # equilibrium values
+                # values per-year
                 proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum) * proj_h[j,]
                 proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
                 proj_n[j,,]        <- n

@@ -7,5 +7,5 @@
 load_rmax(object, value, ...)
 }
 \description{
-Load rmax into \code{om-class} object.
+Load rmax into the \code{pst} slot of an \code{om-class} object.
 }

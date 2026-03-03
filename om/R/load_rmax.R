@@ -1,6 +1,6 @@
 #' @title load rmax
 #' 
-#' @description Load rmax into \code{om-class} object.
+#' @description Load rmax into the \code{pst} slot of an \code{om-class} object.
 #' 
 #' @include om-class.R distribution-class.R
 #' @export

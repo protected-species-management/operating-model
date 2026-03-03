@@ -38,6 +38,17 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     # error term
     sigmap <- sqrt(log(1 + cv_dynamics^2))
     
+    # initial values
+    # (process error)
+    perr <- matrix(rnorm(equ_time * equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = equ_iter, ncol = equ_time)
+    # (parameter values - check order)
+    pars <- unlist(lapply(object@pars, sample, n = 1))
+    
+    # accessor functions
+    get_K    <- function() exp(get("pars", envir = ENV)[1])
+    get_r    <- function() exp(get("pars", envir = ENV)[2])
+    get_perr <- function() get("perr", envir = ENV)
+    
     # setup diagnostics
     # (catch)
     object@diagnostics$catch <- matrix(NA_real_, nrow = iter, ncol = ntime)
@@ -131,14 +142,60 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         S      <- c(S0, rep(S1, nages - 1))
         M      <- -log(S)
         
-        # set-up arrays
-        n <- array(dim = c(nages, ntime))
-        p <- vector("numeric", length = nages)
+        # dummy values
+        b_eq  <- 0
+        b_max <- 0
+        k     <- numeric(nages)
         
-        proj_h         <- array(dim = c(equ_iter, ntime))
-        proj_catch     <- array(dim = c(equ_iter, ntime))
-        proj_depletion <- array(dim = c(equ_iter, ntime))
-        proj_n         <- array(dim = c(equ_iter, nages, ntime))
+        # accessor functions
+        get_beq  <- function() get("b_eq",  envir = ENV)
+        get_bmax <- function() get("b_max", envir = ENV)
+        get_k    <- function() get("k",     envir = ENV)
+        
+        # objective function
+        obj_fun <- function(x) {
+            
+            h <- exp(x)
+            
+            p_init <- AD(vector("numeric", length = nages))
+            
+            # monte-carlo
+            # inputs
+            b_eq  <- DataEval(get_beq)
+            b_max <- DataEval(get_bmax)
+            k     <- DataEval(get_k)
+                
+            # equilibrium age
+            # structure
+            p_init[1] <- 0.5 * sum(pat[-1] * k[-1] * initial_depletion) * (b_eq + (b_max - b_eq) * (1 - initial_depletion^shape))
+            for(a in 2:nages) {
+                p_init[a] <- (p_init[a-1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h))
+            }
+            p_init[nages] <- p_init[nages] + (p_init[nages] * exp(-1 * M[nages]) * (1 - sel[nages] * h))
+                
+            # log of the equilibrium depletion
+            objective <- -1 * dnorm(sum(p_init[-1]) / sum(k[-1]), initial_depletion, 0.01, log = TRUE)
+            
+            # return
+            return(objective)
+        }
+        
+        # initialise with 
+        # parameter value
+        g <- MakeTape(obj_fun, object@pars$log_r@pars[1] - log(object@data$shape + 1))
+        # function to 
+        # estimate minimum
+        # over first argument
+        # (harvest rate)
+        suppressWarnings({
+            ff <- g$newton(1)
+        })
+        
+        # set-up arrays
+        n      <- array(dim = c(nages, ntime))
+        p      <- vector("numeric", length = nages)
+        p_init <- vector("numeric", length = nages)
+        proj_h <- vector("numeric", length = ntime)
         
         # set-up birth function
         birth <- function(y) {
@@ -168,7 +225,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             cli_progress_update()
             
             # sample
-            perr <- matrix(rnorm(ntime * equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = equ_iter, ncol = ntime)
+            perr <- rnorm(ntime, 0 - (sigmap^2) / 2, sigmap)
             pars <- unlist(lapply(object@pars, sample, n = 1))
             
             # project under harvest rate
@@ -201,49 +258,55 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             # (1+ depletion = 1)
             k <- K * n_init / sum(n_init[-1])
             
-            # loop over process
-            # error iterations
-            for (j in 1:equ_iter) {
+            # initial conditions
+            h_init <- exp(ff(numeric()))
+            
+            # equilibrium age
+            # structure
+            p_init[1] <- 0.5 * sum(pat[-1] * k[-1] * initial_depletion) * (b_eq + (b_max - b_eq) * (1 - initial_depletion^shape))
+            for(a in 2:nages) {
+                p_init[a] <- (p_init[a-1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h_init))
+            }
+            p_init[nages] <- p_init[nages] + (p_init[nages] * exp(-1 * M[nages]) * (1 - sel[nages] * h_init))
                 
-                # initialise
-                n[, 1] <- initial_depletion * k * exp(e[j, 1]) 
+            # initialise
+            n[, 1] <- p_init * exp(e[1]) 
+            
+            # project
+            for (y in 2:ntime) {
                 
-                # project
-                for (y in 2:ntime) {
+                proj_h[y - 1] <- object@harvest_rate(object, i)
+                
+                for (a in 2:nages) {
                     
-                    proj_h[j, y - 1] <- object@harvest_rate(object, i)
-                    
-                    for (a in 2:nages) {
-                        
-                        n[a, y] <- (n[a - 1, y - 1] * exp(-1 * M[a - 1]) * (1 - sel[a - 1] * proj_h[j, y - 1])) * exp(e[j, y])  
-                    }
-                    
-                    # plus group
-                    n[nages, y] <- n[nages, y] + (n[nages, y - 1] * exp(-1 * M[nages]) * (1 - sel[nages] * proj_h[j, y - 1])) * exp(e[j, y]) 
-                    
-                    # birth
-                    n[1, y] <- birth(y)
+                    n[a, y] <- (n[a - 1, y - 1] * exp(-1 * M[a - 1]) * (1 - sel[a - 1] * proj_h[y - 1])) * exp(e[y])  
                 }
                 
-                # values per-year
-                proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum) * proj_h[j,]
-                proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
-                proj_n[j,,]        <- n
+                # plus group
+                n[nages, y] <- n[nages, y] + (n[nages, y - 1] * exp(-1 * M[nages]) * (1 - sel[nages] * proj_h[y - 1])) * exp(e[y]) 
                 
-                # spin spinner
-                cli_progress_update()
+                # birth
+                n[1, y] <- birth(y)
             }
+            
+            # values per-year
+            proj_catch     <- apply(sweep(n, 1, sel, "*"), 2, sum) * proj_h
+            proj_depletion <- apply(n[-1,], 2, sum) / sum(k[-1])
+            proj_n         <- n
+            
+            # spin spinner
+            cli_progress_update()
             
             # update targets
             # (catch)
-            object@diagnostics$catch[i,] <- apply(proj_catch, 2, mean)
+            object@diagnostics$catch[i,] <- proj_catch
             # (depletion)
-            object@diagnostics$depletion[i,] <- apply(proj_depletion, 2, mean)
+            object@diagnostics$depletion[i,] <- proj_depletion
             # (harvest rate)
-            object@diagnostics$harvest_rate[i,] <- apply(proj_h, 2, mean)
+            object@diagnostics$harvest_rate[i,] <- proj_h
             
             # numbers
-            N[i,,] <- apply(proj_n, 2:3, mean)
+            N[i,,] <- proj_n
             
             # pst
             object@pst$value[i,] <- (1 / 2) * object@pst$phi * object@pst$rmax[i] * apply(sweep(N[i,,], 1, mat, "*"), 2, sum)
@@ -265,7 +328,10 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 1, object@targets$harvest_rate, p_lower), 1, mean, na.rm = TRUE)
     
     # dimnames (after calculations)
-    dimnames(N) <- list(iter = 1:niter, age = ages, time = time)
+    dimnames(object@diagnostics$catch)        <- list(iter = 1:niter, time = time)
+    dimnames(object@diagnostics$depletion)    <- list(iter = 1:niter, time = time)
+    dimnames(object@diagnostics$harvest_rate) <- list(iter = 1:niter, time = time)
+    dimnames(N)                               <- list(iter = 1:niter, age = ages, time = time)
     
     # assign data
     object@.Data <- N

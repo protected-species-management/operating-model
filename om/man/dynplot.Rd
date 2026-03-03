@@ -10,7 +10,7 @@ dynplot(object, ...)
 
 \method{dynplot}{om}(object, pars = "depletion")
 
-\method{dynplot}{list}(object, ..., par = "depletion", labels = character())
+\method{dynplot}{list}(object, pars = "depletion", labels = character())
 }
 \arguments{
 \item{object}{\code{om} class object.}

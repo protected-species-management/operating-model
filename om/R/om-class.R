@@ -19,7 +19,7 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', pars = 'list', data = 'list', fishery_inputs = 'list', life_history = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
+setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', pars = 'list', data = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
 #}}}
 #{{{
 # initialisation function
@@ -101,15 +101,15 @@ setMethod("show", "om",
               message("ntime: ", if (all(is.na(object@time))) NA_character_ else length(object@time))
               message("nages: ", if (all(is.na(object@ages))) NA_character_ else length(object@ages))
               message("niter: ", object@iter)
-              message("\t")
-              message("fishery_inputs: ", if (length(object@fishery_inputs) > 0)  paste0(names(object@fishery_inputs), collapse = ", ") else red("EMPTY"))
-              message("life_history: ", if (length(object@life_history) > 0)  paste0(names(object@life_history), collapse = ", ") else red("EMPTY"))
+              #message("\t")
+              #message("fishery_inputs: ", if (length(object@fishery_inputs) > 0)  paste0(names(object@fishery_inputs), collapse = ", ") else red("EMPTY"))
+              #message("life_history: ", if (length(object@life_history) > 0)  paste0(names(object@life_history), collapse = ", ") else red("EMPTY"))
               message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
-              message("\nharvest rate function:\n")
+              message("\nharvest rate function:\t")
               message(writeLines(deparse(object@harvest_rate)))
               message("\nrmax:")
               show(distribution(list(value = object@pst$rmax, distribution = "lognormal")))
-              message("\npopulation dynamics:\n\n")
+              message("\npopulation dynamics:\t")
               print(object@.Data)
           })
 # }}}

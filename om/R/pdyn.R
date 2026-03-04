@@ -83,8 +83,28 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             cli_progress_update()
             
             # sample
-            perr <- matrix(rnorm(ntime * equ_iter, 0 - (sigmap^2) / 2, sigmap), nrow = equ_iter, ncol = ntime)
+            perr <- rnorm(ntime, 0 - (sigmap^2) / 2, sigmap)
             pars <- unlist(lapply(object@pars, sample, n = 1))
+            rmax <- sample(object@pst$rmax, n = 1)
+            
+            # record pars sample
+            # value if missing or 
+            # overwrite
+            invisible(lapply(1:length(pars), function(j) {
+                if (is.na(object@pars[[j]]@.Data[i])) {
+                    object@pars[[j]]@.Data[i] <<- pars[j]
+                } else {
+                    pars[j] <<- object@pars[[j]]@.Data[i] 
+                }
+            }))
+            
+            # record rmax sample or
+            # overwrite
+            if (is.na(object@pst$rmax@.Data[i])) {
+                object@pst$rmax@.Data[i] <- rmax
+            } else {
+                rmax <- object@pst$rmax@.Data[i] 
+            }
             
             # spin spinner
             cli_progress_update()
@@ -92,22 +112,20 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             # project under harvest rate
             # function
             # {{{
-            b <- matrix(NA_real_, nrow = equ_iter, ncol = ntime)
-            K <- exp(pars[1])
-            r <- exp(pars[2])
-            h <- matrix(NA_real_, nrow = equ_iter, ncol = ntime)
+            b <- numeric(ntime)
+            K <- exp(pars['log_K'])
+            r <- exp(pars['log_r'])
+            e <- perr
+            h <- numeric(ntime)
             
             # dynamics
-            for (j in 1:equ_iter) {
+            b[1] <- (K * initial_depletion) * exp(e[1])
+            
+            for (j in 2:ntime) {
                 
-                b[j, 1] <- (K * initial_depletion) * exp(perr[j, 1])
+                h[j - 1] <- object@harvest_rate(object, i)
                 
-                for (k in 2:ntime) {
-                    
-                    h[j, k - 1] <- object@harvest_rate(object, i)
-                    
-                    b[j, k] <- (b[j, k - 1] + r / shape * b[j, k - 1] * (1 - (b[j, k - 1] / K)^shape) - h[j, k - 1] * b[j, k - 1]) * exp(perr[j, k])  
-                }
+                b[j] <- (b[j - 1] + r / shape * b[j - 1] * (1 - (b[j - 1] / K)^shape) - h[j - 1] * b[j - 1]) * exp(e[j])  
             }
             #}}}
             
@@ -116,11 +134,11 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             
             # update diagnostics
             # (catch)
-            object@diagnostics$catch[i,] <- apply(b * h, 2, mean)
+            object@diagnostics$catch[i,] <- b * h
             # (depletion)
-            object@diagnostics$depletion[i,] <- apply(b / K, 2, mean)
+            object@diagnostics$depletion[i,] <- b / K
             # (harvest rate)
-            object@diagnostics$harvest_rate[i,] <- apply(h, 2, mean)
+            object@diagnostics$harvest_rate[i,] <- h
             
             # spin spinner
             cli_progress_update()
@@ -211,6 +229,21 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         }
         p[nages] <- p[nages] / (1 - exp(-M[nages]))
         
+        # add dimensions to pars
+        object@pars <- lapply(object@pars, function(x) {
+            if (x@iter == 0 | length(x@.Data) <= 1) {
+                x@iter  <- object@iter 
+                x@.Data <- rep(NA_real_, object@iter)
+            }
+            return(x) 
+        })
+        
+        # add dimensions to rmax
+        if (object@pst$rmax@iter == 0 | length(object@pst$rmax@.Data) <= 1) {
+            object@pst$rmax@iter  <- object@iter 
+            object@pst$rmax@.Data <- rep(NA_real_, object@iter)
+        }
+        
         # loop over monte-carlo
         # samples from 'pars'
         for (i in 1:niter) {
@@ -227,15 +260,31 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             # sample
             perr <- rnorm(ntime, 0 - (sigmap^2) / 2, sigmap)
             pars <- unlist(lapply(object@pars, sample, n = 1))
+            rmax <- sample(object@pst$rmax, n = 1)
             
-            # project under harvest rate
-            # function
-            # {{{
+            # record pars sample
+            # value if missing or 
+            # overwrite
+            invisible(lapply(1:length(pars), function(j) {
+                if (is.na(object@pars[[j]]@.Data[i])) {
+                    object@pars[[j]]@.Data[i] <<- pars[j]
+                } else {
+                    pars[j] <<- object@pars[[j]]@.Data[i] 
+                }
+            }))
+            
+            # record rmax sample or
+            # overwrite
+            if (is.na(object@pst$rmax@.Data[i])) {
+                object@pst$rmax@.Data[i] <- rmax
+            } else {
+                rmax <- object@pst$rmax@.Data[i] 
+            }
             
             # monte-carlo
             # inputs
-            K <- exp(pars[1])
-            r <- exp(pars[2])
+            K <- exp(pars['log_K'])
+            r <- exp(pars['log_r'])
             e <- perr
             
             # productivity for estimation
@@ -272,7 +321,9 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             # initialise
             n[, 1] <- p_init * exp(e[1]) 
             
-            # project
+            # project under harvest rate
+            # function
+            # {{{
             for (y in 2:ntime) {
                 
                 proj_h[y - 1] <- object@harvest_rate(object, i)
@@ -297,7 +348,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             # spin spinner
             cli_progress_update()
             
-            # update targets
+            # update time series diagnostics
             # (catch)
             object@diagnostics$catch[i,] <- proj_catch
             # (depletion)

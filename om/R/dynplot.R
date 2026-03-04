@@ -14,6 +14,7 @@
 #' @import ggplot2
 #' @importFrom rlang .data
 #' @importFrom dplyr bind_rows
+#' @importFrom stats na.omit
 #' 
 #' @export
 dynplot <- function(object, ...) UseMethod("dynplot")
@@ -21,6 +22,8 @@ dynplot <- function(object, ...) UseMethod("dynplot")
 #' @rdname dynplot
 #' @export
 dynplot.om <- function(object, pars = 'depletion') {
+    
+    stopifnot(all(pars %in% c("depletion", "harvest_rate", "catch")))
     
     y <- object
     
@@ -33,14 +36,14 @@ dynplot.om <- function(object, pars = 'depletion') {
         dfr$time <- as.numeric(dfr$time)
         dfr$iter <- as.numeric(dfr$iter)
         
-        lst[[par]] <- dfr
+        lst[[par]] <- na.omit(dfr)
     }
     
     dfr <- bind_rows(lst, .id = 'par')    
     
-    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "catch"), par2 = c("Depletion", "Harvest rate", "Catch")), by = 'par')
+    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "catch"), par2 = c("Depletion", "Harvest rate", "Captures")), by = 'par')
     
-    gg <- ggplot(dfr, aes(.data$time, .data$value))# + labs(x = 'Time', y = 'Predicted Value')
+    gg <- ggplot(dfr, aes(.data$time, .data$value))
 
     gg <- gg + 
         stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = 'ribbon', alpha = 0.3) +
@@ -59,6 +62,8 @@ dynplot.om <- function(object, pars = 'depletion') {
 #' @export
 dynplot.list <- function(object, pars = 'depletion', labels = character()) {
     
+    stopifnot(all(pars %in% c("depletion", "harvest_rate", "catch")))
+    
     y <- object #c(object, list(...))
     
     is.labelled <- ifelse(length(labels) > 0, TRUE, FALSE)
@@ -68,9 +73,15 @@ dynplot.list <- function(object, pars = 'depletion', labels = character()) {
     }
     
     if (is.labelled) {
+        
         names(y) <- labels
+        
     } else {
-        names(y) <- 1:length(y)    
+        
+        labels <- 1:length(y)
+        labels <- ifelse(labels < 10, paste0("0", labels), labels)
+        
+        names(y) <- labels   
     }
     
     lst <- list()
@@ -79,24 +90,22 @@ dynplot.list <- function(object, pars = 'depletion', labels = character()) {
         
         dfr <- bind_rows(lapply(y, function(x) array2dfr(slot(x, 'diagnostics')[[par]], dim.names = list(iter = 1:object[[1]]@iter, time = object[[1]]@time))), .id = 'label')
         
-        if (is.labelled) {
-            dfr$label <- factor(dfr$label, levels = labels)
-        }
+        dfr$label <- factor(dfr$label, levels = labels)
         
         dfr$time <- as.numeric(dfr$time)
         dfr$iter <- as.numeric(dfr$iter)
         
-        lst[[par]] <- dfr
+        lst[[par]] <- na.omit(dfr)
     }
     
     dfr <- bind_rows(lst, .id = 'par')    
     
-    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate"), par2 = c("Depletion", "Harvest rate")), by = "par")
+    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "catch"), par2 = c("Depletion", "Harvest rate", "Captures")), by = "par")
     
     if (length(y) > 1) {
-        gg <- ggplot(dfr, aes(.data$time, .data$value, col = .data$label, fill = .data$label))# + labs(x = 'Time', y = 'Predicted Value', col = 'Model\nrun', fill = 'Model\nrun')
+        gg <- ggplot(dfr, aes(.data$time, .data$value, col = .data$label, fill = .data$label))
     } else {
-        gg <- ggplot(dfr, aes(.data$time, .data$value))# + labs(x = 'Time', y = 'Predicted Value')
+        gg <- ggplot(dfr, aes(.data$time, .data$value))
     }
     
     gg <- gg + 

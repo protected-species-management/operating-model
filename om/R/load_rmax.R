@@ -2,7 +2,7 @@
 #' 
 #' @description Load rmax into the \code{pst} slot of an \code{om-class} object.
 #' 
-#' @include om-class.R distribution-class.R
+#' @include om-class.R distribution-class.R sample.distribution.R
 #' @export
 #{{{ load rmax into om object
 setGeneric("load_rmax", function(object, value, ...) standardGeneric("load_rmax"))
@@ -10,17 +10,23 @@ setGeneric("load_rmax", function(object, value, ...) standardGeneric("load_rmax"
 setMethod("load_rmax", signature = c("om", "distribution"), function(object, value, ...) {
     
     if (is.na(object@iter)) {
+        
         object@iter     <- as.integer(value@iter)
-        object@pst$rmax <- value@.Data
+        object@pst$rmax <- value
+        
     } else {
-        if (object@iter == value@iter) {
-            object@pst$rmax <- value@.Data
+        if (object@iter == value@iter | value@iter == 0) {
+            
+            object@pst$rmax <- value
+            
         } else {
-            if (value@iter == 1) {
-                object@pst$rmax <- rep(value@.Data, object@iter)
-            } else {
-                stop("'iter' does not match")
-            }
+            
+            warning("'iter' does not match: resampling rmax distribution")
+            
+            value@iter  <- object@iter
+            value@.Data <- sample(value, n = object@iter)
+            
+            object@pst$rmax <- value
         }
     }
     

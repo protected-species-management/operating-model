@@ -100,13 +100,20 @@ setMethod("show", "distribution",
               message("iter: ", object@iter)
               message("distribution: ", object@distribution)
               message("pars: ", paste(round(object@pars, 3), collapse = ", "))
-              #message("values: ", if (length(object@.Data) == 0) red("EMPTY") else .show_lognormal_moments(object@pars))
-              if (grepl("^uniform", object@distribution)) print(.show_uniform_moments(object@pars))
-              if (grepl("^normal", object@distribution)) print(.show_normal_moments(object@pars))
-              if (grepl("^log?normal", object@distribution)) print(.show_lognormal_moments(object@pars))
-              if (grepl("^gamma", object@distribution)) print(.show_gamma_moments(object@pars))
-          })
+              message("values: ", if (length(object@.Data) == 0 | all(is.na(object@.Data))) red("EMPTY") else if (length(object@.Data) > 14) paste0(c(round(object@.Data[1:12], 3), "...", round(object@.Data[length(object@.Data)], 3)), collapse = ", ") else paste0(round(object@.Data, 3), collapse = ", "))
+              message("\t")
+        })
 # }}}
+
+#' @exportS3Method base::summary
+summary.distribution <- function(object) {
+    
+    if (grepl("^unspecified", object@distribution)) return(.show_unspecified_moments(object@.Data))
+    if (grepl("^uniform", object@distribution)) return(.show_uniform_moments(object@pars))
+    if (grepl("^normal", object@distribution)) return(.show_normal_moments(object@pars))
+    if (grepl("^log?normal", object@distribution)) return(.show_lognormal_moments(object@pars))
+    if (grepl("^gamma", object@distribution)) return(.show_gamma_moments(object@pars))
+}
 
 # distribution-specific functions
 # {{{
@@ -199,5 +206,11 @@ setMethod("show", "distribution",
     
     # return
     c('E[x]' = round(alpha * theta, 3), 'VAR[x]' = round(alpha * theta^2, 3), 'CV[x]' = round(sqrt(alpha * theta^2) / alpha * theta, 3))
+}
+
+.show_unspecified_moments <- function(x) {
+    
+    # return
+    c('E[x]' = round(mean(x), 3), 'MIN[x]' = round(min(x), 3), 'MAX[x]' = round(max(x), 3))
 }
 # }}}

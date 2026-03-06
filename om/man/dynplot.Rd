@@ -22,7 +22,7 @@ dynplot(object, ...)
 \item{labels}{character vector of labels per model run}
 }
 \value{
-Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the median and the 75th and 95th percentiles. The posterior mean is shown as a dashed line.
+Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles. The posterior median is shown as a dashed line.
 }
 \description{
 Plots the dynamics over time of the estimated biomass, depletion, harvest rate or surplus production.

@@ -51,11 +51,11 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     
     # setup diagnostics
     # (catch)
-    object@diagnostics$catch <- matrix(NA_real_, nrow = iter, ncol = ntime)
+    object@diagnostics$catch <- matrix(NA_real_, nrow = iter, ncol = ntime - 1)
     # (depletion)
     object@diagnostics$depletion <- matrix(NA_real_, nrow = iter, ncol = ntime)
     # (harvest rate)
-    object@diagnostics$harvest_rate <- matrix(NA_real_, nrow = iter, ncol = ntime)
+    object@diagnostics$harvest_rate <- matrix(NA_real_, nrow = iter, ncol = ntime - 1)
     
     # pst
     object@pst$value <- matrix(NA_real_, nrow = iter, ncol = ntime)
@@ -116,7 +116,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             K <- exp(pars['log_K'])
             r <- exp(pars['log_r'])
             e <- perr
-            h <- numeric(ntime)
+            h <- numeric(ntime - 1)
             
             # dynamics
             b[1] <- (K * initial_depletion) * exp(e[1])
@@ -134,7 +134,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             
             # update diagnostics
             # (catch)
-            object@diagnostics$catch[i,] <- b * h
+            object@diagnostics$catch[i,] <- b[-ntime] * h
             # (depletion)
             object@diagnostics$depletion[i,] <- b / K
             # (harvest rate)
@@ -213,7 +213,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
         n      <- array(dim = c(nages, ntime))
         p      <- vector("numeric", length = nages)
         p_init <- vector("numeric", length = nages)
-        proj_h <- vector("numeric", length = ntime)
+        proj_h <- vector("numeric", length = ntime - 1)
         
         # set-up birth function
         birth <- function(y) {
@@ -341,7 +341,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
             }
             
             # values per-year
-            proj_catch     <- apply(sweep(n, 1, sel, "*"), 2, sum) * proj_h
+            proj_catch     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-ntime] * proj_h
             proj_depletion <- apply(n[-1,], 2, sum) / sum(k[-1])
             proj_n         <- n
             
@@ -379,9 +379,9 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 1, object@targets$harvest_rate, p_lower), 1, mean, na.rm = TRUE)
     
     # dimnames (after calculations)
-    dimnames(object@diagnostics$catch)        <- list(iter = 1:niter, time = time)
+    dimnames(object@diagnostics$catch)        <- list(iter = 1:niter, time = time[-ntime])
     dimnames(object@diagnostics$depletion)    <- list(iter = 1:niter, time = time)
-    dimnames(object@diagnostics$harvest_rate) <- list(iter = 1:niter, time = time)
+    dimnames(object@diagnostics$harvest_rate) <- list(iter = 1:niter, time = time[-ntime])
     dimnames(N)                               <- list(iter = 1:niter, age = ages, time = time)
     
     # assign data

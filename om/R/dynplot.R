@@ -9,7 +9,7 @@
 #' @param labels character vector of labels per model run
 #' @param ... additional \code{om} class objects
 #' 
-#' @return Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the median and the 75th and 95th percentiles. The posterior mean is shown as a dashed line. 
+#' @return Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles. The posterior median is shown as a dashed line. 
 #' @include array2dfr.R
 #' @import ggplot2
 #' @importFrom rlang .data
@@ -31,7 +31,9 @@ dynplot.om <- function(object, pars = 'depletion') {
     
     for (par in pars) {
         
-        dfr <- array2dfr(slot(y, 'diagnostics')[[par]], dim.names = list(iter = 1:object@iter, time = object@time))
+        if (par == "depletion") dm <- list(iter = 1:object@iter, time = object@time) else dm <- list(iter = 1:object@iter, time = object@time[-ntime]) 
+        
+        dfr <- array2dfr(slot(y, 'diagnostics')[[par]], dim.names = dm)
     
         dfr$time <- as.numeric(dfr$time)
         dfr$iter <- as.numeric(dfr$iter)
@@ -48,8 +50,8 @@ dynplot.om <- function(object, pars = 'depletion') {
     gg <- gg + 
         stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = 'ribbon', alpha = 0.3) +
         stat_summary(fun.min = function(x) quantile(x, 0.125), fun.max = function(x) quantile(x, 0.875), geom = 'ribbon', alpha = 0.3) +
-        stat_summary(fun = function(x) median(x), geom = 'line', lwd = 1) +
-        stat_summary(fun = function(x) mean(x), geom = 'line', lwd = 0.5, linetype = "dashed")
+        stat_summary(fun = function(x) mean(x), geom = 'line', lwd = 1) +
+        stat_summary(fun = function(x) median(x), geom = 'line', lwd = 0.5, linetype = "dashed")
     
     if (length(pars) > 1) {
         gg <- gg + facet_grid(.data$par2~., scales  =  'free_y')
@@ -88,7 +90,9 @@ dynplot.list <- function(object, pars = 'depletion', labels = character()) {
     
     for (par in pars) {
         
-        dfr <- bind_rows(lapply(y, function(x) array2dfr(slot(x, 'diagnostics')[[par]], dim.names = list(iter = 1:object[[1]]@iter, time = object[[1]]@time))), .id = 'label')
+        if (par == "depletion") dm <- list(iter = 1:object[[1]]@iter, time = object[[1]]@time) else dm <- list(iter = 1:object[[1]]@iter, time = object[[1]]@time[-ntime]) 
+        
+        dfr <- bind_rows(lapply(y, function(x) array2dfr(slot(x, 'diagnostics')[[par]], dim.names = dm)), .id = 'label')
         
         dfr$label <- factor(dfr$label, levels = labels)
         

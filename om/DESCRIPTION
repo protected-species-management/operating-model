@@ -2,7 +2,7 @@ Package: om
 Type: Package
 Title: Operating model (TMB)
 Version: 0.0.1
-Date: 2026-03-04
+Date: 2026-03-06
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation module for managed populations

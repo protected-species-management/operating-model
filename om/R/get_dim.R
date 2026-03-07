@@ -7,7 +7,7 @@
 get_dim <- function(object, ...) UseMethod("get_dim")
 #' @rdname get_dim
 #' @export
-get_dim.om <- function(object, env) {
+get_dim.om <- function(object, env = environment()) {
     
     ages   <- object@ages
     time   <- object@time
@@ -30,7 +30,7 @@ get_dim.om <- function(object, env) {
 get_values <- function(object, ...) UseMethod("get_values")
 #' @rdname get_dim
 #' @export
-get_values.om <- function(object, iter = 1, env) {
+get_values.om <- function(object, iter = 1, env = environment()) {
     
     l1 <- object@pars
     l2 <- object@life_history
@@ -51,7 +51,7 @@ get_values.om <- function(object, iter = 1, env) {
 get_data <- function(object, ...) UseMethod("get_data")
 #' @rdname get_dim
 #' @export
-get_data.om <- function(object, env) {
+get_data.om <- function(object, env = environment()) {
     
     if (is.environment(env)) {
         lapply(names(object@data), function(x) assign(x, slot(get("object"), "data")[[x]], envir = env))

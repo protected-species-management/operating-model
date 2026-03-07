@@ -10,11 +10,11 @@
 \usage{
 get_dim(object, ...)
 
-\method{get_dim}{om}(object, env)
+\method{get_dim}{om}(object, env = environment())
 
-\method{get_values}{om}(object, iter = 1, env)
+\method{get_values}{om}(object, iter = 1, env = environment())
 
-\method{get_data}{om}(object, env)
+\method{get_data}{om}(object, env = environment())
 }
 \description{
 Extract dimensions and/or values from object for use within a function call.

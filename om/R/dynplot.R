@@ -25,13 +25,15 @@ dynplot.om <- function(object, pars = 'depletion') {
     
     stopifnot(all(pars %in% c("depletion", "harvest_rate", "catch")))
     
+    get_dim(object, env = environment())
+    
     y <- object
     
     lst <- list()
     
     for (par in pars) {
         
-        if (par == "depletion") dm <- list(iter = 1:object@iter, time = object@time) else dm <- list(iter = 1:object@iter, time = object@time[-ntime]) 
+        if (par == "depletion") dm <- list(iter = 1:niter, time = time) else dm <- list(iter = 1:niter, time = time[-ntime]) 
         
         dfr <- array2dfr(slot(y, 'diagnostics')[[par]], dim.names = dm)
     
@@ -66,6 +68,8 @@ dynplot.list <- function(object, pars = 'depletion', labels = character()) {
     
     stopifnot(all(pars %in% c("depletion", "harvest_rate", "catch")))
     
+    get_dim(object[[1]], env = environment())
+    
     y <- object #c(object, list(...))
     
     is.labelled <- ifelse(length(labels) > 0, TRUE, FALSE)
@@ -90,7 +94,7 @@ dynplot.list <- function(object, pars = 'depletion', labels = character()) {
     
     for (par in pars) {
         
-        if (par == "depletion") dm <- list(iter = 1:object[[1]]@iter, time = object[[1]]@time) else dm <- list(iter = 1:object[[1]]@iter, time = object[[1]]@time[-ntime]) 
+        if (par == "depletion") dm <- list(iter = 1:niter, time = time) else dm <- list(iter = 1:niter, time = time[-ntime]) 
         
         dfr <- bind_rows(lapply(y, function(x) array2dfr(slot(x, 'diagnostics')[[par]], dim.names = dm)), .id = 'label')
         

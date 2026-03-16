@@ -15,7 +15,7 @@ setMethod("load_rmax", signature = c("om", "distribution"), function(object, val
         object@pst$rmax <- value
         
     } else {
-        if (object@iter == value@iter | value@iter == 0) {
+        if (object@iter == value@iter) {
             
             object@pst$rmax <- value
             

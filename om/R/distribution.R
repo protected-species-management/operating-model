@@ -1,7 +1,7 @@
 #' 
 #' @rdname distribution-class
 #' 
-#' @param value either an integer specifiying the length of an empty vector or a vector of derived values
+#' @param object either an integer specifiying the length of an empty vector or a vector of derived values
 #' 
 #' @examples
 #' # create object containing
@@ -11,7 +11,7 @@
 #' cv <- 0.2
 #' sd <- sqrt(log(1+cv^2))
 #' x <- rlnorm(iter,log(mu)-sd^2/2,sd)
-#' r <- distribution(x)
+#' r <- distribution(list(value = x, density = "lognormal"))
 #'
 #' @include distribution-class.R
 #' 

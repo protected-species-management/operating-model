@@ -61,6 +61,16 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     .Object@pst$rmax    <- NA_real_
     .Object@pst$value   <- NA_real_
     
+    # setup pars
+    # (intrinsic growth)
+    .Object@pars$r <- NA_real_ 
+    # (adult female natural mortality)
+    .Object@pars$M <- NA_real_
+    # (females born per adult female)
+    .Object@pars$f <- NA_real_
+    # (age at female maturity)
+    .Object@pars$a <- NA_real_
+    
     # setup management
     # target reference points
     # (MNPL values)

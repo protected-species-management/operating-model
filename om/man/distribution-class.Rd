@@ -9,14 +9,13 @@
 distribution(value, ...)
 }
 \arguments{
-\item{value}{either an integer specifiying the length of an empty vector or a vector of derived values}
+\item{object}{either an integer specifiying the length of an empty vector or a vector of derived values}
 }
 \description{
 This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution.
 }
 \details{
-If \code{length(x)>1} then the function creates an object containing values of \code{x}, otherwise it creates a vector of zero's of length equal to \code{x}. 
-The class contains an additional slot to hold parameters of distribution.
+The \code{object} input contains a list of values that determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then paramters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated.
 }
 \section{Slots}{
 
@@ -36,6 +35,6 @@ mu <- 0.1
 cv <- 0.2
 sd <- sqrt(log(1+cv^2))
 x <- rlnorm(iter,log(mu)-sd^2/2,sd)
-r <- distribution(x)
+r <- distribution(list(value = x, density = "lognormal"))
 
 }

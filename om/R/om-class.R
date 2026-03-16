@@ -19,11 +19,11 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', pars = 'list', data = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
+setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', shape = 'numeric', pars = 'list', data = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
 #}}}
 #{{{
 # initialisation function
-setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, time, phi = 1, ...) {
+setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, time, shape = 1, phi = 1, ...) {
     
     if(missing(harvest_function) | missing(ages)) {
         .Object@harvest_rate <- function() NA_real_
@@ -115,12 +115,12 @@ setMethod("show", "om",
               #message("fishery_inputs: ", if (length(object@fishery_inputs) > 0)  paste0(names(object@fishery_inputs), collapse = ", ") else red("EMPTY"))
               #message("life_history: ", if (length(object@life_history) > 0)  paste0(names(object@life_history), collapse = ", ") else red("EMPTY"))
               message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
-              message("\nharvest rate function:\t")
+              message("\nharvest_rate <- ")
               message(writeLines(deparse(object@harvest_rate)))
-              message("\nrmax:")
+              message("rmax:")
               show(distribution(list(value = object@pst$rmax, distribution = "lognormal")))
-              message("\npopulation dynamics:\t")
-              print(object@.Data)
+              #message("\npopulation dynamics:\t")
+              #print(object@.Data)
           })
 # }}}
 

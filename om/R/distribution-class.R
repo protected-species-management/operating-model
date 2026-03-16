@@ -100,6 +100,7 @@ setMethod("show", "distribution",
               message("density: ", object@density)
               message("pars: ", paste(round(object@pars, 3), collapse = ", "))
               message("values: ", if (length(object@.Data) == 0 | all(is.na(object@.Data))) red("EMPTY") else if (length(object@.Data) > 14) paste0(c(round(object@.Data[1:12], 3), "...", round(object@.Data[length(object@.Data)], 3)), collapse = ", ") else paste0(round(object@.Data, 3), collapse = ", "))
+              message("name: ", if (length(object@name) == 0) "--" else object@name)
               message("\t")
         })
 # }}}

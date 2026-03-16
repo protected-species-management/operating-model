@@ -5,6 +5,7 @@
 #' @export
 #' @include om-class.R dot_pdyn.R
 #' @import RTMB
+#' @import cli
 #{{{ shape()
 # wrapper for execution of population
 # dynamics function
@@ -30,6 +31,8 @@ setMethod("shape", signature = "om", function(object, depletion = 0.5, ...) {
     
     # 
     shape_values <- numeric(object@iter)
+    
+    cli_progress_step("Estimating the shape parameter ...", spinner = FALSE, msg_done = paste0("Estimated shape = ", object@shape))
     
     # set up objective
     # function and tape

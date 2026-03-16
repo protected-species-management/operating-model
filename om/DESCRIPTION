@@ -30,6 +30,7 @@ Collate:
     'biomass.R'
     'distribution-class.R'
     'distribution.R'
+    'dot_pdyn.R'
     'dynplot.R'
     'load_data.R'
     'load_pars.R'
@@ -42,6 +43,8 @@ Collate:
     'rp.R'
     'update_pars.R'
     'run_mnpl.R'
+    'shape.R'
+    'sp.om.R'
     'zzz.R'
 RoxygenNote: 7.3.3
 Encoding: UTF-8

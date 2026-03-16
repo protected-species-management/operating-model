@@ -1,4 +1,5 @@
-.pdyn <- function(h, shape, ntime) {
+#' @importFrom RTMB AD
+.pdyn <- function(h, shape, ntime, initial_depletion = 1) {
     
     n <- AD(array(dim = c(nages, ntime)))
     p <- vector("numeric", length = nages)
@@ -36,7 +37,7 @@
     k <- n_init / sum(n_init[-1])
     
     # initialise
-    n[, 1] <- k
+    n[, 1] <- k * initial_depletion
     
     # check birth function
     #isTRUE(all.equal(birth(1), n[1,1]))

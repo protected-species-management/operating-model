@@ -7,7 +7,7 @@
 \usage{
 sample(x, n, ...)
 
-\method{sample}{distribution}(x, n, ...)
+\method{sample}{distribution}(x, n = 1, ...)
 }
 \description{
 Sample from distribution class object

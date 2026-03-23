@@ -51,3 +51,14 @@ setMethod("objectives", signature = c("om"), function(object) {
 })
 #}}}
 
+#{{{
+#' @export
+setGeneric("pars", function(object, ...) standardGeneric("pars"))
+# accessor function
+#' @rdname targets
+setMethod("pars", signature = c("om"), function(object) {
+    object@pars
+})
+#}}}
+
+

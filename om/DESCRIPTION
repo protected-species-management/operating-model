@@ -9,6 +9,7 @@ Description: Simulation module for managed populations
 VignetteBuilder: knitr
 Depends:
     R (>= 4.4),
+	utils (>= 4.5),
     methods (>= 4.3),
     RTMB (>= 1.8),
     tmbstan (>= 1.0),
@@ -30,7 +31,7 @@ Collate:
     'biomass.R'
     'distribution-class.R'
     'distribution.R'
-    'dot_pdyn.R'
+    'dot-pdyn.R'
     'dynplot.R'
     'load_data.R'
     'load_pars.R'
@@ -41,7 +42,8 @@ Collate:
     'pdyn.R'
     'plot.distribution.R'
     'rp.R'
-    'rp2.R'
+    'rpd.R'
+    'rps.R'
     'update_pars.R'
     'run_mnpl.R'
     'shape.R'

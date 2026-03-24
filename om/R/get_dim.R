@@ -61,4 +61,18 @@ get_data.om <- function(object, env = environment()) {
     
     invisible()
 }
+#' @export
+get_seeds <- function(object, ...) UseMethod("get_seeds")
+#' @rdname get_dim
+#' @export
+get_seeds.om <- function(object, env = environment()) {
+    
+    if (is.environment(env)) {
+        assign("rng_seed", slot(get("object"), "seeds"), envir = env)
+    } else {
+        warning("not a valid environment!")    
+    }
+    
+    invisible()
+}
 

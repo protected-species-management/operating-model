@@ -73,15 +73,12 @@
 
 .pdyn2 <- function(h, shape, error, ntime, initial_depletion = 1) {
     
-    # progress message
-    cli_progress_step("Stochastic projection", spinner = TRUE, msg_done = "Done")
-    
-    n <- AD(array(dim = c(siter, nages, ntime)))
+    n <- AD(array(dim = c(nages, ntime)))
     p <- vector("numeric", length = nages)
     e <- error
     
-    birth <- function(i, y) {
-        0.5 * sum(pat[-1] * n[i,-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[i,-1,y]) / sum(k[-1]))^shape))
+    birth <- function(y) {
+        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
     }
     
     # set up unexploited 
@@ -112,36 +109,28 @@
     # (1+ depletion = 1)
     k <- n_init / sum(n_init[-1])
     
-    # loop over stochastic
-    # iterations
-    for (i in 1:siter) {
+    # initialise
+    n[, 1] <- k * initial_depletion
+    
+    # check birth function
+    #isTRUE(all.equal(birth(i,1), n[i,1,1]))
+    
+    for (y in 2:ntime) {
         
-        # spin spinner
-        cli_progress_update()
-        
-        # initialise
-        n[i,, 1] <- k * initial_depletion
-        
-        # check birth function
-        #isTRUE(all.equal(birth(i,1), n[i,1,1]))
-        
-        for (y in 2:ntime) {
+        for (a in 2:nages) {
             
-            for (a in 2:nages) {
-                
-                m <- M[a - 1] + e[i, y - 1]
-                
-                n[i, a, y] <- n[i, a - 1, y - 1] * exp(-1 * m) * (1 - sel[a - 1] * h) 
-            }
+            m <- M[a - 1] + e[y - 1]
             
-            # plus group
-            m <- M[nages] + e[i, y]
-            
-            n[i, nages, y] <- n[i, nages, y] + n[i, nages, y - 1] * exp(-1 * m) * (1 - sel[nages] * h)
-            
-            # birth
-            n[i, 1, y] <- birth(i, y)
+            n[a, y] <- n[a - 1, y - 1] * exp(-1 * m) * (1 - sel[a - 1] * h) 
         }
+        
+        # plus group
+        m <- M[nages] + e[y]
+        
+        n[nages, y] <- n[nages, y] + n[nages, y - 1] * exp(-1 * m) * (1 - sel[nages] * h)
+        
+        # birth
+        n[1, y] <- birth(y)
     }
     
     return(n)
@@ -150,16 +139,16 @@
 .ff <- function(h, shape, equilibrium_time = 1e3, env) {
     
     # run dynamics
-    n <- do.call(".pdyn", list(h = h, shape = shape, ntime = equilibrium_time), envir = env)
+    N <- do.call(".pdyn", list(h = h, shape = shape, ntime = equilibrium_time), envir = env)
     
     # equilibrium captures
-    captures <- sum(n[, equilibrium_time] * sel * h)
+    captures <- sum(N[, equilibrium_time] * sel * h)
     
     # equilibrium depletion
-    depletion <- sum(n[-1, equilibrium_time])
+    depletion <- sum(N[-1, equilibrium_time])
     
     # equilibrium per-capita birth
-    production <- n[1, equilibrium_time] / sum(n[-1, equilibrium_time] * pat[-1])
+    production <- N[1, equilibrium_time] / sum(N[-1, equilibrium_time] * pat[-1])
     
     # return lambda
     return(list(captures = captures, depletion = depletion, production = production))
@@ -167,20 +156,25 @@
 
 .ff2 <- function(h, shape, error, equilibrium_time = 1e3, env) {
     
+    # setup
+    N <- array(dim = c(siter, nages, equilibrium_time))
+    
     # run dynamics
-    n <- do.call(".pdyn2", list(h = h, shape = shape, error = error, ntime = equilibrium_time), envir = env)
+    for (i in 1:siter) {
+        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, error = error[i,], ntime = equilibrium_time), envir = env)
+    }
     
     # recent time
     recent_time <- ceiling((2 / 3) * equilibrium_time):equilibrium_time
     
     # equilibrium captures
-    captures <- mean(apply(sweep(n[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))
+    captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))
     
     # equilibrium depletion
-    depletion <- mean(apply(n[, -1, recent_time], 1, sum) / length(recent_time))
+    depletion <- mean(apply(N[, -1, recent_time], 1, sum) / length(recent_time))
     
     # equilibrium per-capita birth
-    production <- mean(apply(n[,1,recent_time], 1, sum) / apply(sweep(n[,-1, recent_time], 2, pat[-1], "*"), 1, sum))
+    production <- mean(apply(N[,1,recent_time], 1, sum) / apply(sweep(N[,-1, recent_time], 2, pat[-1], "*"), 1, sum))
     
     # return lambda
     return(list(captures = captures, depletion = depletion, production = production))

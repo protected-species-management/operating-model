@@ -14,11 +14,6 @@ setMethod("rpd", signature = "om", function(object, ...) {
     # current environment
     ENV <- environment()
     
-    # check environment for function call is
-    # consistent with current environment
-    environment(.pdyn) <- ENV
-    environment(.ff)   <- ENV
-    
     # load time, age and
     # iteration dimensions
     # into function environment
@@ -45,6 +40,11 @@ setMethod("rpd", signature = "om", function(object, ...) {
     # AGE-STRUCTURED MODEL    
     # {{{
         
+        # check environment for function call is
+        # consistent with current environment
+        environment(.pdyn) <- ENV
+        environment(.ff)   <- ENV
+        
         # set up objective
         # function to estimate
         # harvest rate at 
@@ -68,8 +68,14 @@ setMethod("rpd", signature = "om", function(object, ...) {
         # first iteration #
         ###################
         
+        # progress message
+        cli_progress_step("Estimating deterministic reference points ...", spinner = FALSE, msg_done = "Estimated deterministic reference points")
+        
         # sample pars
         pars_sample <- lapply(object@pars, sample, n = 1)
+        
+        # check data present
+        stopifnot(length(object@data) > 0)
         
         # setup (1)
         age_mat <- as.integer(pars_sample$a)

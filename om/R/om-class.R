@@ -19,7 +19,7 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', shape = 'numeric', pars = 'list', data = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
+setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', shape = 'numeric', pars = 'list', data = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
 #}}}
 #{{{
 # initialisation function
@@ -45,7 +45,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
         if (length(time) > 1) {
             .Object@time <- time
         } else {
-            .Object@time <- 1:time
+            .Object@time <- 0:(time - 1)
         }
     }
     
@@ -96,6 +96,11 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     # add dimensions to 
     # diagnostics
     #.Object@diagnostics <- lapply(.Object@diagnostics, function(x) matrix(NA_real_, nrow = length(.Object@time), ncol = .Object@iter))
+    
+    # record rng seeds
+    seeds <- floor(runif(iter, 1, 1e6))
+    while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(iter, 1, 1e6))
+    .Object@seeds <- as.integer(seeds)
     
     # return
     return(.Object)

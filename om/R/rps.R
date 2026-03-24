@@ -14,11 +14,6 @@ setMethod("rps", signature = "om", function(object, ...) {
     # current environment
     ENV <- environment()
     
-    # check environment for function call is
-    # consistent with current environment
-    environment(.pdyn2) <- ENV
-    environment(.ff2)   <- ENV
-    
     # load time, age and
     # iteration dimensions
     # into function environment
@@ -27,6 +22,9 @@ setMethod("rps", signature = "om", function(object, ...) {
     # load data inputs stored
     # in object@data
     #get_data(object, env = ENV)
+    
+    # get seeds
+    get_seeds(object, env = ENV)
     
     # reset targets
     # (catch)
@@ -45,6 +43,11 @@ setMethod("rps", signature = "om", function(object, ...) {
     # AGE-STRUCTURED MODEL    
     # {{{
         
+        # check environment for function call is
+        # consistent with current environment
+        environment(.pdyn2) <- ENV
+        environment(.ff2)   <- ENV
+        
         # set up objective
         # function to estimate
         # harvest rate at 
@@ -55,15 +58,28 @@ setMethod("rps", signature = "om", function(object, ...) {
             h     <- exp(x[1])
             shape <- exp(x[2])
             
-            n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr, ntime = 1e3), envir = ENV)
+            objective <- 0
             
-            # recent time
-            loc <- ceiling((2 / 3) * dim(n)[3]):dim(n)[3]
-            
-            # objective function from
-            # mean across stochastic
-            # iterations
-            objective <- -1 * mean(apply(sweep(n[,, loc], 2, sel, "*") * h, 1, sum) / length(loc))
+            for (i in 1:siter) {
+                
+                # spin spinner
+                cli_progress_update(.envir = ENV)
+                
+                # stochastic dynamics
+                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], ntime = 1e3), envir = ENV)
+                
+                # recent time
+                loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
+                
+                # objective function from
+                # mean across stochastic
+                # iterations
+                #objective <- -1 * mean(apply(sweep(n[,, loc], 2, sel, "*") * h, 1, sum) / length(loc))
+                
+                # log of the equilibrium catch
+                # per iteration
+                objective <- objective - log(sum(sweep(n[, loc], 1, sel, "*") * h) / length(loc))
+            }
             
             # return
             return(objective)
@@ -88,6 +104,9 @@ setMethod("rps", signature = "om", function(object, ...) {
         # sample process error
         perr <- matrix(rnorm(siter * 1e3, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = 1e3)
         
+        # check data present
+        stopifnot(length(object@data) > 0)
+        
         # setup (1)
         age_mat <- as.integer(pars_sample$a)
         age_pat <- age_mat + 1L
@@ -102,7 +121,7 @@ setMethod("rps", signature = "om", function(object, ...) {
         lambda <- exp(pars_sample$r)
         
         # progress message
-        cli_progress_message("Compiling model...")
+        cli_progress_step("Estimating stochastic reference points ...", spinner = TRUE, msg_done = "Estimated stochastic reference points", .envir = ENV)
         
         # function to estimate h_mnpl
         # given shape

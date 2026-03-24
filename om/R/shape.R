@@ -32,6 +32,7 @@ setMethod("shape", signature = "om", function(object, depletion = 0.5, ...) {
     # create container
     shape_values <- numeric(object@iter)
     
+    # progress message
     cli_progress_step("Estimating the shape parameter ...", spinner = FALSE, msg_done = "Estimated shape = {round(object@shape, 2)}")
     
     # set up objective
@@ -75,6 +76,9 @@ setMethod("shape", signature = "om", function(object, depletion = 0.5, ...) {
     # first iteration
     # sample pars
     pars_sample <- lapply(object@pars, sample, n = 1)
+    
+    # check data present
+    stopifnot(length(object@data) > 0)
     
     # setup (1)
     age_mat <- as.integer(pars_sample$a)

@@ -73,6 +73,9 @@ setMethod("rps", signature = "om", function(object, ...) {
         # first iteration #
         ###################
         
+        # set seed
+        set.seed(rng_seed[1])
+        
         # sample pars
         pars_sample <- lapply(object@pars, sample, n = 1)
         
@@ -119,6 +122,9 @@ setMethod("rps", signature = "om", function(object, ...) {
         if (niter > 1) {
             for (i in 2:niter) {
                 
+                # set seed
+                set.seed(rng_seed[i])
+                
                 # sample pars
                 pars_sample <- lapply(object@pars, sample, n = 1)
                 
@@ -135,7 +141,7 @@ setMethod("rps", signature = "om", function(object, ...) {
                 S      <- exp(-M)
                 lambda <- exp(pars_sample$r)
                 
-                # function to estimate h_mnpl
+                # re-compile function to estimate h_mnpl
                 # given shape
                 #h1 <- MakeTape(obj1, c(log(0.02), log(1)))
                 #h2 <- h1$newton(1)

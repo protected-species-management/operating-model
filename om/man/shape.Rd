@@ -4,7 +4,7 @@
 \alias{shape}
 \title{Calculate shape}
 \usage{
-shape(object, depletion, ...)
+shape(object, depletion, stochastic, ...)
 }
 \description{
 Calculates shape parameter given depeletion at MNPL.

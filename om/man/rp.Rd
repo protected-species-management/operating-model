@@ -2,9 +2,9 @@
 % Please edit documentation in R/rp.R
 \name{rp}
 \alias{rp}
-\title{Reference point calculation}
+\title{Stochastic reference point calculation}
 \usage{
-rp(object, ...)
+rp(object, stochastic, ...)
 }
 \description{
 Calculate the stochastic Maximum Net Productivity reference points.

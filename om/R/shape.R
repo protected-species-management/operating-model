@@ -79,8 +79,6 @@ setMethod("shape", signature = "om", function(object, depletion = 0.5, stochasti
             h      <- exp(h2(x[1])) # internal estimation of h_mnpl given shape
             target <- x[2]
             
-            n <- do.call(".pdyn2", list(h = h, shape = shape, ntime = 1e3), envir = ENV)
-            
             objective <- 0
             
             for (i in 1:siter) {

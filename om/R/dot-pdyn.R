@@ -142,7 +142,7 @@
     N <- do.call(".pdyn", list(h = h, shape = shape, ntime = equilibrium_time), envir = env)
     
     # equilibrium captures
-    captures <- sum(N[, equilibrium_time] * sel * h)
+    captures <- sum(N[, equilibrium_time] * sel * h) + N[nages, equilibrium_time] * sel[nages] * h
     
     # equilibrium depletion
     depletion <- sum(N[-1, equilibrium_time])
@@ -168,7 +168,7 @@
     recent_time <- ceiling((2 / 3) * equilibrium_time):equilibrium_time
     
     # equilibrium captures
-    captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))
+    captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time)) + mean(N[, nages, recent_time] * sel[nages] * h)
     
     # equilibrium depletion
     depletion <- mean(apply(N[, -1, recent_time], 1, sum) / length(recent_time))

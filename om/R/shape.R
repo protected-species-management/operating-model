@@ -94,7 +94,7 @@ setMethod("shape", signature = "om", function(object, depletion = 0.5, stochasti
                 
                 # log of the equilibrium catch
                 # per iteration
-                objective <- objective - dnorm(sum(n[-1, dim(n)[2]]), depletion, 0.01, log = TRUE)
+                objective <- objective - dnorm(mean(apply(n[-1, loc], 2, sum)), depletion, 0.01, log = TRUE)
             }
             
             # return objective
@@ -193,7 +193,7 @@ setMethod("shape", signature = "om", function(object, depletion = 0.5, stochasti
     h1 <- MakeTape(obj1, c(log(0.02), log(1)))
     h2 <- h1$newton(1)
     
-    #exp(h2(log(shape)))
+    #exp(h2(log(5)))
     
     # function to estimate
     # shape given target

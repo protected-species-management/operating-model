@@ -12,11 +12,9 @@ Depends:
 	utils (>= 4.5),
     methods (>= 4.3),
     RTMB (>= 1.8),
-    tmbstan (>= 1.0),
     shiny (>= 1.12)
 Repos:
-    kaskr/RTMB,
-    kaskr/tmbstan
+    kaskr/RTMB
 Suggests:
     rmarkdown (>= 2.6),
     knitr (>= 1.31),

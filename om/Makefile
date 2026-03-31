@@ -7,7 +7,7 @@ all: documentation dependencies install
 
 dependencies: 
 	Rscript \
-	-e 'if (!requireNamespace("remotes")) install.packages("remotes")' \
+	-e 'if (!requireNamespace("remotes")) install.packages("remotes", contriburl = "https://cran.ma.imperial.ac.uk/bin/windows/contrib/4.5/")' \
 	-e 'remotes::install_deps(dependencies = TRUE)' 
 
 documentation:

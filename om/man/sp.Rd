@@ -5,9 +5,9 @@
 \alias{sp.om}
 \title{Surplus production function}
 \usage{
-sp(object, harvest_rate, stochastic, ...)
+sp(object, harvest_rate, ...)
 
-\method{sp}{om}(object, harvest_rate, stochastic = FALSE, ...)
+\method{sp}{om}(object, harvest_rate, ...)
 }
 \value{
 A data frame containing depletion, sustainable captures and the harvest rate, for each of the input harvest rate values. If life-history inputs are uncertain, iterations are sampled. These iterations do not represent any process error, only uncertainty in the operating model conditioning.

@@ -5,10 +5,9 @@
 #' @slot ages integer vector of ages assumed by operating model. Set to \code{NA} when a cohort aggregated model is assumed.
 #' @slot time integer vector of times used for operating model projection or single value given the number of time steps.
 #' @slot iter integer value indicating number of stochastic iterations.
-#' @slot life_history names list of life history inputs. See \code{\link{load_life_history}}.
-#' @slot fishery_inputs named list of fishery inputs. See \code{\link{load_fishery_inputs}}.
+#' @slot stochastic logical indicating whether stochastic dynamics are being assumed. 
 #' @slot pars list of estimated values used by the operating model. See \code{\link{load_pars}}.
-#' @slot pars list of data values used by the operating model. See \code{\link{load_data}}.
+#' @slot fixed list of fixed input values used by the operating model. See \code{\link{load_data}}.
 #' @slot harvest_rate function containing the harvest rate function.
 #' @slot pst list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.
 #' @slot targets list containing \code{catch}, \code{depletion} and \code{harvest_rate} target reference points. These should be set at the appropriate level for the operating model being assumed. See \code{load_targets}.
@@ -19,7 +18,7 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', shape = 'numeric', pars = 'list', data = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
+setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', stochastic = 'list', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', fixed = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
 #}}}
 #{{{
 # initialisation function
@@ -55,6 +54,15 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
         .Object@ages <- ages
     }
     
+    # no default
+    .Object@stochastic <- list(ref_points = NA, projections = NA) 
+    
+    # setup settings required
+    # for reference point
+    # estimation
+    .Object@settings$stochastic_iterations <- NA_integer_
+    .Object@settings$equilibrium_time      <- NA_integer_
+    
     # setup PST limit
     # reference point
     .Object@pst$phi     <- phi
@@ -73,18 +81,18 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     
     # setup management
     # target reference points
-    # (MNPL values)
-    .Object@targets$catch        <- NA_real_
+    # (estimated or assumed MNPL values)
+    .Object@targets$captures     <- NA_real_
     .Object@targets$harvest_rate <- NA_real_
     .Object@targets$depletion    <- NA_real_
     
     # set up diagnostics
-    .Object@diagnostics$catch        <- NA_real_
+    .Object@diagnostics$captures     <- NA_real_
     .Object@diagnostics$depletion    <- NA_real_
     .Object@diagnostics$harvest_rate <- NA_real_
     
     # set up objectives
-    .Object@objectives$catch        <- NA_real_
+    .Object@objectives$captures     <- NA_real_
     .Object@objectives$depletion    <- NA_real_
     .Object@objectives$harvest_rate <- NA_real_
     
@@ -120,10 +128,11 @@ setMethod("show", "om",
               #message("fishery_inputs: ", if (length(object@fishery_inputs) > 0)  paste0(names(object@fishery_inputs), collapse = ", ") else red("EMPTY"))
               #message("life_history: ", if (length(object@life_history) > 0)  paste0(names(object@life_history), collapse = ", ") else red("EMPTY"))
               message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
-              message("\nharvest_rate <- ")
+              message("shape: ", if (length(object@shape) > 0) round(object@shape, 2) else red("EMPTY"))
+              message("\nharvest rate function:")
               message(writeLines(deparse(object@harvest_rate)))
               message("rmax:")
-              show(distribution(list(value = object@pst$rmax, distribution = "lognormal")))
+              show(distribution(list(value = object@pst$rmax, distribution = "lognormal", name = "rmax")))
               #message("\npopulation dynamics:\t")
               #print(object@.Data)
           })

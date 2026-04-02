@@ -19,13 +19,11 @@ Each list entry in \code{life_history}, \code{fishery_inputs} and \code{pars} sl
 
 \item{\code{iter}}{integer value indicating number of stochastic iterations.}
 
-\item{\code{life_history}}{names list of life history inputs. See \code{\link{load_life_history}}.}
-
-\item{\code{fishery_inputs}}{named list of fishery inputs. See \code{\link{load_fishery_inputs}}.}
+\item{\code{stochastic}}{logical indicating whether stochastic dynamics are being assumed.}
 
 \item{\code{pars}}{list of estimated values used by the operating model. See \code{\link{load_pars}}.}
 
-\item{\code{pars}}{list of data values used by the operating model. See \code{\link{load_data}}.}
+\item{\code{fixed}}{list of fixed input values used by the operating model. See \code{\link{load_data}}.}
 
 \item{\code{harvest_rate}}{function containing the harvest rate function.}
 

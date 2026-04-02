@@ -1,15 +1,20 @@
 #' @title Stochastic reference point calculation
 #' @description 
-#' Calculate the stochastic Maximum Net Productivity reference points.
-#' 
+#' Calculate the Maximum Net Productivity reference points.
+#' @param object \code{om} class object
+#' @param stochastic Logical indicating whether stochastic dynamics are assumed
+#' @param equilibrium_time Time horizon used for projection to assumed equilibrium
+#' @param iterations Process error iterations used for stochastic projection
+#' @note This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function. 
+#' @seealso [targets()]
 #' @export
 #' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R
 #' @import RTMB
 #' @import cli
-#{{{ rps()
+#{{{ rp()
 # wrapper for execution of function
-setGeneric("rp", function(object, stochastic, ...) standardGeneric("rp"))
-setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
+setGeneric("rp", function(object, stochastic, equilibrium_time, iterations, ...) standardGeneric("rp"))
+setMethod("rp", signature = "om", function(object, stochastic = FALSE, equilibrium_time = 200L, iterations = ifelse(stochastic, 300L, NA_integer_), ...) {
     
     # current environment
     ENV <- environment()
@@ -22,13 +27,50 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
     # get seeds
     get_seeds(object, env = ENV)
     
+    # record stochasticity
+    object@stochastic$ref_points <- as.logical(stochastic)
+    
     # reset targets
     # (catch)
-    object@targets$catch <- numeric(object@iter)
+    object@targets$captures <- rep(NA_real_, object@iter)
     # (depletion)
-    object@targets$depletion <- numeric(object@iter)
+    object@targets$depletion <- rep(NA_real_, object@iter)
     # (harvest rate)
-    object@targets$harvest_rate <- numeric(object@iter)
+    if (all(is.na(object@targets$harvest_rate))) {
+        object@targets$harvest_rate <- rep(NA_real_, object@iter)
+    } else {
+        cli_alert_info("'object' already contains 'harvest_rate' reference point estimates (no estimation needed)")    
+    }
+    
+    # settings
+    if (missing(iterations)) {
+        
+        siter <- object@settings$stochastic_iterations
+    
+    } else {
+        
+        if (!is.na(object@settings$stochastic_iterations)) { if (iterations != object@settings$stochastic_iterations) {
+            warning("'iterations' argument updates value in 'object@settings$stochastic_iterations'")
+        }}
+        
+        siter <- object@settings$stochastic_iterations <- iterations
+    }
+    if (missing(equilibrium_time)) {
+        
+        equ_time <- object@settings$equilibrium_time
+    
+    } else {
+        
+        if (!is.na(object@settings$equilibrium_time)) { if (equilibrium_time != object@settings$equilibrium_time) {
+            warning("'equilibrium_time' argument updates value in 'object@settings$equilibrium_time'")
+        }}
+        
+        equ_time <- object@settings$equilibrium_time <- equilibrium_time
+    }
+    
+    # checks
+    if (is.na(siter) & stochastic) stop("process error 'iterations' argument required")
+    if (is.na(equ_time))           stop("'equilibrium_time' argument required")
     
     # PT model
     # {{{
@@ -38,6 +80,35 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
     } else {
     # AGE-STRUCTURED MODEL    
     # {{{
+        
+        # check environment for function call is
+        # consistent with current environment
+        environment(.pdyn) <- ENV
+        environment(.ff)   <- ENV
+        
+        # set up objective
+        # function to estimate
+        # harvest rate at 
+        # maximum sustainable 
+        # catch
+        # (deterministic)
+        obj1 <- function(x) {
+            
+            h     <- exp(x[1])
+            shape <- exp(x[2])
+            
+            # spin spinner
+            cli_progress_update(.envir = ENV)
+            
+            # deterministic dynamics
+            n <- do.call(".pdyn", list(h = h, shape = shape, initial_depletion = 0.5, ntime = equ_time), envir = ENV)
+            
+            # objective function
+            objective <- -1 * log(sum(n[, dim(n)[2]] * sel * h))
+            
+            # return
+            return(objective)
+        }
         
         if (stochastic) {
             
@@ -51,7 +122,7 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
             # harvest rate at 
             # maximum sustainable 
             # catch
-            obj1 <- function(x) {
+            obj2 <- function(x) {
                 
                 h     <- exp(x[1])
                 shape <- exp(x[2])
@@ -64,15 +135,10 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
                     cli_progress_update(.envir = ENV)
                     
                     # stochastic dynamics
-                    n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], ntime = 1e3), envir = ENV)
+                    n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], initial_depletion = 0.5, ntime = equ_time), envir = ENV)
                     
                     # recent time
                     loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
-                    
-                    # objective function from
-                    # mean across stochastic
-                    # iterations
-                    #objective <- -1 * mean(apply(sweep(n[,, loc], 2, sel, "*") * h, 1, sum) / length(loc))
                     
                     # log of the equilibrium catch
                     # per iteration
@@ -83,35 +149,6 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
                 return(objective)
             }
         
-        } else {
-            
-            # check environment for function call is
-            # consistent with current environment
-            environment(.pdyn) <- ENV
-            environment(.ff)   <- ENV
-            
-            # set up objective
-            # function to estimate
-            # harvest rate at 
-            # maximum sustainable 
-            # catch
-            obj1 <- function(x) {
-                
-                h     <- exp(x[1])
-                shape <- exp(x[2])
-                
-                # spin spinner
-                cli_progress_update(.envir = ENV)
-                
-                # deterministic dynamics
-                n <- do.call(".pdyn", list(h = h, shape = shape, ntime = 1e3), envir = ENV)
-                
-                # objective function
-                objective <- -1 * log(sum(n[, dim(n)[2]] * sel * h))
-                
-                # return
-                return(objective)
-            }
         }
         
         ###################
@@ -127,22 +164,19 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
         if (stochastic) {
             
             # log-normal process error term
-            sigmap <- sqrt(log(1 + object@data$cv_dynamics^2))
-            
-            # stochastic iterations
-            siter <- object@data$stochastic_iterations
+            sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
             
             # sample process error
-            perr <- matrix(rnorm(siter * 1e3, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = 1e3)
+            perr <- matrix(rnorm(siter * equ_time, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = equ_time)
         }
         
         # check data present
-        stopifnot(length(object@data) > 0)
+        stopifnot(length(object@fixed) > 0)
         
         # setup (1)
         age_mat <- as.integer(pars_sample$a)
         age_pat <- age_mat + 1L
-        age_sel <- as.integer(object@data$selectivity)
+        age_sel <- as.integer(object@fixed$selectivity)
         
         # setup (2)
         mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
@@ -153,29 +187,53 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
         lambda <- exp(pars_sample$r)
         
         # progress message
-        if (stochastic) {
-            cli_progress_step("Estimating stochastic reference points ...", spinner = TRUE, msg_done = "Estimated stochastic reference points", .envir = ENV)
-        } else {
-            cli_progress_step("Estimating deterministic reference points ...", spinner = TRUE, msg_done = "Estimated deterministic reference points", .envir = ENV)
+        if (all(is.na(object@targets$harvest_rate))) {
+            if (stochastic) {
+                cli_progress_step("Estimating stochastic reference points ...", spinner = TRUE, msg_done = "Estimated stochastic reference points", .envir = ENV)
+            } else {
+                cli_progress_step("Estimating deterministic reference points ...", spinner = TRUE, msg_done = "Estimated deterministic reference points", .envir = ENV)
+            }
         }
         
-        # function to estimate h_mnpl
-        # given shape
-        h1 <- MakeTape(obj1, c(log(0.02), log(1)))
-        h2 <- h1$newton(1)
+        # check shape exists
+        stopifnot(length(object@shape) > 0)
         
-        # record estimate
-        object@targets$harvest_rate[1] <- exp(h2(log(object@shape)))
+        # re-estimate h_mnpl only
+        # if necessary
+        if (is.na(object@targets$harvest_rate[1])) {
+            
+            # function to estimate h_mnpl
+            # given shape
+            h1 <- MakeTape(obj1, c(log(0.02), log(1)))
+            h2 <- h1$newton(1)
+    
+            # record initial 
+            # deterministic estimates
+            h_log_init <- h2(log(object@shape))
+            
+            if (stochastic) {
+            
+                h1 <- MakeTape(obj1, c(h_log_init, log(object@shape)))
+                h2 <- h1$newton(1)
+                
+                # record estimate
+                object@targets$harvest_rate[1] <- exp(h2(log(object@shape)))
+            
+            } else {
+                
+                object@targets$harvest_rate[1] <- exp(h_log_init)
+            }
+        }
         
         if (stochastic) {
         
-            object@targets$catch[1]        <- .ff2(object@targets$harvest_rate[1], shape = object@shape, error = perr, env = ENV)$captures
-            object@targets$depletion[1]    <- .ff2(object@targets$harvest_rate[1], shape = object@shape, error = perr, env = ENV)$depletion
+            object@targets$captures[1]  <- .ff2(object@targets$harvest_rate[1], shape = object@shape, error = perr, equilibrium_time = equ_time, env = ENV)$captures
+            object@targets$depletion[1] <- .ff2(object@targets$harvest_rate[1], shape = object@shape, error = perr, equilibrium_time = equ_time, env = ENV)$depletion
         
         } else {
             
-            object@targets$catch[1]        <- .ff(object@targets$harvest_rate[1], shape = object@shape, env = ENV)$captures
-            object@targets$depletion[1]    <- .ff(object@targets$harvest_rate[1], shape = object@shape, env = ENV)$depletion    
+            object@targets$captures[1]  <- .ff(object@targets$harvest_rate[1], shape = object@shape, equilibrium_time = equ_time, env = ENV)$captures
+            object@targets$depletion[1] <- .ff(object@targets$harvest_rate[1], shape = object@shape, equilibrium_time = equ_time, env = ENV)$depletion    
         }
         
         #######################
@@ -195,7 +253,7 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
                 # setup (1)
                 age_mat <- as.integer(pars_sample$a)
                 age_pat <- age_mat + 1L
-                age_sel <- as.integer(object@data$selectivity)
+                age_sel <- as.integer(object@fixed$selectivity)
                 
                 # setup (2)
                 mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
@@ -210,18 +268,21 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, ...) {
                 #h1 <- MakeTape(obj1, c(log(0.02), log(1)))
                 #h2 <- h1$newton(1)
                 
-                # record estimate
-                object@targets$harvest_rate[i] <- exp(h2(log(object@shape)))
+                # record estimate if
+                # necessary
+                if (is.na(object@targets$harvest_rate[i])) {
+                    object@targets$harvest_rate[i] <- exp(h2(log(object@shape)))
+                }
                 
                 if (stochastic) {
                     
-                    object@targets$catch[i]        <- .ff2(object@targets$harvest_rate[1], shape = object@shape, error = perr, env = ENV)$captures
-                    object@targets$depletion[i]    <- .ff2(object@targets$harvest_rate[1], shape = object@shape, error = perr, env = ENV)$depletion
+                    object@targets$captures[i]  <- .ff2(object@targets$harvest_rate[i], shape = object@shape, error = perr, equilibrium_time = equ_time, env = ENV)$captures
+                    object@targets$depletion[i] <- .ff2(object@targets$harvest_rate[i], shape = object@shape, error = perr, equilibrium_time = equ_time, env = ENV)$depletion
                     
                 } else {
                     
-                    object@targets$catch[i]        <- .ff(object@targets$harvest_rate[1], shape = object@shape, env = ENV)$captures
-                    object@targets$depletion[i]    <- .ff(object@targets$harvest_rate[1], shape = object@shape, env = ENV)$depletion    
+                    object@targets$captures[i]  <- .ff(object@targets$harvest_rate[i], shape = object@shape, equilibrium_time = equ_time, env = ENV)$captures
+                    object@targets$depletion[i] <- .ff(object@targets$harvest_rate[i], shape = object@shape, equilibrium_time = equ_time, env = ENV)$depletion    
                 }
             }
         }

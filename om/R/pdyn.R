@@ -3,11 +3,13 @@
 #' @description The population dynamics function is called per-iteration.
 #' 
 #' @export
-#' @include om-class.R
+#' @include om-class.R get_dim.R
 #' @import RTMB
+#' @import cli
+#' @import glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, stochastic, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, initial_depletion = 1.0, ...) {
     
     # current environment
     ENV <- environment()
@@ -28,14 +30,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
     # set seed
     set.seed(rng_seed[1])
     
+    # get shape
+    get_shape(object, env = ENV)
+    
     # define process error
     if (stochastic) {
         
         # log-normal process error term
-        sigmap <- sqrt(log(1 + object@data$cv_dynamics^2))
+        sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
         
         # stochastic iterations
-        siter <- object@data$stochastic_iterations
+        siter <- object@fixed$stochastic_iterations
         
         # sample process error
         perr <- matrix(rnorm(siter * ntime, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = ntime)    
@@ -62,14 +67,14 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
     
     # setup diagnostics
     # (catch)
-    object@diagnostics$catch <- array(dim = c(niter, siter, ntime - 1)) #matrix(NA_real_, nrow = iter, ncol = ntime - 1)
+    object@diagnostics$captures <- array(dim = c(niter, siter, ntime - 1))
     # (depletion)
-    object@diagnostics$depletion <- array(dim = c(niter, siter, ntime)) #matrix(NA_real_, nrow = iter, ncol = ntime)
+    object@diagnostics$depletion <- array(dim = c(niter, siter, ntime)) 
     # (harvest rate)
-    object@diagnostics$harvest_rate <- array(dim = c(niter, siter, ntime - 1)) #matrix(NA_real_, nrow = iter, ncol = ntime - 1)
+    object@diagnostics$harvest_rate <- array(dim = c(niter, siter, ntime - 1))
     
     # pst
-    object@pst$value <- array(dim = c(niter, siter, ntime)) #matrix(NA_real_, nrow = iter, ncol = ntime)
+    object@pst$value <- array(dim = c(niter, siter, ntime))
     
     # progress
     msg <- ""
@@ -87,12 +92,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
         pars_sample <- lapply(object@pars, sample, n = 1)
         
         # check data present
-        stopifnot(length(object@data) > 0)
+        stopifnot(length(object@fixed) > 0)
         
         # setup (1)
         age_mat <- as.integer(pars_sample$a)
         age_pat <- age_mat + 1L
-        age_sel <- as.integer(object@data$selectivity)
+        age_sel <- as.integer(object@fixed$selectivity)
         
         # setup (2)
         mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
@@ -101,7 +106,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
         M      <- c(sqrt(pars_sample$M), rep(pars_sample$M, nages - 1))
         S      <- exp(-M)
         lambda <- exp(pars_sample$r)
-        K      <- object@data$K
+        K      <- object@fixed$K
         
         # dummy values
         b_eq  <- 0
@@ -157,7 +162,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
         p      <- vector("numeric", length = nages)
         p_init <- vector("numeric", length = nages)
         
-        proj_n         <- array(dim = c(siter, nages, time))
+        proj_n         <- array(dim = c(siter, nages, ntime))
         proj_h         <- array(dim = c(siter, ntime - 1))
         proj_catch     <- array(dim = c(siter, ntime - 1))
         proj_depletion <- array(dim = c(siter, ntime))
@@ -177,19 +182,19 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
         p[nages] <- p[nages] / (1 - exp(-M[nages]))
         
         # add dimensions to pars
-        object@pars <- lapply(object@pars, function(x) {
-            if (x@iter == 0 | length(x@.Data) <= 1) {
-                x@iter  <- object@iter 
-                x@.Data <- rep(NA_real_, object@iter)
-            }
-            return(x) 
-        })
+        #object@pars <- lapply(object@pars, function(x) {
+        #    if (length(x@.Data) <= object@iter) {
+        #        x@iter  <- object@iter 
+        #        x@.Data <- sample(x, n = object@iter)
+        #    }
+        #    return(x) 
+        #})
         
         # add dimensions to rmax
-        if (object@pst$rmax@iter == 0 | length(object@pst$rmax@.Data) <= 1) {
-            object@pst$rmax@iter  <- object@iter 
-            object@pst$rmax@.Data <- rep(NA_real_, object@iter)
-        }
+        #if (length(object@pst$rmax@.Data) < object@iter) {
+        #    object@pst$rmax@iter  <- object@iter 
+        #    object@pst$rmax@.Data <- sample(object@pst$rmax, n = object@iter)
+        #}
         
         #######################
         # monte-carlo samples #
@@ -240,7 +245,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
             
             # maximum birth rate
             # per female
-            b_max <- 2 * (lambda^(age_pat) - S1 * lambda^(age_pat - 1)) / (S0 * S1^(age_pat - 1))
+            b_max <- 2 * (lambda^(age_pat) - S[2] * lambda^(age_pat - 1)) / (S[1] * S[2]^(age_pat - 1))
             
             # initialise population
             # at equilibrium
@@ -292,7 +297,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
                 }
                 
                 # values per-year
-                proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-ntime] * proj_h[j,] + n[nages,] * sel[nages] * proj_h[j,] 
+                proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-ntime] * proj_h[j,] 
                 proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
                 proj_n[j,,]        <- n
                 
@@ -303,7 +308,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
             
             # update time series diagnostics
             # (catch)
-            object@diagnostics$catch[i,,] <- proj_catch
+            object@diagnostics$captures[i,,] <- proj_catch
             # (depletion)
             object@diagnostics$depletion[i,,] <- proj_depletion
             # (harvest rate)
@@ -328,7 +333,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
     p_lower  <- function(x, y) ifelse(x < y, 1, ifelse(x > y, 0, 0.5))
     
     # (prob. that catch is less than that required to meet MNPL)
-    object@objectives$catch        <- array(dim = c(niter, ntime - 1))
+    object@objectives$captures     <- array(dim = c(niter, ntime - 1))
     # (prob. that depletion is greater than the depletion at MNPL)
     object@objectives$depletion    <- array(dim = c(niter, ntime))
     # (prob. that harvest rate is less than that required to meet MNPL)
@@ -336,9 +341,9 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, ...) {
     
     for (i in 1:niter) {
         
-        object@objectives$catch[i,]        <- apply(sweep(object@diagnostics$catch[i,,],        1, object@targets$catch, p_lower),        1, mean, na.rm = TRUE)
-        object@objectives$depletion[i,]    <- apply(sweep(object@diagnostics$depletion[i,,],    1, object@targets$depletion, p_higher),   1, mean, na.rm = TRUE)
-        object@objectives$harvest_rate[i,] <- apply(sweep(object@diagnostics$harvest_rate[i,,], 1, object@targets$harvest_rate, p_lower), 1, mean, na.rm = TRUE)
+        object@objectives$captures[i,]     <- apply(sweep(matrix(object@diagnostics$captures[i,,], nrow = siter),     1, object@targets$captures[i], p_lower),     2, mean, na.rm = TRUE)
+        object@objectives$depletion[i,]    <- apply(sweep(matrix(object@diagnostics$depletion[i,,], nrow = siter),    1, object@targets$depletion[i], p_higher),   2, mean, na.rm = TRUE)
+        object@objectives$harvest_rate[i,] <- apply(sweep(matrix(object@diagnostics$harvest_rate[i,,], nrow = siter), 1, object@targets$harvest_rate[i], p_lower), 2, mean, na.rm = TRUE)
     }
     
     # dimnames (after calculations)

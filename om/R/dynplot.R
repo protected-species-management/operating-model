@@ -23,7 +23,7 @@ dynplot <- function(object, ...) UseMethod("dynplot")
 #' @export
 dynplot.om <- function(object, pars = 'depletion') {
     
-    stopifnot(all(pars %in% c("depletion", "harvest_rate", "catch")))
+    stopifnot(all(pars %in% c("depletion", "harvest_rate", "captures")))
     
     get_dim(object, env = environment())
     
@@ -31,21 +31,28 @@ dynplot.om <- function(object, pars = 'depletion') {
     
     lst <- list()
     
+    dm <- dimnames(object@.Data)[c(1,2,4)]
+    
     for (par in pars) {
         
-        if (par == "depletion") dm <- list(iter = 1:niter, time = time) else dm <- list(iter = 1:niter, time = time[-ntime]) 
+        if (par %in% c("harvest_rate", "captures")) dm$time <- dm$time[-length(dm$time)] 
         
-        dfr <- array2dfr(slot(y, 'diagnostics')[[par]], dim.names = dm)
+        #dfr <- array2dfr(slot(y, 'diagnostics')[[par]], dim.names = dm)
     
+        dfr <- slot(y, 'diagnostics')[[par]]
+        dimnames(dfr) <- dm
+        dfr <- array2DF(dfr, responseName = "value")
+        
         dfr$time <- as.numeric(dfr$time)
         dfr$iter <- as.numeric(dfr$iter)
+        dfr$stochastic_iter  <- as.numeric(dfr$stochastic_iter )
         
         lst[[par]] <- na.omit(dfr)
     }
     
     dfr <- bind_rows(lst, .id = 'par')    
     
-    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "catch"), par2 = c("Depletion", "Harvest rate", "Captures")), by = 'par')
+    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "captures"), par2 = c("Depletion", "Harvest rate", "Captures")), by = 'par')
     
     gg <- ggplot(dfr, aes(.data$time, .data$value))
 
@@ -66,11 +73,15 @@ dynplot.om <- function(object, pars = 'depletion') {
 #' @export
 dynplot.list <- function(object, pars = 'depletion', labels = character()) {
     
-    stopifnot(all(pars %in% c("depletion", "harvest_rate", "catch")))
+    stop("not currently working for list input...")
+    
+    stopifnot(all(pars %in% c("depletion", "harvest_rate", "captures")))
     
     get_dim(object[[1]], env = environment())
     
     y <- object #c(object, list(...))
+    
+    dm <- dimnames(object@.Data)[c(1,2,4)]
     
     is.labelled <- ifelse(length(labels) > 0, TRUE, FALSE)
     
@@ -108,7 +119,7 @@ dynplot.list <- function(object, pars = 'depletion', labels = character()) {
     
     dfr <- bind_rows(lst, .id = 'par')    
     
-    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "catch"), par2 = c("Depletion", "Harvest rate", "Captures")), by = "par")
+    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "captures"), par2 = c("Depletion", "Harvest rate", "Captures")), by = "par")
     
     if (length(y) > 1) {
         gg <- ggplot(dfr, aes(.data$time, .data$value, col = .data$label, fill = .data$label))

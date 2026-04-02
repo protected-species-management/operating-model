@@ -5,10 +5,10 @@
 #' @include dot-pdyn.R
 #' @importFrom dplyr bind_rows
 #' @export
-sp <- function(object, harvest_rate, stochastic, ...) UseMethod("sp")
+sp <- function(object, harvest_rate, ...) UseMethod("sp")
 #' @rdname sp
 #' @export
-sp.om <- function(object, harvest_rate, stochastic = FALSE, ...) {
+sp.om <- function(object, harvest_rate, ...) {
     
     # current environment
     ENV <- environment()
@@ -20,6 +20,13 @@ sp.om <- function(object, harvest_rate, stochastic = FALSE, ...) {
     
     # get seeds
     get_seeds(object, env = ENV)
+    
+    # get stochastic
+    stochastic <- object@stochastic$ref_points
+    
+    # settings
+    equ_time <- object@settings$equilibrium_time
+    siter    <- object@settings$stochastic_iterations
     
     if (stochastic) {
         
@@ -33,13 +40,10 @@ sp.om <- function(object, harvest_rate, stochastic = FALSE, ...) {
         environment(.ff2)   <- ENV
         
         # log-normal process error term
-        sigmap <- sqrt(log(1 + object@data$cv_dynamics^2))
-        
-        # stochastic iterations
-        siter <- object@data$stochastic_iterations
+        sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
         
         # sample process error
-        perr <- matrix(rnorm(siter * 1e3, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = 1e3)
+        perr <- matrix(rnorm(siter * equ_time, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = equ_time)
         
     } else {
         
@@ -69,7 +73,7 @@ sp.om <- function(object, harvest_rate, stochastic = FALSE, ...) {
         # setup (1)
         age_mat <- as.integer(pars_sample$a)
         age_pat <- age_mat + 1L
-        age_sel <- as.integer(object@data$selectivity)
+        age_sel <- as.integer(object@fixed$selectivity)
         
         # setup (2)
         mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
@@ -85,20 +89,25 @@ sp.om <- function(object, harvest_rate, stochastic = FALSE, ...) {
         
         if (stochastic) {
             
+            cli_progress_step("Calculating stochastic surplus production function ...", spinner = TRUE, msg_done = "Calculated stochastic production function", .envir = ENV)
+            
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape, error = perr, env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape, error = perr, equilibrium_time = equ_time, env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
                 pvalue[j] <- tmp$production
+                
+                # spin spinner
+                cli_progress_update(.envir = ENV)
             }
             
         } else {
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[j], shape = object@shape, env = ENV)
+                tmp <- .ff(harvest_rate[j], shape = object@shape, equilibrium_time = equ_time, env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion

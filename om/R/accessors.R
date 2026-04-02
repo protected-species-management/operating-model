@@ -24,7 +24,7 @@ setGeneric("diagnostics", function(object, ...) standardGeneric("diagnostics"))
 setMethod("diagnostics", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
-    lapply(object@diagnostics, function(x) array2dfr(x, dim.names = list(iteration = 1:object@iter, time = object@time)))
+    lapply(object@diagnostics, function(x) array2dfr(x, dim.names = list(iteration = 1:object@iter, stochastic_iteration = 1:dim(x)[2], time = object@time)))
 })
 #}}}
 #{{{
@@ -47,7 +47,7 @@ setGeneric("objectives", function(object, ...) standardGeneric("objectives"))
 setMethod("objectives", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: probability of reaching management target :::"))
-    lapply(object@objectives,  function(x) { y <- data.frame(time = time, value = x);  as_tibble(y) })
+    lapply(object@objectives,  function(x) array2dfr(x, dim.names = list(iteration = 1:object@iter, time = min(object@time):(min(object@time) + dim(x)[2] - 1))))
 })
 #}}}
 

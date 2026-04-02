@@ -4,8 +4,23 @@
 \alias{rp}
 \title{Stochastic reference point calculation}
 \usage{
-rp(object, stochastic, ...)
+rp(object, stochastic, equilibrium_time, iterations, ...)
+}
+\arguments{
+\item{object}{\code{om} class object}
+
+\item{stochastic}{Logical indicating whether stochastic dynamics are assumed}
+
+\item{equilibrium_time}{Time horizon used for projection to assumed equilibrium}
+
+\item{iterations}{Process error iterations used for stochastic projection}
 }
 \description{
-Calculate the stochastic Maximum Net Productivity reference points.
+Calculate the Maximum Net Productivity reference points.
+}
+\note{
+This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function.
+}
+\seealso{
+[targets()]
 }

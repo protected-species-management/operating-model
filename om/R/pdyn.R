@@ -9,7 +9,7 @@
 #' @import glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, stochastic, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, initial_depletion = 1.0, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, initial_depletion = 1.0, ...) {
     
     # current environment
     ENV <- environment()
@@ -18,6 +18,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, initial
     # function has correct
     # environment
     environment(object@harvest_rate) <- ENV
+    
+    # update object
+    if (!missing(stochastic)) {
+        object@stochastic$projections <- as.logical(stochastic)
+    }
+    if (!missing(iterations)) {
+        object@iter[2] <- as.integer(iterations)
+    }
+    
+    # flag stochastic
+    STOCHASTIC <- object@stochastic$projections
     
     # load time, age and
     # iteration dimensions
@@ -34,13 +45,13 @@ setMethod("pdyn", signature = "om", function(object, stochastic = FALSE, initial
     get_shape(object, env = ENV)
     
     # define process error
-    if (stochastic) {
+    if (STOCHASTIC) {
         
         # log-normal process error term
         sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
         
         # stochastic iterations
-        siter <- object@fixed$stochastic_iterations
+        siter <- object@iter[2]
         
         # sample process error
         perr <- matrix(rnorm(siter * ntime, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = ntime)    

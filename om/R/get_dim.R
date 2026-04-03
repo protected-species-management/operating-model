@@ -11,7 +11,8 @@ get_dim.om <- function(object, env = environment()) {
     
     ages   <- object@ages
     time   <- object@time
-    niter  <- object@iter
+    niter  <- object@iter[1]
+    siter  <- object@iter[2]
     
     nages  <- length(ages)
     ntime  <- length(time)
@@ -48,13 +49,13 @@ get_values.om <- function(object, iter = 1, env = environment()) {
     invisible()
 }
 #' @export
-get_data <- function(object, ...) UseMethod("get_data")
+get_fixed <- function(object, ...) UseMethod("get_fixed")
 #' @rdname get_dim
 #' @export
-get_data.om <- function(object, env = environment()) {
+get_fixed.om <- function(object, env = environment()) {
     
     if (is.environment(env)) {
-        lapply(names(object@data), function(x) assign(x, slot(get("object"), "data")[[x]], envir = env))
+        lapply(names(object@fixed), function(x) assign(x, slot(get("object"), "fixed")[[x]], envir = env))
     } else {
         warning("not a valid environment!")    
     }

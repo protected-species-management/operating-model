@@ -21,6 +21,14 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # current environment
     ENV <- environment()
     
+    # update object
+    if (!missing(stochastic)) {
+        object@stochastic$ref_points <- as.logical(stochastic)
+    }
+    
+    # flag stochastic
+    STOCHASTIC <- object@stochastic$ref_points
+    
     # load time, age and
     # iteration dimensions
     # into function environment
@@ -29,12 +37,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # get seeds
     get_seeds(object, env = ENV)
     
-    # record stochasticity
-    object@stochastic$ref_points <- as.logical(stochastic)
-    
     # create container(s)
-    shape_values <- numeric(object@iter)
-    h_values     <- numeric(object@iter)
+    shape_values <- numeric(niter)
+    h_values     <- numeric(niter)
 	
 	# make sure dynamic
     # functions have correct
@@ -69,7 +74,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     }
     
     # checks
-    if (is.na(siter) & stochastic) stop("process error 'iterations' argument required")
+    if (is.na(siter) & STOCHASTIC) stop("process error 'iterations' argument required")
     if (is.na(equ_time))           stop("'equilibrium_time' argument required")
     
 	# set up objective
@@ -83,7 +88,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		h     <- exp(x[1])
 		shape <- exp(x[2])
 		
-		n <- do.call(".pdyn", list(h = h, shape = shape, initial_depletion = depletion, ntime = equ_time), envir = ENV)
+		n <- do.call(".pdyn", list(h = h, shape = shape, ntime = equ_time), envir = ENV)
 		
 		# objective function
 		objective <- -1 * log(sum(n[, dim(n)[2]] * sel * h))
@@ -103,7 +108,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		h      <- exp(h2(x[1])) # internal estimation of h_mnpl given shape
 		target <- x[2]
 		
-		n <- do.call(".pdyn", list(h = h, shape = shape, initial_depletion = depletion, ntime = equ_time), envir = ENV)
+		n <- do.call(".pdyn", list(h = h, shape = shape, ntime = equ_time), envir = ENV)
 		
 		# objective function
 		objective <- -1 * dnorm(sum(n[-1, dim(n)[2]]), depletion, 0.01, log = TRUE)
@@ -112,7 +117,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		return(objective)
 	}
 	
-    if (stochastic) {
+    if (STOCHASTIC) {
         
         # progress message
         cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(object@shape, 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
@@ -135,7 +140,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], initial_depletion = depletion, ntime = equ_time), envir = ENV)
+                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], ntime = equ_time), envir = ENV)
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -167,7 +172,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], initial_depletion = depletion, ntime = equ_time), envir = ENV)
+                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], ntime = equ_time), envir = ENV)
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -197,7 +202,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # sample pars
     pars_sample <- lapply(object@pars, sample, n = 1)
     
-    if (stochastic) {
+    if (STOCHASTIC) {
         
         # log-normal process error term
         sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
@@ -237,7 +242,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	shape_log_init <- i2(depletion)
 	h_log_init     <- h2(shape_log_init)
 	
-	if (stochastic) {
+	if (STOCHASTIC) {
 	
 		# recompile with 
 		# initial values

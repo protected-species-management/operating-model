@@ -13,7 +13,7 @@ setGeneric("targets", function(object, ...) standardGeneric("targets"))
 setMethod("targets", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: management target :::"))
-    lapply(object@targets, function(x) { y <- data.frame(iter = 1:object@iter, value = x);  as_tibble(y) })  
+    lapply(object@targets, function(x) { y <- data.frame(iter = 1:niter, value = x);  as_tibble(y) })  
 })
 #}}}
 #{{{
@@ -24,7 +24,7 @@ setGeneric("diagnostics", function(object, ...) standardGeneric("diagnostics"))
 setMethod("diagnostics", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
-    lapply(object@diagnostics, function(x) array2dfr(x, dim.names = list(iteration = 1:object@iter, stochastic_iteration = 1:dim(x)[2], time = object@time)))
+    lapply(object@diagnostics, function(x) array2dfr(x, dim.names = list(iteration = 1:dim(x)[1], stochastic_iteration = 1:dim(x)[2], time = object@time)))
 })
 #}}}
 #{{{
@@ -35,7 +35,7 @@ setGeneric("pst", function(object, ...) standardGeneric("pst"))
 setMethod("pst", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
-    array2dfr(object@pst$value, dim.names = list(iteration = 1:object@iter, time = object@time))
+    array2dfr(object@pst$value, dim.names = list(iteration = 1:niter, time = object@time))
 })
 #}}}
 
@@ -47,7 +47,7 @@ setGeneric("objectives", function(object, ...) standardGeneric("objectives"))
 setMethod("objectives", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: probability of reaching management target :::"))
-    lapply(object@objectives,  function(x) array2dfr(x, dim.names = list(iteration = 1:object@iter, time = min(object@time):(min(object@time) + dim(x)[2] - 1))))
+    lapply(object@objectives,  function(x) array2dfr(x, dim.names = list(iteration = 1:niter, time = object@time)))
 })
 #}}}
 

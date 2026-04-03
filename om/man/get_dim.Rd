@@ -5,7 +5,7 @@
 \alias{get_values}
 \alias{get_dim.om}
 \alias{get_values.om}
-\alias{get_data.om}
+\alias{get_fixed.om}
 \alias{get_seeds.om}
 \alias{get_shape.om}
 \title{Get dimensions and values stored in \code{\link{om-class}} object.}
@@ -16,7 +16,7 @@ get_dim(object, ...)
 
 \method{get_values}{om}(object, iter = 1, env = environment())
 
-\method{get_data}{om}(object, env = environment())
+\method{get_fixed}{om}(object, env = environment())
 
 \method{get_seeds}{om}(object, env = environment())
 

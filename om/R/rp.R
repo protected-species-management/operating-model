@@ -213,7 +213,7 @@ setMethod("rp", signature = "om", function(object, stochastic = FALSE, equilibri
             
             if (stochastic) {
             
-                h1 <- MakeTape(obj1, c(h_log_init, log(object@shape)))
+                h1 <- MakeTape(obj2, c(h_log_init, log(object@shape)))
                 h2 <- h1$newton(1)
                 
                 # record estimate

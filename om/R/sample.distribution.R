@@ -15,7 +15,7 @@ sample.distribution <- function(x, n = 1, ...) {
         
         # if a vector of values is stored then sample
         # from this vector (non-parametric)
-        if (x@iter > 1 & n > 1 & length(x@.Data) <= n) {
+        if (x@iter > 1 & n > 1 & n <= length(x@.Data)) {
             
             return(x@.Data[sample.int(length(x@.Data), size = n, replace = FALSE)])
             

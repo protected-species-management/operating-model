@@ -29,6 +29,7 @@ Collate:
     'biomass.R'
     'distribution-class.R'
     'distribution.R'
+    'dot-check.R'
     'dot-pdyn.R'
     'dynplot.R'
     'load_fixed.R'

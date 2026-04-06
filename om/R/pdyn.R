@@ -99,79 +99,36 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
     # {{{
     # AGE-STRUCTURED MODEL
         
-        # sample pars
-        pars_sample <- lapply(object@pars, sample, n = 1)
-        
-        # check data present
-        stopifnot(length(object@fixed) > 0)
-        
-        # setup (1)
-        age_mat <- as.integer(pars_sample$a)
-        age_pat <- age_mat + 1L
-        age_sel <- as.integer(object@fixed$selectivity)
-        
-        # setup (2)
-        mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
-        pat    <- c(0, mat[-length(mat)])
-        sel    <- c(rep(0, age_sel), rep(1, nages - age_sel))
-        M      <- c(sqrt(pars_sample$M), rep(pars_sample$M, nages - 1))
-        S      <- exp(-M)
-        lambda <- exp(pars_sample$r)
-        K      <- object@fixed$K
-        
-        # dummy values
-        b_eq  <- 0
-        b_max <- 0
-        k     <- numeric(nages)
-        
-        # accessor functions
-        get_beq  <- function() get("b_eq",  envir = ENV)
-        get_bmax <- function() get("b_max", envir = ENV)
-        get_k    <- function() get("k",     envir = ENV)
-        
-        # objective function
-        obj_fun <- function(x) {
+        # objective function for
+        # estimation of h at
+        # initial depletion
+        obj_fun <- function(x, target) {
             
-            h <- exp(x)
+            h <- 1 / (1 + exp(-x[1]))
+            p <- numeric(nages)
             
-            p_init <- AD(vector("numeric", length = nages))
-            
-            # monte-carlo
-            # inputs
-            b_eq  <- DataEval(get_beq)
-            b_max <- DataEval(get_bmax)
-            k     <- DataEval(get_k)
-                
             # equilibrium age
             # structure
-            p_init[1] <- 0.5 * sum(pat[-1] * k[-1] * initial_depletion) * (b_eq + (b_max - b_eq) * (1 - initial_depletion^shape))
-            for(a in 2:nages) {
-                p_init[a] <- (p_init[a-1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h))
+            p[] <- k
+            for (i in 1:1e3) {
+                for(a in 2:nages) {
+                    p[a] <- p[a-1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
+                }
+                p[nages] <- p[nages] / (1 - exp(-1 * M[nages]) * (1 - sel[nages] * h))
+                p[1] <- 0.5 * sum(pat[-1] * p[-1]) * (b_eq + (b_max - b_eq) * (1 - (sum(p[-1]) / sum(k[-1]))^shape))
             }
-            p_init[nages] <- p_init[nages] + (p_init[nages] * exp(-1 * M[nages]) * (1 - sel[nages] * h))
                 
             # log of the equilibrium depletion
-            objective <- -1 * dnorm(sum(p_init[-1]) / sum(k[-1]), initial_depletion, 0.01, log = TRUE)
+            objective <- -1 * dnorm(sum(p[-1]) / sum(k[-1]), target, 0.01, log = TRUE)
             
             # return
             return(objective)
         }
         
-        # initialise with 
-        # parameter value
-        g <- MakeTape(obj_fun, log(0.02))
-        # function to 
-        # estimate minimum
-        # over first argument
-        # (harvest rate)
-        suppressWarnings({
-            ff <- g$newton(1)
-        })
-        
         # set-up arrays
         n      <- array(dim = c(nages, ntime))
         p      <- vector("numeric", length = nages)
-        p_init <- vector("numeric", length = nages)
+        n_init <- vector("numeric", length = nages)
         
         proj_n         <- array(dim = c(siter, nages, ntime))
         proj_h         <- array(dim = c(siter, ntime - 1))
@@ -182,30 +139,6 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
         birth <- function(y) {
             0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape)) 
         }
-        
-        # set up unexploited 
-        # equilibrium female
-        # population
-        p[1] <- 0.5
-        for(a in 2:nages) {
-            p[a] <- p[a-1] * exp(-M[a - 1])
-        }
-        p[nages] <- p[nages] / (1 - exp(-M[nages]))
-        
-        # add dimensions to pars
-        #object@pars <- lapply(object@pars, function(x) {
-        #    if (length(x@.Data) <= object@iter) {
-        #        x@iter  <- object@iter 
-        #        x@.Data <- sample(x, n = object@iter)
-        #    }
-        #    return(x) 
-        #})
-        
-        # add dimensions to rmax
-        #if (length(object@pst$rmax@.Data) < object@iter) {
-        #    object@pst$rmax@iter  <- object@iter 
-        #    object@pst$rmax@.Data <- sample(object@pst$rmax, n = object@iter)
-        #}
         
         #######################
         # monte-carlo samples #
@@ -246,9 +179,32 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
                 rmax_sample <- object@pst$rmax@.Data[i] 
             }
             
-            # productivity for estimation
-            # of b_max
-            lambda <- exp(pars_sample$r)
+            # setup (1)
+            age_mat <- as.integer(pars_sample$a)
+            age_pat <- age_mat + 1L
+            age_sel <- as.integer(object@fixed$selectivity)
+            
+            # setup (2)
+            r <- pars_sample$r
+            M <- pars_sample$M
+            
+            # setup (3)
+            mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
+            pat    <- c(rep(0, age_pat), rep(1, nages - age_pat))
+            sel    <- c(rep(0, age_sel), rep(1, nages - age_sel))
+            M      <- c(rep(sqrt(M), age_mat), rep(M, nages - age_mat))
+            S      <- exp(-M)
+            lambda <- exp(r)
+            K      <- object@fixed$K
+            
+            # set up unexploited 
+            # equilibrium female
+            # population
+            p[1] <- 0.5
+            for(a in 2:nages) {
+                p[a] <- p[a-1] * exp(-M[a - 1])
+            }
+            p[nages] <- p[nages] / (1 - exp(-M[nages]))
             
             # replacement birth rate
             # per female
@@ -256,33 +212,40 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
             
             # maximum birth rate
             # per female
-            b_max <- 2 * (lambda^(age_pat) - S[2] * lambda^(age_pat - 1)) / (S[1] * S[2]^(age_pat - 1))
+            b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat+1])
             
             # initialise population
             # at equilibrium
-            n_init <- b_eq * p
+            k_prime <- b_eq * p
             
             # initial conditions
             # (1+ depletion = K)
-            k <- K * n_init / sum(n_init[-1])
+            k <- K * k_prime / sum(k_prime[-1])
             
             # initial conditions
-            h_init <- exp(ff(numeric()))
+            if (initial_depletion < 1) {
+                h_init <- .ilogit(optimise(obj_fun, interval = c(-10,-1), target = initial_depletion)$minimum)
+            } else {
+                h_init <- 0    
+            }
             
             # equilibrium age
             # structure
-            p_init[1] <- 0.5 * sum(pat[-1] * k[-1] * initial_depletion) * (b_eq + (b_max - b_eq) * (1 - initial_depletion^shape))
-            for(a in 2:nages) {
-                p_init[a] <- (p_init[a-1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h_init))
+            n_init[] <- k
+            for (l in 1:1e3) {
+                for(a in 2:nages) {
+                    n_init[a] <- n_init[a-1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h_init)
+                }
+                n_init[nages] <- n_init[nages] / (1 - exp(-1 * M[nages]) * (1 - sel[nages] * h_init))
+                n_init[1]     <- 0.5 * sum(pat[-1] * n_init[-1]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1]) / sum(k[-1]))^shape))
             }
-            p_init[nages] <- p_init[nages] + (p_init[nages] * exp(-1 * M[nages]) * (1 - sel[nages] * h_init))
             
             # loop over stochastic
             # process error
             for (j in 1:siter) {
                 
                 # initialise
-                n[, 1] <- p_init
+                n[, 1] <- n_init
                 
                 # project under harvest rate
                 # function
@@ -319,9 +282,9 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
             
             # update time series diagnostics
             # (catch)
-            object@diagnostics$captures[i,,] <- proj_catch
+            object@diagnostics$captures[i,,]     <- proj_catch
             # (depletion)
-            object@diagnostics$depletion[i,,] <- proj_depletion
+            object@diagnostics$depletion[i,,]    <- proj_depletion
             # (harvest rate)
             object@diagnostics$harvest_rate[i,,] <- proj_h
             

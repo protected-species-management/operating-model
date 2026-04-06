@@ -42,10 +42,9 @@ Collate:
     'pdyn.R'
     'plot.distribution.R'
     'rp.R'
-    'update_pars.R'
-    'run_mnpl.R'
     'shape.R'
     'sp.om.R'
+    'update_pars.R'
     'zzz.R'
 RoxygenNote: 7.3.3
 Encoding: UTF-8

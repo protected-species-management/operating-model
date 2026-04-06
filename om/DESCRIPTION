@@ -30,6 +30,7 @@ Collate:
     'distribution-class.R'
     'distribution.R'
     'dot-check.R'
+    'dot-logit.R'
     'dot-pdyn.R'
     'dynplot.R'
     'load_fixed.R'

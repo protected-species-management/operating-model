@@ -22,13 +22,13 @@ sp.om <- function(object, harvest_rate, ...) {
     get_seeds(object, env = ENV)
     
     # get stochastic
-    stochastic <- object@stochastic$ref_points
+    STOCHASTIC <- object@stochastic$ref_points
     
     # settings
-    equ_time <- object@settings$equilibrium_time
-    siter    <- object@settings$stochastic_iterations
+    EQU_TIME <- object@settings$equilibrium_time
+    SITER    <- object@settings$stochastic_iterations
     
-    if (stochastic) {
+    if (STOCHASTIC) {
         
         # set seed
         set.seed(rng_seed[1])
@@ -43,7 +43,7 @@ sp.om <- function(object, harvest_rate, ...) {
         sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
         
         # sample process error
-        perr <- matrix(rnorm(siter * equ_time, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = equ_time)
+        perr <- matrix(rnorm(SITER * EQU_TIME, 0 - (sigmap^2) / 2, sigmap), nrow = SITER, ncol = EQU_TIME)
         
     } else {
         
@@ -76,24 +76,28 @@ sp.om <- function(object, harvest_rate, ...) {
         age_sel <- as.integer(object@fixed$selectivity)
         
         # setup (2)
+        r <- pars_sample$r
+        M <- pars_sample$M
+        
+        # setup (3)
         mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
-        pat    <- c(0, mat[-length(mat)])
+        pat    <- c(rep(0, age_pat), rep(1, nages - age_pat))
         sel    <- c(rep(0, age_sel), rep(1, nages - age_sel))
-        M      <- c(sqrt(pars_sample$M), rep(pars_sample$M, nages - 1))
+        M      <- c(rep(sqrt(M), age_mat), rep(M, nages - age_mat))
         S      <- exp(-M)
-        lambda <- exp(pars_sample$r)
+        lambda <- exp(r)
         
         dvalue <- numeric(length(harvest_rate))
         cvalue <- numeric(length(harvest_rate))
         pvalue <- numeric(length(harvest_rate))
         
-        if (stochastic) {
+        if (STOCHASTIC) {
             
             cli_progress_step("Calculating stochastic surplus production function ...", spinner = TRUE, msg_done = "Calculated stochastic production function", .envir = ENV)
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape, error = perr, equilibrium_time = equ_time, env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape, error = perr, equilibrium_time = EQU_TIME, env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -107,7 +111,7 @@ sp.om <- function(object, harvest_rate, ...) {
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[j], shape = object@shape, equilibrium_time = equ_time, env = ENV)
+                tmp <- .ff(harvest_rate[j], shape = object@shape, equilibrium_time = EQU_TIME, env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion

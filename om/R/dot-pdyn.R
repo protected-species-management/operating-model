@@ -7,10 +7,11 @@
 # - lambda
 # - M
 # - 
-.pdyn <- function(h, shape, ntime, initial_depletion = 1) {
+.pdyn <- function(h, shape, time) {
     
-    n <- AD(array(dim = c(nages, ntime)))
-    p <- vector("numeric", length = nages)
+    n      <- AD(array(dim = c(nages, time)))
+    n_init <- AD(vector("numeric", length = nages))
+    p      <- vector("numeric", length = nages)
     
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
@@ -30,27 +31,33 @@
     b_eq <- 1 / sum(pat * p)
     
     # maximum fecundity
-    b_max <- 2 * (lambda^(age_pat) - S[2] * lambda^(age_pat - 1)) / (S[1] * S[2]^(age_pat - 1))
+    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat+1])
     
-    # initilise population
+    # population
     # at equilibrium
-    n_init <- b_eq * p
-    
-    # check equilibrium number
-    # of female pups
-    isTRUE(all.equal(sum(pat * n_init * b_eq) / 2, n_init[1]))
+    k_prime <- b_eq * p
     
     # initial conditions
     # (1+ depletion = 1)
-    k <- n_init / sum(n_init[-1])
+    k <- k_prime / sum(k_prime[-1])
+    
+    # use iteration to calculate
+    # initial age structure
+    # and depletion
+    n_init[] <- k
+    for (l in 1:1e3) {
+        for(a in 2:nages) {
+            n_init[a] <- n_init[a - 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
+        }
+        n_init[nages] <- n_init[nages] / (1 - exp(-1 * M[nages]) * (1 - sel[nages] * h))
+        n_init[1]     <- 0.5 * sum(pat[-1] * n_init[-1]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1]))^shape))
+    }
     
     # initialise
-    n[, 1] <- k * initial_depletion
+    n[, 1] <- n_init
     
-    # check birth function
-    #isTRUE(all.equal(birth(1), n[1,1]))
-    
-    for (y in 2:ntime) {
+    # project
+    for (y in 2:time) {
         
         for (a in 2:nages) {
             
@@ -71,11 +78,12 @@
     return(n)
 }
 
-.pdyn2 <- function(h, shape, error, ntime, initial_depletion = 1) {
+.pdyn2 <- function(h, shape, error, time) {
     
-    n <- AD(array(dim = c(nages, ntime)))
-    p <- vector("numeric", length = nages)
-    e <- error
+    n      <- AD(array(dim = c(nages, time)))
+    n_init <- AD(vector("numeric", length = nages))
+    p      <- vector("numeric", length = nages)
+    e      <- error
     
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
@@ -95,27 +103,33 @@
     b_eq <- 1 / sum(pat * p)
     
     # maximum fecundity
-    b_max <- 2 * (lambda^(age_pat) - S[2] * lambda^(age_pat - 1)) / (S[1] * S[2]^(age_pat - 1))
+    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat+1])
     
-    # initilise population
+    # population
     # at equilibrium
-    n_init <- b_eq * p
-    
-    # check equilibrium number
-    # of female pups
-    isTRUE(all.equal(sum(pat * n_init * b_eq) / 2, n_init[1]))
+    k_prime <- b_eq * p
     
     # initial conditions
     # (1+ depletion = 1)
-    k <- n_init / sum(n_init[-1])
+    k <- k_prime / sum(k_prime[-1])
+    
+    # use iteration to calculate
+    # initial age structure
+    # and depletion
+    n_init[] <- k
+    for (l in 1:1e3) {
+        for(a in 2:nages) {
+            n_init[a] <- n_init[a - 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
+        }
+        n_init[nages] <- n_init[nages] / (1 - exp(-1 * M[nages]) * (1 - sel[nages] * h))
+        n_init[1]     <- 0.5 * sum(pat[-1] * n_init[-1]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1]))^shape))
+    }
     
     # initialise
-    n[, 1] <- k * initial_depletion
+    n[, 1] <- n_init
     
-    # check birth function
-    #isTRUE(all.equal(birth(i,1), n[i,1,1]))
-    
-    for (y in 2:ntime) {
+    # project
+    for (y in 2:time) {
         
         for (a in 2:nages) {
             
@@ -136,10 +150,10 @@
     return(n)
 }
 
-.ff <- function(h, shape, equilibrium_time = 1e3, env) {
+.ff <- function(h, shape, equilibrium_time, env) {
     
     # run dynamics
-    N <- do.call(".pdyn", list(h = h, shape = shape, ntime = equilibrium_time), envir = env)
+    N <- do.call(".pdyn", list(h = h, shape = shape, time = equilibrium_time), envir = env)
     
     # equilibrium female captures
     captures <- sum(N[, equilibrium_time] * sel * h)
@@ -154,14 +168,14 @@
     return(list(captures = captures, depletion = depletion, production = production))
 }
 
-.ff2 <- function(h, shape, error, equilibrium_time = 1e3, env) {
+.ff2 <- function(h, shape, error, equilibrium_time, env) {
     
     # setup
     N <- array(dim = c(siter, nages, equilibrium_time))
     
     # run dynamics
     for (i in 1:siter) {
-        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, error = error[i,], ntime = equilibrium_time), envir = env)
+        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, error = error[i,], time = equilibrium_time), envir = env)
     }
     
     # recent time

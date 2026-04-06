@@ -35,7 +35,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     if(missing(iter)) {
         stop("'iter' is a required input")
     } else {
-        .Object@iter <- iter
+        .Object@iter <- if(length(iter) < 2) c(iter, NA_integer_) else if(length(iter) == 2) iter else stop("length(iter) > 2")
     }
     
     if(missing(time)) {

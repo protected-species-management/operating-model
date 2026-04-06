@@ -8,7 +8,7 @@
 #' @param iterations Process error iterations used for stochastic projection
 #' @seealso [rp()]
 #' @export
-#' @include om-class.R dot-pdyn.R
+#' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R
 #' @import RTMB
 #' @import cli
 #{{{ shape()
@@ -16,18 +16,19 @@
 # dynamics function
 # -- executes object@pdyn for each monte-carlo sample
 setGeneric("shape", function(object, depletion, stochastic, equilibrium_time, iterations, ...) standardGeneric("shape"))
-setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic = FALSE, equilibrium_time = 200L, iterations = ifelse(stochastic, 300L, NA_integer_), ...) {
+setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, equilibrium_time, iterations, ...) {
     
     # current environment
     ENV <- environment()
     
-    # update object
-    if (!missing(stochastic)) {
-        object@stochastic$ref_points <- as.logical(stochastic)
-    }
+    # check and update object with
+    # function arguments
+    object <- .check_rp(object, stochastic, equilibrium_time, iterations)
     
-    # flag stochastic
+    # get values
     STOCHASTIC <- object@stochastic$ref_points
+    EQU_TIME   <- object@settings$equilibrium_time
+    SITER      <- object@settings$stochastic_iterations
     
     # load time, age and
     # iteration dimensions
@@ -47,48 +48,18 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	environment(.pdyn)  <- ENV
     environment(.pdyn2) <- ENV
     
-    # settings
-    if (missing(iterations)) {
-        
-        siter <- object@settings$stochastic_iterations
-        
-    } else {
-        
-        if (!is.na(object@settings$stochastic_iterations)) { if (iterations != object@settings$stochastic_iterations) {
-            warning("'iterations' argument updates value in 'object@settings$stochastic_iterations'")
-        }}
-        
-        siter <- object@settings$stochastic_iterations <- iterations
-    }
-    if (missing(equilibrium_time)) {
-        
-        equ_time <- object@settings$equilibrium_time
-        
-    } else {
-        
-        if (!is.na(object@settings$equilibrium_time)) { if (equilibrium_time != object@settings$equilibrium_time) {
-            warning("'equilibrium_time' argument updates value in 'object@settings$equilibrium_time'")
-        }}
-        
-        equ_time <- object@settings$equilibrium_time <- equilibrium_time
-    }
-    
-    # checks
-    if (is.na(siter) & STOCHASTIC) stop("process error 'iterations' argument required")
-    if (is.na(equ_time))           stop("'equilibrium_time' argument required")
-    
 	# set up objective
-	# function and tape
+	# function
 	# for harvest rate at
 	# maximum sustainable 
 	# catch
 	# (deterministic)
 	obj1 <- function(x) {
 		
-		h     <- exp(x[1])
+		h     <- 1 / (1 + exp(-x[1]))
 		shape <- exp(x[2])
 		
-		n <- do.call(".pdyn", list(h = h, shape = shape, ntime = equ_time), envir = ENV)
+		n <- do.call(".pdyn", list(h = h, shape = shape, time = EQU_TIME), envir = ENV)
 		
 		# objective function
 		objective <- -1 * log(sum(n[, dim(n)[2]] * sel * h))
@@ -98,20 +69,20 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	}
 	
 	# set up objective
-	# function and tape
+	# function
 	# for depletion at 
 	# target 
 	# (deterministic)
 	obj2 <- function(x) {
 		
 		shape  <- exp(x[1])
-		h      <- exp(h2(x[1])) # internal estimation of h_mnpl given shape
+		h      <- 1 / (1 + exp(-h2(x[1]))) # internal estimation of h_mnpl given shape
 		target <- x[2]
 		
-		n <- do.call(".pdyn", list(h = h, shape = shape, ntime = equ_time), envir = ENV)
+		n <- do.call(".pdyn", list(h = h, shape = shape, time = EQU_TIME), envir = ENV)
 		
 		# objective function
-		objective <- -1 * dnorm(sum(n[-1, dim(n)[2]]), depletion, 0.01, log = TRUE)
+		objective <- -1 * dnorm(sum(n[-1, dim(n)[2]]), target, 0.01, log = TRUE)
 		
 		# return objective
 		return(objective)
@@ -129,18 +100,18 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
         # catch
         obj3 <- function(x) {
             
-            h     <- exp(x[1])
+            h     <- 1 / (1 + exp(-x[1]))
             shape <- exp(x[2])
             
             objective <- 0
             
-            for (i in 1:siter) {
+            for (i in 1:SITER) {
                 
                 # spin spinner
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], ntime = equ_time), envir = ENV)
+                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], time = EQU_TIME), envir = ENV)
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -161,25 +132,25 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
         obj4 <- function(x) {
             
             shape  <- exp(x[1])
-            h      <- exp(h2(x[1])) # internal estimation of h_mnpl given shape
+            h      <- 1 / (1 + exp(-h2(x[1]))) # internal estimation of h_mnpl given shape
             target <- x[2]
             
             objective <- 0
             
-            for (i in 1:siter) {
+            for (i in 1:SITER) {
                 
                 # spin spinner
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], ntime = equ_time), envir = ENV)
+                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], time = EQU_TIME), envir = ENV)
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
                 
                 # log of the equilibrium catch
                 # per iteration
-                objective <- objective - dnorm(mean(apply(n[-1, loc], 2, sum)), depletion, 0.01, log = TRUE)
+                objective <- objective - dnorm(mean(apply(n[-1, loc], 2, sum)), target, 0.01, log = TRUE)
             }
             
             # return objective
@@ -208,7 +179,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
         sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
         
         # sample process error
-        perr <- matrix(rnorm(siter * equ_time, 0 - (sigmap^2) / 2, sigmap), nrow = siter, ncol = equ_time)
+        perr <- matrix(rnorm(SITER * EQU_TIME, 0 - (sigmap^2) / 2, sigmap), nrow = SITER, ncol = EQU_TIME)
     }
     
     # check fixed inputs present
@@ -220,16 +191,20 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     age_sel <- as.integer(object@fixed$selectivity)
     
     # setup (2)
+    r <- pars_sample$r
+    M <- pars_sample$M
+    
+    # setup (3)
     mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
-    pat    <- c(0, mat[-length(mat)])
+    pat    <- c(rep(0, age_pat), rep(1, nages - age_pat))
     sel    <- c(rep(0, age_sel), rep(1, nages - age_sel))
-    M      <- c(sqrt(pars_sample$M), rep(pars_sample$M, nages - 1))
+    M      <- c(rep(sqrt(M), age_mat), rep(M, nages - age_mat))
     S      <- exp(-M)
-    lambda <- exp(pars_sample$r)
+    lambda <- exp(r)
     
     # function to estimate h_mnpl
     # given shape
-    h1 <- MakeTape(obj1, c(log(0.02), log(1)))
+    h1 <- MakeTape(obj1, c(.logit(0.02), log(1)))
     h2 <- h1$newton(1)
 
     # function to estimate
@@ -240,26 +215,26 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # record initial 
 	# deterministic estimates
 	shape_log_init <- i2(depletion)
-	h_log_init     <- h2(shape_log_init)
+	h_logit_init   <- h2(shape_log_init)
 	
 	if (STOCHASTIC) {
 	
 		# recompile with 
 		# initial values
-		h1 <- MakeTape(obj3, c(h_log_init, shape_log_init))
+		h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
 		h2 <- h1$newton(1)
 
-		i1 <- MakeTape(obj4, c(shape_log_init, 0.5))
+		i1 <- MakeTape(obj4, c(shape_log_init, depletion))
 		i2 <- i1$newton(1)
 		
 		# record estimate
 		shape_values[1] <- exp(i2(depletion))
-		h_values[1]     <- exp(h2(log(shape_values[1])))
+		h_values[1]     <- .ilogit(h2(log(shape_values[1])))
 		
 	} else {
 	
 		shape_values[1] <- exp(shape_log_init)
-		h_values[1]     <- exp(h2(log(shape_values[1])))
+		h_values[1]     <- .ilogit(h2(log(shape_values[1])))
     }
 	
     #######################
@@ -279,15 +254,19 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             # setup (1)
             age_mat <- as.integer(pars_sample$a)
             age_pat <- age_mat + 1L
-            age_sel <- as.integer(object@data$selectivity)
+            age_sel <- as.integer(object@fixed$selectivity)
             
             # setup (2)
+            r <- pars_sample$r
+            M <- pars_sample$M
+            
+            # setup (3)
             mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
-            pat    <- c(0, mat[-length(mat)])
+            pat    <- c(rep(0, age_pat), rep(1, nages - age_pat))
             sel    <- c(rep(0, age_sel), rep(1, nages - age_sel))
-            M      <- c(sqrt(pars_sample$M), rep(pars_sample$M, nages - 1))
+            M      <- c(rep(sqrt(M), age_mat), rep(M, nages - age_mat))
             S      <- exp(-M)
-            lambda <- exp(pars_sample$r)
+            lambda <- exp(r)
         
             # function to estimate h_mnpl
             # given shape
@@ -301,7 +280,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             
             # record estimate
             shape_values[i] <- exp(i2(depletion))
-            h_values[i]     <- exp(h2(log(shape_values[i])))
+            h_values[i]     <- .ilogit(h2(log(shape_values[i])))
         }
     }
     

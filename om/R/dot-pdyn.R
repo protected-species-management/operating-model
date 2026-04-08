@@ -1,16 +1,8 @@
 #' @importFrom RTMB AD
-# global inputs:
-# - nages
-# - pat
-# - age_pat
-# - sel
-# - lambda
-# - M
-# - 
-.pdyn <- function(h, shape, time) {
+.pdyn <- function(h, shape, survivorship) {
     
-    n <- AD(array(dim = c(nages, time)))
-    p <- vector("numeric", length = nages)
+    n <- AD(array(dim = c(NAGES, NTIME)))
+    p <- vector("numeric", length = NAGES)
     
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
@@ -20,10 +12,10 @@
     # equilibrium female
     # population
     p[1] <- 0.5
-    for(a in 2:nages) {
-        p[a] <- p[a-1] * exp(-M[a - 1])
+    for(a in 2:NAGES) {
+        p[a] <- p[a-1] * S[a - 1]
     }
-    p[nages] <- p[nages] / (1 - exp(-M[nages]))
+    p[a] <- p[a] / (1 - S[a])
     
     # replacement birth rate
     # per female
@@ -43,34 +35,29 @@
     # use iteration to calculate
     # initial age structure
     # and depletion
-    n_init <- AD(matrix(k, nrow = nages, ncol = 2))
+    n_init <- AD(matrix(k, nrow = NAGES, ncol = 2))
     for (l in 2:1e3) {
         
         n_init[, 1] <- n_init[, 2]
-        for(a in 2:nages) {
-            n_init[a, 2] <- n_init[a - 1, 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
+        for(a in 2:NAGES) {
+            n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
         }
-        n_init[nages, 2] <- n_init[nages, 2] + n_init[nages, 1] * exp(-1 * M[nages]) * (1 -  sel[nages] * h)
-        n_init[1,     2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
+        n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
+        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
     }
     
     # initialise
     n[, 1] <- n_init[, 2]
     
     # project
-    for (y in 2:time) {
+    for (y in 2:NTIME) {
         
-        for (a in 2:nages) {
-            
-            m <- M[a - 1]
-            
-            n[a, y] <- n[a - 1, y - 1] * exp(-1 * m) * (1 - sel[a - 1] * h) 
+        for (a in 2:NAGES) {
+            n[a, y] <- n[a - 1, y - 1] * survivorship[a - 1, y - 1] * (1 - sel[a - 1] * h) 
         }
         
         # plus group
-        m <- M[nages]
-        
-        n[nages, y] <- n[nages, y] + n[nages, y - 1] * exp(-1 * m) * (1 - sel[nages] * h)
+        n[a, y] <- n[a, y] + n[a, y - 1] * survivorship[a, y - 1] * (1 - sel[a] * h)
         
         # birth
         n[1, y] <- birth(y)
@@ -79,11 +66,10 @@
     return(n)
 }
 
-.pdyn2 <- function(h, shape, error, time) {
+.pdyn2 <- function(h, shape, survivorship) {
     
-    n <- AD(array(dim = c(nages, time)))
-    p <- vector("numeric", length = nages)
-    e <- error
+    n <- AD(array(dim = c(NAGES, NTIME)))
+    p <- vector("numeric", length = NAGES)
     
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
@@ -93,17 +79,17 @@
     # equilibrium female
     # population
     p[1] <- 0.5
-    for(a in 2:nages) {
-        p[a] <- p[a-1] * exp(-M[a - 1])
+    for(a in 2:NAGES) {
+        p[a] <- p[a-1] * S[a - 1]
     }
-    p[nages] <- p[nages] / (1 - exp(-M[nages]))
+    p[a] <- p[a] / (1 - S[a])
     
     # replacement birth rate
     # per female
     b_eq <- 1 / sum(pat * p)
     
     # maximum fecundity
-    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat+1])
+    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat + 1])
     
     # population
     # at equilibrium
@@ -116,34 +102,29 @@
     # use iteration to calculate
     # initial age structure
     # and depletion
-    n_init <- AD(matrix(k, nrow = nages, ncol = 2))
+    n_init <- AD(matrix(k, nrow = NAGES, ncol = 2))
     for (l in 2:1e3) {
         
         n_init[, 1] <- n_init[, 2]
-        for(a in 2:nages) {
-            n_init[a, 2] <- n_init[a - 1, 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
+        for(a in 2:NAGES) {
+            n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
         }
-        n_init[nages, 2] <- n_init[nages, 2] + n_init[nages, 1] * exp(-1 * M[nages]) * (1 -  sel[nages] * h)
-        n_init[1,     2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
+        n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
+        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
     }
     
     # initialise
     n[, 1] <- n_init[, 2]
     
     # project
-    for (y in 2:time) {
+    for (y in 2:NTIME) {
         
-        for (a in 2:nages) {
-            
-            m <- M[a - 1] + e[y - 1]
-            
-            n[a, y] <- n[a - 1, y - 1] * exp(-1 * m) * (1 - sel[a - 1] * h) 
+        for (a in 2:NAGES) {
+            n[a, y] <- n[a - 1, y - 1] * survivorship[a - 1, y - 1] * (1 - sel[a - 1] * h) 
         }
         
         # plus group
-        m <- M[nages] + e[y]
-        
-        n[nages, y] <- n[nages, y] + n[nages, y - 1] * exp(-1 * m) * (1 - sel[nages] * h)
+        n[a, y] <- n[a, y] + n[a, y - 1] * survivorship[a, y - 1] * (1 - sel[a] * h)
         
         # birth
         n[1, y] <- birth(y)
@@ -152,36 +133,36 @@
     return(n)
 }
 
-.ff <- function(h, shape, equilibrium_time, env) {
+.ff <- function(h, shape, survivorship, env) {
     
     # run dynamics
-    N <- do.call(".pdyn", list(h = h, shape = shape, time = equilibrium_time), envir = env)
+    N <- do.call(".pdyn", list(h = h, shape = shape, survivorship = survivorship), envir = env)
     
     # equilibrium female captures
-    captures <- sum(N[, equilibrium_time] * sel * h)
+    captures <- sum(N[, NTIME] * sel * h)
     
     # equilibrium depletion
-    depletion <- sum(N[-1, equilibrium_time])
+    depletion <- sum(N[-1, NTIME])
     
     # equilibrium per-capita birth
-    production <- N[1, equilibrium_time] / sum(N[-1, equilibrium_time] * pat[-1])
+    production <- N[1, NTIME] / sum(N[-1, NTIME] * pat[-1])
     
     # return dynamics
     return(list(captures = captures, depletion = depletion, production = production))
 }
 
-.ff2 <- function(h, shape, error, equilibrium_time, env) {
+.ff2 <- function(h, shape, survivorship, env) {
     
     # setup
-    N <- array(dim = c(dim(error)[1], nages, equilibrium_time))
+    N <- array(dim = c(dim(survivorship)[1], NAGES, NTIME))
     
     # run dynamics
-    for (i in 1:dim(error)[1]) {
-        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, error = error[i,], time = equilibrium_time), envir = env)
+    for (i in 1:dim(survivorship)[1]) {
+        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = survivorship[i,,]), envir = env)
     }
     
     # recent time
-    recent_time <- ceiling((2 / 3) * equilibrium_time):equilibrium_time
+    recent_time <- ceiling((2 / 3) * NTIME):NTIME
     
     # equilibrium female captures
     captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))

@@ -65,17 +65,17 @@
 .check_pdyn <- function(object, stochastic, time, iterations) {
     
     if (missing(stochastic)) {
-        if (is.na(object@stochastic$projections)) {
-            stop("'stochastic' argument unspecified (projections)")    
+        if (is.na(object@stochastic$projection)) {
+            stop("'stochastic' argument unspecified (projection)")    
         } else {
-            cli_alert_info(paste0("'stochastic' = ", ifelse(object@stochastic$projections, "TRUE", "FALSE"), " (projections)"))
+            cli_alert_info(paste0("'stochastic' = ", ifelse(object@stochastic$projection, "TRUE", "FALSE"), " (projection)"))
         }
     } else {
         if (is.logical(stochastic)) {
-            if (!is.na(object@stochastic$projections) & object@stochastic$projections != stochastic) {
-                cli_alert_info("'stochastic' argument updates value in 'object@stochastic$projections'")
+            if (!is.na(object@stochastic$projection) & object@stochastic$projection != stochastic) {
+                cli_alert_info("'stochastic' argument updates value in 'object@stochastic$projection'")
             }
-            object@stochastic$projections <- stochastic
+            object@stochastic$projection <- stochastic
         } else {
             stop("'stochastic' is not logical")    
         }
@@ -94,24 +94,24 @@
         } else {
             time <- as.integer(time)    
         }
-        if (!all(object@time == time)) {
+        if (!all(object@time %in% time) | !all(time %in% object@time)) {
             cli_alert_info("'time' argument updates values in 'object@time'")
         }
         object@time <- time
         
     }
     if (missing(iterations)) {
-        if (is.na(object@iter[2]) & object@stochastic$projections) {
+        if (is.na(object@iter[2]) & object@stochastic$projection) {
             stop("'iterations' argument unspecified for stochastic model")    
         } else {
-            if (object@stochastic$projections) {
+            if (object@stochastic$projection) {
                 cli_alert_info(paste0("'iterations' = ", object@iter[2]))
             }
         }
     } else {
         if (iterations %% 1 == 0) {
             iterations <- as.integer(iterations)
-            if (!is.na(object@iter[2]) & !object@stochastic$projections) {
+            if (!is.na(object@iter[2]) & !object@stochastic$projection) {
                 stop("'iterations' argument specified but model is not stochastic")
             }
             if (!is.na(object@iter[2]) & object@iter[2] != iterations) {

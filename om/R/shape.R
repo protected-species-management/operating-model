@@ -25,22 +25,17 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # function arguments
     object <- .check_rp(object, stochastic, equilibrium_time, iterations)
     
-    # get values
-    STOCHASTIC <- object@stochastic$ref_points
-    EQU_TIME   <- object@settings$equilibrium_time
-    SITER      <- object@settings$stochastic_iterations
-    
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, env = ENV)
+    get_dim(object, ref_points = TRUE, env = ENV)
     
     # get seeds
     get_seeds(object, env = ENV)
     
     # create container(s)
-    shape_values <- numeric(niter)
-    h_values     <- numeric(niter)
+    shape_values <- numeric(NITER)
+    h_values     <- numeric(NITER)
 	
 	# make sure dynamic
     # functions have correct
@@ -59,7 +54,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		h     <- 1 / (1 + exp(-x[1]))
 		shape <- exp(x[2])
 		
-		n <- do.call(".pdyn", list(h = h, shape = shape, time = EQU_TIME), envir = ENV)
+		n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s), envir = ENV)
 		
 		# objective function
 		objective <- -1 * log(sum(n[, dim(n)[2]] * sel * h))
@@ -79,7 +74,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		h      <- 1 / (1 + exp(-h2(x[1]))) # internal estimation of h_mnpl given shape
 		target <- x[2]
 		
-		n <- do.call(".pdyn", list(h = h, shape = shape, time = EQU_TIME), envir = ENV)
+		n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s), envir = ENV)
 		
 		# objective function
 		objective <- -1 * dnorm(sum(n[-1, dim(n)[2]]), target, 0.01, log = TRUE)
@@ -111,7 +106,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], time = EQU_TIME), envir = ENV)
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,]), envir = ENV)
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -143,7 +138,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, error = perr[i,], time = EQU_TIME), envir = ENV)
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,]), envir = ENV)
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -173,15 +168,6 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # sample pars
     pars_sample <- lapply(object@pars, sample, n = 1)
     
-    if (STOCHASTIC) {
-        
-        # log-normal process error term
-        sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
-        
-        # sample process error
-        perr <- matrix(rnorm(SITER * EQU_TIME, 0 - (sigmap^2) / 2, sigmap), nrow = SITER, ncol = EQU_TIME)
-    }
-    
     # check fixed inputs present
     stopifnot(length(object@fixed) > 0)
     
@@ -195,12 +181,17 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     M <- pars_sample$M
     
     # setup (3)
-    mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
-    pat    <- c(rep(0, age_pat), rep(1, nages - age_pat))
-    sel    <- c(rep(0, age_sel), rep(1, nages - age_sel))
-    M      <- c(rep(sqrt(M), age_mat), rep(M, nages - age_mat))
+    mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+    pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+    sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+    M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
     S      <- exp(-M)
     lambda <- exp(r)
+    
+    s <- array(dim = c(NAGES, NTIME))
+    for (a in 1:NAGES) {
+        s[a,] <- S[a]
+    }
     
     # function to estimate h_mnpl
     # given shape
@@ -219,6 +210,30 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	
 	if (STOCHASTIC) {
 	
+	    # process error term
+	    sigmap <- object@fixed$cv_survivorship * S
+	    
+	    # calculate mu given sigmap
+	    mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+	    
+	    mu <- numeric(NAGES)
+	    for (a in 1:NAGES) {
+	        mu[a] <- mu_calc(S[a], sigmap[a])
+	    }
+	    
+	    s <- array(dim = c(SITER, NAGES, NTIME))
+	    
+	    for (a in 1:NAGES) {
+	        
+	        e <- rnorm(SITER * NTIME, mu[a], sigmap[a])
+	        
+	        s[,a,] <- pnorm(e)
+	        
+	        # first year is
+	        # equal to expectation
+	        s[,a,1] <- S[a]
+	    }
+	    
 		# recompile with 
 		# initial values
 		h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
@@ -242,8 +257,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # from life-history   #
     # distributions       #
     #######################
-    if (niter > 1) {
-        for (i in 2:niter) {
+    if (NITER > 1) {
+        for (i in 2:NITER) {
             
             # set seed
             set.seed(rng_seed[i])
@@ -261,10 +276,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             M <- pars_sample$M
             
             # setup (3)
-            mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
-            pat    <- c(rep(0, age_pat), rep(1, nages - age_pat))
-            sel    <- c(rep(0, age_sel), rep(1, nages - age_sel))
-            M      <- c(rep(sqrt(M), age_mat), rep(M, nages - age_mat))
+            mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+            pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+            sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+            M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
             S      <- exp(-M)
             lambda <- exp(r)
         

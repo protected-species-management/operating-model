@@ -12,7 +12,12 @@
 \usage{
 get_dim(object, ...)
 
-\method{get_dim}{om}(object, env = environment())
+\method{get_dim}{om}(
+  object,
+  projection = TRUE,
+  ref_points = !projection,
+  env = environment()
+)
 
 \method{get_values}{om}(object, iter = 1, env = environment())
 

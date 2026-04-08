@@ -55,7 +55,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     }
     
     # no default
-    .Object@stochastic <- list(ref_points = NA, projections = NA) 
+    .Object@stochastic <- list(ref_points = NA, projection = NA) 
     
     # setup settings required
     # for reference point

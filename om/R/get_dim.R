@@ -7,15 +7,26 @@
 get_dim <- function(object, ...) UseMethod("get_dim")
 #' @rdname get_dim
 #' @export
-get_dim.om <- function(object, env = environment()) {
+get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env = environment()) {
     
     ages   <- object@ages
     time   <- object@time
-    niter  <- object@iter[1]
-    siter  <- object@iter[2]
     
-    nages  <- length(ages)
-    ntime  <- length(time)
+    NITER  <- object@iter[1]
+    SITER  <- ifelse(is.na(object@iter[2]), 1L, object@iter[2])
+    
+    NAGES  <- length(ages)
+    NTIME  <- length(time)
+    
+    STOCHASTIC <- object@stochastic$projection
+    
+    if (ref_points) {
+        
+        NTIME <- object@settings$equilibrium_time
+        SITER <- object@settings$stochastic_iterations
+        
+        STOCHASTIC <- object@stochastic$ref_points
+    }
     
     rm(object)
     

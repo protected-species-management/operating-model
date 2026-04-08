@@ -16,34 +16,18 @@ sp.om <- function(object, harvest_rate, ...) {
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, env = ENV)
+    get_dim(object, ref_points = TRUE, env = ENV)
     
     # get seeds
     get_seeds(object, env = ENV)
     
-    # get stochastic
-    STOCHASTIC <- object@stochastic$ref_points
-    
-    # settings
-    EQU_TIME <- object@settings$equilibrium_time
-    SITER    <- object@settings$stochastic_iterations
-    
     if (STOCHASTIC) {
-        
-        # set seed
-        set.seed(rng_seed[1])
-        
+
         # make sure
         # functions have correct
         # environment
         environment(.pdyn2) <- ENV
         environment(.ff2)   <- ENV
-        
-        # log-normal process error term
-        sigmap <- sqrt(log(1 + object@fixed$cv_dynamics^2))
-        
-        # sample process error
-        perr <- matrix(rnorm(SITER * EQU_TIME, 0 - (sigmap^2) / 2, sigmap), nrow = SITER, ncol = EQU_TIME)
         
     } else {
         
@@ -62,7 +46,7 @@ sp.om <- function(object, harvest_rate, ...) {
     # from life-history   #
     # distributions       #
     #######################
-    for (i in 1:niter) {
+    for (i in 1:NITER) {
         
         # set seed
         set.seed(rng_seed[i])
@@ -80,10 +64,10 @@ sp.om <- function(object, harvest_rate, ...) {
         M <- pars_sample$M
         
         # setup (3)
-        mat    <- c(rep(0, age_mat), rep(1, nages - age_mat))
-        pat    <- c(rep(0, age_pat), rep(1, nages - age_pat))
-        sel    <- c(rep(0, age_sel), rep(1, nages - age_sel))
-        M      <- c(rep(sqrt(M), age_mat), rep(M, nages - age_mat))
+        mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+        pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+        sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+        M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
         S      <- exp(-M)
         lambda <- exp(r)
         
@@ -95,9 +79,33 @@ sp.om <- function(object, harvest_rate, ...) {
             
             cli_progress_step("Calculating stochastic surplus production function ...", spinner = TRUE, msg_done = "Calculated stochastic production function", .envir = ENV)
             
+            # process error term
+            sigmap <- object@fixed$cv_survivorship * S
+            
+            # calculate mu given sigmap
+            mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+            
+            mu <- numeric(NAGES)
+            for (a in 1:NAGES) {
+                mu[a] <- mu_calc(S[a], sigmap[a])
+            }
+            
+            s <- array(dim = c(SITER, NAGES, NTIME))
+            
+            for (a in 1:NAGES) {
+                
+                e <- rnorm(SITER * NTIME, mu[a], sigmap[a])
+                
+                s[,a,] <- pnorm(e)
+                
+                # first year is
+                # equal to expectation
+                s[,a,1] <- S[a]
+            }
+            
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape, error = perr, equilibrium_time = EQU_TIME, env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape, survivorship = s, env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -109,9 +117,14 @@ sp.om <- function(object, harvest_rate, ...) {
             
         } else {
             
+            s <- array(dim = c(NAGES, NTIME))
+            for (a in 1:NAGES) {
+                s[a,] <- S[a]
+            }
+            
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[j], shape = object@shape, equilibrium_time = EQU_TIME, env = ENV)
+                tmp <- .ff(harvest_rate[j], shape = object@shape, survivorship = s, env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion

@@ -33,10 +33,7 @@ get_values <- function(object, ...) UseMethod("get_values")
 #' @export
 get_values.om <- function(object, iter = 1, env = environment()) {
     
-    l1 <- object@pars
-    l2 <- object@life_history
-    l3 <- object@fishery_inputs
-    ll <- c(l1, l2,l3)
+    ll <- object@pars
     
     rm(object)
     

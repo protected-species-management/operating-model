@@ -8,8 +8,8 @@
 #' @import cli
 #' @import glue
 #{{{ pdyn()
-setGeneric("pdyn", function(object, stochastic, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic, iterations, initial_depletion = 1.0, ...) {
+setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, ...) {
     
     # current environment
     ENV <- environment()
@@ -19,13 +19,9 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
     # environment
     environment(object@harvest_rate) <- ENV
     
-    # update object
-    if (!missing(stochastic)) {
-        object@stochastic$projections <- as.logical(stochastic)
-    }
-    if (!missing(iterations)) {
-        object@iter[2] <- as.integer(iterations)
-    }
+    # check and update object with
+    # function arguments
+    object <- .check_pdyn(object, stochastic, time, iterations)
     
     # flag stochastic
     STOCHASTIC <- object@stochastic$projections
@@ -105,21 +101,22 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
         obj_fun <- function(x, target) {
             
             h <- 1 / (1 + exp(-x[1]))
-            p <- numeric(nages)
+            n <- matrix(k, nrow = nages, ncol = 2)
             
             # equilibrium age
             # structure
-            p[] <- k
-            for (i in 1:1e3) {
+            for (l in 2:1e3) {
+                
+                n[, 1] <- n[, 2]
                 for(a in 2:nages) {
-                    p[a] <- p[a-1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
+                    n[a, 2] <- n[a - 1, 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
                 }
-                p[nages] <- p[nages] / (1 - exp(-1 * M[nages]) * (1 - sel[nages] * h))
-                p[1] <- 0.5 * sum(pat[-1] * p[-1]) * (b_eq + (b_max - b_eq) * (1 - (sum(p[-1]) / sum(k[-1]))^shape))
+                n[nages, 2] <- n[nages, 2] + n[nages, 1] * exp(-1 * M[nages]) * (1 -  sel[nages] * h)
+                n[1,     2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2]) / sum(k[-1]))^shape))
             }
                 
             # log of the equilibrium depletion
-            objective <- -1 * dnorm(sum(p[-1]) / sum(k[-1]), target, 0.01, log = TRUE)
+            objective <- -1 * dnorm(sum(n[-1, 2]) / sum(k[-1]), target, 0.01, log = TRUE)
             
             # return
             return(objective)
@@ -231,13 +228,18 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
             
             # equilibrium age
             # structure
-            n_init[] <- k
-            for (l in 1:1e3) {
+            n_init <- matrix(k, nrow = nages, ncol = 2)
+            for (l in 2:1e3) {
+                
+                n_init[, 1] <- n_init[, 2]
                 for(a in 2:nages) {
-                    n_init[a] <- n_init[a-1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h_init)
+                    n_init[a, 2] <- n_init[a - 1, 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h_init)
                 }
-                n_init[nages] <- n_init[nages] / (1 - exp(-1 * M[nages]) * (1 - sel[nages] * h_init))
-                n_init[1]     <- 0.5 * sum(pat[-1] * n_init[-1]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1]) / sum(k[-1]))^shape))
+                n_init[nages, 2] <- n_init[nages, 2] + n_init[nages, 1] * exp(-1 * M[nages]) * (1 -  sel[nages] * h_init)
+                n_init[1,     2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
+                
+                #print(paste(l, sum(n_init[-1, 2]), sum((n_init[,1] - n_init[,2])^2)))
+                #if (log10(sum((n_init[,1] - n_init[,2])^2)) < -20) break
             }
             
             # loop over stochastic
@@ -245,7 +247,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, ini
             for (j in 1:siter) {
                 
                 # initialise
-                n[, 1] <- n_init
+                n[, 1] <- n_init[,2]
                 
                 # project under harvest rate
                 # function

@@ -9,9 +9,8 @@
 # - 
 .pdyn <- function(h, shape, time) {
     
-    n      <- AD(array(dim = c(nages, time)))
-    n_init <- AD(vector("numeric", length = nages))
-    p      <- vector("numeric", length = nages)
+    n <- AD(array(dim = c(nages, time)))
+    p <- vector("numeric", length = nages)
     
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
@@ -44,17 +43,19 @@
     # use iteration to calculate
     # initial age structure
     # and depletion
-    n_init[] <- k
-    for (l in 1:1e3) {
+    n_init <- AD(matrix(k, nrow = nages, ncol = 2))
+    for (l in 2:1e3) {
+        
+        n_init[, 1] <- n_init[, 2]
         for(a in 2:nages) {
-            n_init[a] <- n_init[a - 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
+            n_init[a, 2] <- n_init[a - 1, 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
         }
-        n_init[nages] <- n_init[nages] / (1 - exp(-1 * M[nages]) * (1 - sel[nages] * h))
-        n_init[1]     <- 0.5 * sum(pat[-1] * n_init[-1]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1]))^shape))
+        n_init[nages, 2] <- n_init[nages, 2] + n_init[nages, 1] * exp(-1 * M[nages]) * (1 -  sel[nages] * h)
+        n_init[1,     2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
     }
     
     # initialise
-    n[, 1] <- n_init
+    n[, 1] <- n_init[, 2]
     
     # project
     for (y in 2:time) {
@@ -80,10 +81,9 @@
 
 .pdyn2 <- function(h, shape, error, time) {
     
-    n      <- AD(array(dim = c(nages, time)))
-    n_init <- AD(vector("numeric", length = nages))
-    p      <- vector("numeric", length = nages)
-    e      <- error
+    n <- AD(array(dim = c(nages, time)))
+    p <- vector("numeric", length = nages)
+    e <- error
     
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
@@ -116,17 +116,19 @@
     # use iteration to calculate
     # initial age structure
     # and depletion
-    n_init[] <- k
-    for (l in 1:1e3) {
+    n_init <- AD(matrix(k, nrow = nages, ncol = 2))
+    for (l in 2:1e3) {
+        
+        n_init[, 1] <- n_init[, 2]
         for(a in 2:nages) {
-            n_init[a] <- n_init[a - 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
+            n_init[a, 2] <- n_init[a - 1, 1] * exp(-M[a - 1]) * (1 - sel[a - 1] * h)
         }
-        n_init[nages] <- n_init[nages] / (1 - exp(-1 * M[nages]) * (1 - sel[nages] * h))
-        n_init[1]     <- 0.5 * sum(pat[-1] * n_init[-1]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1]))^shape))
+        n_init[nages, 2] <- n_init[nages, 2] + n_init[nages, 1] * exp(-1 * M[nages]) * (1 -  sel[nages] * h)
+        n_init[1,     2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
     }
     
     # initialise
-    n[, 1] <- n_init
+    n[, 1] <- n_init[, 2]
     
     # project
     for (y in 2:time) {
@@ -164,17 +166,17 @@
     # equilibrium per-capita birth
     production <- N[1, equilibrium_time] / sum(N[-1, equilibrium_time] * pat[-1])
     
-    # return lambda
+    # return dynamics
     return(list(captures = captures, depletion = depletion, production = production))
 }
 
 .ff2 <- function(h, shape, error, equilibrium_time, env) {
     
     # setup
-    N <- array(dim = c(siter, nages, equilibrium_time))
+    N <- array(dim = c(dim(error)[1], nages, equilibrium_time))
     
     # run dynamics
-    for (i in 1:siter) {
+    for (i in 1:dim(error)[1]) {
         N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, error = error[i,], time = equilibrium_time), envir = env)
     }
     
@@ -190,7 +192,7 @@
     # equilibrium per-capita birth
     production <- mean(apply(N[,1,recent_time], 1, sum) / apply(sweep(N[,-1, recent_time], 2, pat[-1], "*"), 1, sum))
     
-    # return lambda
+    # return dynamics
     return(list(captures = captures, depletion = depletion, production = production))
 }
 

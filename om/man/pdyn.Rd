@@ -4,7 +4,7 @@
 \alias{pdyn}
 \title{Population dynamics function}
 \usage{
-pdyn(object, stochastic, ...)
+pdyn(object, ...)
 }
 \description{
 The population dynamics function is called per-iteration.

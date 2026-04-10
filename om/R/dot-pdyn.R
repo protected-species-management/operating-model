@@ -22,7 +22,7 @@
     b_eq <- 1 / sum(pat * p)
     
     # maximum fecundity
-    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat+1])
+    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / prod(S[1:(age_mat + 1)])
     
     # population
     # at equilibrium

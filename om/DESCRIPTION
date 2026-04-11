@@ -2,7 +2,7 @@ Package: om
 Type: Package
 Title: Operating model (TMB)
 Version: 0.0.1
-Date: 2026-04-10
+Date: 2026-04-11
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation module for managed populations
@@ -30,6 +30,7 @@ Collate:
     'distribution-class.R'
     'distribution.R'
     'dot-check.R'
+    'dot-epsilon.R'
     'dot-logit.R'
     'dot-pdyn.R'
     'dot-survivorship.R'
@@ -38,6 +39,7 @@ Collate:
     'load_pars.R'
     'sample.distribution.R'
     'load_rmax.R'
+    'load_settings.R'
     'load_targets.R'
     'om.R'
     'pdyn.R'

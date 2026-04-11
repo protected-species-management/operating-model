@@ -89,7 +89,7 @@
     b_eq <- 1 / sum(pat * p)
     
     # maximum fecundity
-    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat + 1])
+    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / prod(S[1:(age_mat + 1)])
     
     # population
     # at equilibrium
@@ -147,8 +147,11 @@
     # equilibrium per-capita birth
     production <- N[1, NTIME] / sum(N[-1, NTIME] * pat[-1])
     
+    # terminal growth rate
+    lambda <- sum(N[, NTIME]) / sum(N[, NTIME - 1])
+    
     # return dynamics
-    return(list(captures = captures, depletion = depletion, production = production))
+    return(list(captures = captures, depletion = depletion, production = production, lambda = lambda))
 }
 
 .ff2 <- function(h, shape, survivorship, env) {
@@ -173,8 +176,11 @@
     # equilibrium per-capita birth
     production <- mean(apply(N[,1,recent_time], 1, sum) / apply(sweep(N[,-1, recent_time], 2, pat[-1], "*"), 1, sum))
     
+    # growth rate
+    lambda <- mean(apply(N[,, recent_time], 3, sum) / apply(N[,, recent_time - 1], 3, sum)) 
+    
     # return dynamics
-    return(list(captures = captures, depletion = depletion, production = production))
+    return(list(captures = captures, depletion = depletion, production = production, lambda = lambda))
 }
 
 

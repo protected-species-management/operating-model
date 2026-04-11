@@ -59,9 +59,13 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     
     # setup settings required
     # for reference point
-    # estimation
-    .Object@settings$stochastic_iterations <- NA_integer_
+    # estimation and projection
+    .Object@settings$samples               <- .Object@iter[1]
+    .Object@settings$stochastic_iterations <- .Object@iter[2]
     .Object@settings$equilibrium_time      <- NA_integer_
+    .Object@settings$cv_survivorship       <- 0.0
+    .Object@settings$cv_birth              <- 0.0
+    .Object@settings$cv_observe            <- 0.0
     
     # setup PST limit
     # reference point
@@ -95,16 +99,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     .Object@objectives$captures     <- NA_real_
     .Object@objectives$depletion    <- NA_real_
     .Object@objectives$harvest_rate <- NA_real_
-    
-    # add dimensions to 
-    # reference point
-    #.Object@pst$numbers <- matrix(NA_real_, nrow = length(.Object@time), ncol = .Object@iter)
-    #.Object@pst$value   <- matrix(NA_real_, nrow = length(.Object@time), ncol = .Object@iter)
-    
-    # add dimensions to 
-    # diagnostics
-    #.Object@diagnostics <- lapply(.Object@diagnostics, function(x) matrix(NA_real_, nrow = length(.Object@time), ncol = .Object@iter))
-    
+
     # record rng seeds
     seeds <- floor(runif(iter, 1, 1e6))
     while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(iter, 1, 1e6))
@@ -125,9 +120,6 @@ setMethod("show", "om",
               message("nages: ", if (all(is.na(object@ages))) NA_character_ else length(object@ages))
               message("niter: ", object@iter[1])
               message("siter: ", object@iter[2])
-              #message("\t")
-              #message("fishery_inputs: ", if (length(object@fishery_inputs) > 0)  paste0(names(object@fishery_inputs), collapse = ", ") else red("EMPTY"))
-              #message("life_history: ", if (length(object@life_history) > 0)  paste0(names(object@life_history), collapse = ", ") else red("EMPTY"))
               message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
               message("shape: ", if (length(object@shape) > 0) round(object@shape, 2) else red("EMPTY"))
               message("\nharvest rate function:")

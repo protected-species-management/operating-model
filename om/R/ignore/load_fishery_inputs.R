@@ -1,7 +1,7 @@
 #' @title Load fishery inputs
 #' 
 #' @description Load fishery inputs data into \code{om-class} object from \code{fim-class} object. Checks ensure that 'iter', 'time' and 'ages' arguments match.
-#' @details The \code{fim-class} object can store any relevant information necessary for the operating model projection. These values are accessible within the \code{populations_dynamics} function stored in the \code{om-class} object.
+#' @details The \code{fim-class} object can store any relevant information necessary for the operating model projection. Once loaded, these values are accessible within the \code{populations_dynamics} function stored in the \code{om-class} object.
 #' 
 #' @import fim
 #' @include om-class.R
@@ -45,15 +45,6 @@ setMethod("load_fishery_inputs", signature = c("om", "fim"), function(object, va
             object@time <- as.integer(value@time)
         }
     }
-    
-    # add dimensions to 
-    # reference point
-    object@pst$numbers <- matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
-    object@pst$value   <- matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
-    
-    # add dimensions to 
-    # diagnostics
-    object@diagnostics <- lapply(object@diagnostics, function(x) matrix(NA_real_, nrow = length(object@time), ncol = object@iter))
     
 	# return    
     return(object)

@@ -1,35 +1,56 @@
 Package: om
 Type: Package
-Title: Operating model
+Title: Operating model (TMB)
 Version: 0.0.1
-Date: 2025-12-06
+Date: 2026-04-12
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation module for managed populations
 VignetteBuilder: knitr
 Depends:
     R (>= 4.4),
-    methods (>= 4.3)
+	utils (>= 4.5),
+    methods (>= 4.3),
+    RTMB (>= 1.8),
+    shiny (>= 1.12)
+Repos:
+    kaskr/RTMB
 Suggests:
     rmarkdown (>= 2.6),
     knitr (>= 1.31),
     testthat (>= 3.0),
-    kableExtra (>= 1.3)
+    kableExtra (>= 1.3),
+    bslib (>= 0.0)
 Collate: 
+    'array2dfr.R'
     'om-class.R'
     'get_dim.R'
     'accessors.R'
     'biomass.R'
-    'load_fishery_inputs.R'
-    'load_life_history.R'
+    'distribution-class.R'
+    'distribution.R'
+    'dot-check.R'
+    'dot-epsilon.R'
+    'dot-logit.R'
+    'dot-pdyn.R'
+    'dot-survivorship.R'
+    'dynplot.R'
+    'load_fixed.R'
     'load_pars.R'
+    'sample.distribution.R'
+    'load_rmax.R'
+    'load_settings.R'
     'load_targets.R'
     'om.R'
     'pdyn.R'
+    'plot.distribution.R'
+    'rp.R'
+    'shape.R'
+    'sp.om.R'
     'update_pars.R'
     'zzz.R'
 RoxygenNote: 7.3.3
 Encoding: UTF-8
 Config/testthat/edition: 3
-URL: https://github.com/protected-species-management/operating-model/om
+URL: https://github.com/protected-species-management/operating-model/omtmb
 BugReports: https://github.com/protected-species-management/operating-model/issues

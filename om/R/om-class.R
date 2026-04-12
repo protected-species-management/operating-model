@@ -3,12 +3,12 @@
 #' @description 
 #' Operating model class definition.
 #' @slot ages integer vector of ages assumed by operating model. Set to \code{NA} when a cohort aggregated model is assumed.
-#' @slot time integer vector times used for operating model projection.
+#' @slot time integer vector of times used for operating model projection or single value given the number of time steps.
 #' @slot iter integer value indicating number of stochastic iterations.
-#' @slot life_history names list of life history inputs. See \code{\link{load_life_history}}.
-#' @slot fishery_inputs named list of fishery inputs. See \code{\link{load_fishery_inputs}}.
-#' @slot pars list of values used by the operating model. See \code{\link{load_pars}}.
-#' @slot population_dynamics function containing the operating model. Can take any value stored in the \code{life_history}, \code{fishery_inputs} and \code{pars} slots.
+#' @slot stochastic logical indicating whether stochastic dynamics are being assumed. 
+#' @slot pars list of estimated values used by the operating model. See \code{\link{load_pars}}.
+#' @slot fixed list of fixed input values used by the operating model. See \code{\link{load_data}}.
+#' @slot harvest_rate function containing the harvest rate function.
 #' @slot pst list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.
 #' @slot targets list containing \code{catch}, \code{depletion} and \code{harvest_rate} target reference points. These should be set at the appropriate level for the operating model being assumed. See \code{load_targets}.
 #' @slot objectives list containing probability values indicating whether management target has been reached (i.e., the realised objective values) for comparison with the probabilistic management objective. 
@@ -18,30 +18,34 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', time = 'numeric', pars = 'list', fishery_inputs = 'list', life_history = 'list', population_dynamics = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list'))
+setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', stochastic = 'list', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', fixed = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
 #}}}
 #{{{
 # initialisation function
-setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time, phi = 1, ...) {
+setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, time, shape = 1, phi = 1, ...) {
     
-    if(missing(pdyn_function) | missing(ages)) {
-        .Object@population_dynamics <- function() NA_real_
+    if(missing(harvest_function) | missing(ages)) {
+        .Object@harvest_rate <- function() NA_real_
     } else {
-        .Object@population_dynamics <- pdyn_function
+        .Object@harvest_rate <- harvest_function
     }
     
-    if (grepl("\\(i\\ ", deparse1(pdyn_function))) stop("'pdyn_function' cannot contain 'i' index")
+    if (!grepl("object", deparse1(harvest_function))) stop("'harvest_function' must contain 'object' as its first argument")
     
     if(missing(iter)) {
-        .Object@iter <- NA_integer_
+        stop("'iter' is a required input")
     } else {
-        .Object@iter <- iter
+        .Object@iter <- if(length(iter) < 2) c(iter, NA_integer_) else if(length(iter) == 2) iter else stop("length(iter) > 2")
     }
     
     if(missing(time)) {
-        .Object@time <- NA_integer_
+        stop("'time' is a required input")
     } else {
-        .Object@time <- time
+        if (length(time) > 1) {
+            .Object@time <- time
+        } else {
+            .Object@time <- 0:(time - 1)
+        }
     }
     
     if(missing(ages) | is.null(ages)) {
@@ -50,28 +54,56 @@ setMethod("initialize", "om", function(.Object, ages, pdyn_function, iter, time,
         .Object@ages <- ages
     }
     
+    # no default
+    .Object@stochastic <- list(ref_points = NA, projection = NA) 
+    
+    # setup settings required
+    # for reference point
+    # estimation and projection
+    .Object@settings$samples               <- .Object@iter[1]
+    .Object@settings$stochastic_iterations <- .Object@iter[2]
+    .Object@settings$equilibrium_time      <- NA_integer_
+    .Object@settings$cv_survivorship       <- 0.0
+    .Object@settings$cv_birth              <- 0.0
+    .Object@settings$cv_observe            <- 0.0
+    
     # setup PST limit
     # reference point
     .Object@pst$phi     <- phi
     .Object@pst$rmax    <- NA_real_
     .Object@pst$value   <- NA_real_
     
+    # setup pars
+    # (intrinsic growth)
+    .Object@pars$r <- NA_real_ 
+    # (adult female natural mortality)
+    .Object@pars$M <- NA_real_
+    # (females born per adult female)
+    .Object@pars$f <- NA_real_
+    # (age at female maturity)
+    .Object@pars$a <- NA_real_
+    
     # setup management
     # target reference points
-    # (MNPL values)
-    .Object@targets$catch        <- NA_real_
+    # (estimated or assumed MNPL values)
+    .Object@targets$captures     <- NA_real_
     .Object@targets$harvest_rate <- NA_real_
-    .Object@targets$depletion    <- 0.5
+    .Object@targets$depletion    <- NA_real_
     
     # set up diagnostics
-    .Object@diagnostics$catch        <- NA_real_
+    .Object@diagnostics$captures     <- NA_real_
     .Object@diagnostics$depletion    <- NA_real_
     .Object@diagnostics$harvest_rate <- NA_real_
     
     # set up objectives
-    .Object@objectives$catch        <- NA_real_
+    .Object@objectives$captures     <- NA_real_
     .Object@objectives$depletion    <- NA_real_
     .Object@objectives$harvest_rate <- NA_real_
+
+    # record rng seeds
+    seeds <- floor(runif(iter, 1, 1e6))
+    while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(iter, 1, 1e6))
+    .Object@seeds <- as.integer(seeds)
     
     # return
     return(.Object)
@@ -86,29 +118,16 @@ setMethod("show", "om",
               message("\t")
               message("ntime: ", if (all(is.na(object@time))) NA_character_ else length(object@time))
               message("nages: ", if (all(is.na(object@ages))) NA_character_ else length(object@ages))
-              message("niter: ", object@iter)
-              message("\t")
-              message("fishery_inputs: ", if (length(object@fishery_inputs) > 0)  paste0(names(object@fishery_inputs), collapse = ", ") else red("EMPTY"))
-              message("life_history: ", if (length(object@life_history) > 0)  paste0(names(object@life_history), collapse = ", ") else red("EMPTY"))
+              message("niter: ", object@iter[1])
+              message("siter: ", object@iter[2])
               message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
-              message("\npopulation dynamics function:")
-              message(writeLines(deparse(object@population_dynamics)))
-              message("population dynamics:")
-              print(object@.Data)
+              message("shape: ", if (length(object@shape) > 0) round(object@shape, 2) else red("EMPTY"))
+              message("\nharvest rate function:")
+              message(writeLines(deparse(object@harvest_rate)))
+              message("rmax:")
+              show(object@pst$rmax)
+              #message("\npopulation dynamics:\t")
+              #print(object@.Data)
           })
 # }}}
 
-#{{{
-# class definition
-#setClass("omIter", contains = "matrix",
-#         slots=list(
-#             ages                = 'numeric',
-#             time                = 'numeric',
-#             productivity        = 'list',
-#             fishing             = 'list',
-#             life_history        = 'list',
-#             population_dynamics = 'function',
-#             pst                 = 'list'
-#         )
-#)
-#}}}

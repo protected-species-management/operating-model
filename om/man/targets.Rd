@@ -9,6 +9,7 @@
 \alias{diagnostics,om-method}
 \alias{pst,om-method}
 \alias{objectives,om-method}
+\alias{pars,om-method}
 \title{Access outputs from \code{\link{om-class}} object.}
 \usage{
 targets(object, ...)
@@ -20,6 +21,8 @@ targets(object, ...)
 \S4method{pst}{om}(object)
 
 \S4method{objectives}{om}(object)
+
+\S4method{pars}{om}(object)
 }
 \arguments{
 \item{object}{\code{\link{om-class}} object.}

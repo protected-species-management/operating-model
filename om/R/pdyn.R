@@ -1,94 +1,337 @@
-#' @title pdyn
+#' @title Population dynamics function
 #' 
-#' @description Population dynamics function
+#' @description The population dynamics function is called per-iteration.
 #' 
 #' @export
-#' @include om-class.R
-#' 
+#' @include om-class.R get_dim.R
+#' @import RTMB
+#' @import cli
+#' @import glue
 #{{{ pdyn()
-# wrapper for execution of population
-# dynamics function
-# -- executes object@pdyn for each monte-carlo sample
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, ...) {
     
-    # check environment for function call is
-    # consistent with current environment
-    environment(object@population_dynamics) <- environment()
+    # current environment
+    ENV <- environment()
+    
+    # make sure harvest rate
+    # function has correct
+    # environment
+    environment(object@harvest_rate) <- ENV
+    
+    # check and update object with
+    # function arguments
+    object <- .check_pdyn(object, stochastic, time, iterations)
     
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, env = environment())
+    get_dim(object, projection = TRUE, env = ENV)
+    
+    # get seeds
+    get_seeds(object, env = ENV)
+    
+    # set seed
+    set.seed(rng_seed[1])
+    
+    # get shape
+    get_shape(object, env = ENV)
     
     # setup numbers array
-    if (any(is.na(ages))) {
-        n <- array(dim = c(1, ntime, niter))
+    # [life-history samples, process-error samples, ages, time]
+    if (all(is.na(ages))) {
+        N <- array(dim = c(NITER, SITER, 1, NTIME))
     } else {
-        n <- array(dim = c(nages, ntime, niter))
+        N <- array(dim = c(NITER, SITER, NAGES, NTIME))
     }
     
-    # arrays to record catch
-    # and depletion
-    x <- array(dim = c(ntime, niter))
-    y <- array(dim = c(ntime, niter))
-    z <- array(dim = c(ntime, niter))
+    # setup diagnostics
+    # (catch)
+    object@diagnostics$captures <- array(dim = c(NITER, SITER, NTIME - 1))
+    # (depletion)
+    object@diagnostics$depletion <- array(dim = c(NITER, SITER, NTIME)) 
+    # (harvest rate)
+    object@diagnostics$harvest_rate <- array(dim = c(NITER, SITER, NTIME - 1))
     
-    # iterate dynamics
-    for(i in 1:niter) {
+    # pst
+    object@pst$value <- array(dim = c(NITER, SITER, NTIME))
+    
+    # progress
+    msg <- ""
+    cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
+    
+    # {{{
+    # PT model
+    if (all(is.na(object@ages)) | !(length(object@ages) > 1)) {
         
-        # load values stored in:
-        # - object@pars
-        # - object@fishery_inputs
-        # - object@life_history
-        # into function environment
-        # per iteration
-        get_values(object, iter = i, env = environment())
+    } else {
+    # {{{
+    # AGE-STRUCTURED MODEL
         
-        # call population dynamics function
-        # per iteration using values and dimensions
-        # within function environment
-        n[,,i] <- object@population_dynamics()
+        # objective function for
+        # estimation of h at
+        # initial depletion
+        obj_fun <- function(x, target) {
+            
+            h <- 1 / (1 + exp(-x[1]))
+            n <- matrix(k, nrow = NAGES, ncol = 2)
+            
+            # equilibrium age
+            # structure
+            for (l in 2:1e3) {
+                
+                n[, 1] <- n[, 2]
+                for(a in 2:NAGES) {
+                    n[a, 2] <- n[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
+                }
+                n[a, 2] <- n[a, 2] + n[a, 1] * S[a] * (1 -  sel[a] * h)
+                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2]) / sum(k[-1]))^shape))
+            }
+                
+            # log of the equilibrium depletion
+            objective <- -1 * dnorm(sum(n[-1, 2]) / sum(k[-1]), target, 0.01, log = TRUE)
+            
+            # return
+            return(objective)
+        }
         
-        # record depletion
-        # (updated by function call)
-        x[,i] <- depletion
+        # set-up arrays
+        n      <- array(dim = c(NAGES, NTIME))
+        p      <- vector("numeric", length = NAGES)
+        n_init <- vector("numeric", length = NAGES)
         
-        # record catch
-        # (updated by function call)
-        y[,i] <- catch
+        proj_n         <- array(dim = c(SITER, NAGES, NTIME))
+        proj_h         <- array(dim = c(SITER, NTIME - 1))
+        proj_catch     <- array(dim = c(SITER, NTIME - 1))
+        proj_depletion <- array(dim = c(SITER, NTIME))
         
-        # record harvest_rate
-        # (updated by function call)
-        z[,i] <- harvest_rate
+        # set-up birth function
+        birth <- function(y) {
+            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape)) 
+        }
         
-        # record PST
-        # reference point
-        object@pst$value[,i] <- pst_value
-        
-        # calculate diagnostics
-        # (catch)
-        object@diagnostics$catch[,i] <- y[,i]
-        # (catch)
-        object@diagnostics$depletion[,i] <- x[,i]
-        # (catch)
-        object@diagnostics$harvest_rate[,i] <- z[,i]
+        #######################
+        # monte-carlo samples #
+        # from life-history   #
+        # distributions       #
+        #######################
+        for (i in 1:NITER) {
+            
+            # set seed
+            set.seed(rng_seed[i])
+            
+            # progress iteration
+            msg <- glue(", iteration {i}/", NITER)
+            
+            # sample
+            pars_sample <- lapply(object@pars, sample, n = 1)
+            rmax_sample <- sample(object@pst$rmax, n = 1)
+                
+            # spin spinner
+            cli_progress_update()
+            
+            # record pars sample
+            # value if missing or 
+            # overwrite
+            invisible(lapply(1:length(pars_sample), function(j) {
+                if (is.na(object@pars[[j]]@.Data[i])) {
+                    object@pars[[j]]@.Data[i] <<- pars_sample[[j]]
+                } else {
+                    pars_sample[[j]] <<- object@pars[[j]]@.Data[i] 
+                }
+            }))
+            
+            # record rmax sample or
+            # overwrite
+            if (is.na(object@pst$rmax@.Data[i])) {
+                object@pst$rmax@.Data[i] <- rmax_sample
+            } else {
+                rmax_sample <- object@pst$rmax@.Data[i] 
+            }
+            
+            # setup (1)
+            age_mat <- as.integer(pars_sample$a)
+            age_pat <- age_mat + 1L
+            age_sel <- as.integer(object@fixed$selectivity)
+            
+            # setup (2)
+            r <- pars_sample$r
+            M <- pars_sample$M
+            
+            # setup (3)
+            mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+            pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+            sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+            M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
+            S      <- exp(-M)
+            lambda <- exp(r)
+            K      <- object@fixed$K
+            
+            if (STOCHASTIC) {
+                
+                # process error term
+                sigmap <- object@fixed$cv_survivorship * S
+                
+                # calculate mu given sigmap
+                mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+                
+                mu <- numeric(NAGES)
+                for (a in 1:NAGES) {
+                    mu[a] <- mu_calc(S[a], sigmap[a])
+                }
+                
+                s <- array(dim = c(SITER, NAGES, NTIME))
+                
+                for (a in 1:NAGES) {
+                    
+                    e <- rnorm(SITER * NTIME, mu[a], sigmap[a])
+                    
+                    s[,a,] <- pnorm(e)
+                    
+                    # first year is
+                    # equal to expectation
+                    s[,a,1] <- S[a]
+                }
+            
+            } else {
+                
+                s <- array(dim = c(SITER, NAGES, NTIME))
+                
+                for (a in 1:NAGES) {
+                    s[,a,] <- S[a]
+                }
+            }
+            
+            # set up unexploited 
+            # equilibrium female
+            # population
+            p[1] <- 0.5
+            for(a in 2:NAGES) {
+                p[a] <- p[a-1] * S[a - 1]
+            }
+            p[NAGES] <- p[NAGES] / (1 - S[NAGES])
+            
+            # replacement birth rate
+            # per female
+            b_eq  <- 1 / sum(pat * p)
+            
+            # maximum birth rate
+            # per female
+            b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat+1])
+            
+            # initialise population
+            # at equilibrium
+            k_prime <- b_eq * p
+            
+            # initial conditions
+            # (1+ depletion = K)
+            k <- K * k_prime / sum(k_prime[-1])
+            
+            # initial conditions
+            if (initial_depletion < 1) {
+                h_init <- .ilogit(optimise(obj_fun, interval = c(-10,-1), target = initial_depletion)$minimum)
+            } else {
+                h_init <- 0    
+            }
+            
+            # equilibrium age
+            # structure
+            n_init <- matrix(k, nrow = NAGES, ncol = 2)
+            for (l in 2:1e3) {
+                
+                n_init[, 1] <- n_init[, 2]
+                for(a in 2:NAGES) {
+                    n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h_init)
+                }
+                n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
+                n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
+            }
+            
+            # loop over stochastic
+            # process error
+            for (j in 1:SITER) {
+                
+                # initialise
+                n[, 1] <- n_init[,2]
+                
+                # project under harvest rate
+                # function
+                # {{{
+                for (y in 2:NTIME) {
+                    
+                    proj_h[j, y - 1] <- object@harvest_rate(object, i)
+                    
+                    for (a in 2:NAGES) {
+                        n[a, y] <- n[a - 1, y - 1] * s[j, a - 1, y - 1] * (1 - sel[a - 1] * proj_h[j, y - 1]) 
+                    }
+                    
+                    # plus group
+                    n[a, y] <- n[a, y] + n[a, y - 1] * s[j, a - 1, y - 1] * (1 - sel[a] * proj_h[j, y - 1])
+                    
+                    # birth
+                    n[1, y] <- birth(y)
+                }
+                
+                # values per-year
+                proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-NTIME] * proj_h[j,] 
+                proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
+                proj_n[j,,]        <- n
+                
+                # spin spinner
+                cli_progress_update()
+            
+            }
+            
+            # update time series diagnostics
+            # (catch)
+            object@diagnostics$captures[i,,]     <- proj_catch
+            # (depletion)
+            object@diagnostics$depletion[i,,]    <- proj_depletion
+            # (harvest rate)
+            object@diagnostics$harvest_rate[i,,] <- proj_h
+            
+            # numbers
+            N[i,,,] <- proj_n
+            
+            # pst
+            for (j in 1:SITER) {
+                object@pst$value[i,j,] <- (1 / 2) * object@pst$phi * sample(object@pst$rmax, n = 1) * apply(sweep(N[i,j,,], 1, mat, "*"), 2, sum)
+            }
+            
+            # spin spinner
+            cli_progress_update()
+        }
     }
+
+    # calculate objectives as the probability
+    # of a desirable outcome
+    p_higher <- function(x, y) ifelse(x > y, 1, ifelse(x < y, 0, 0.5))
+    p_lower  <- function(x, y) ifelse(x < y, 1, ifelse(x > y, 0, 0.5))
     
-    # calculate objectives
-    # (catch is less than that required to meet MNPL)
-    object@objectives$catch        <- apply(sweep(object@diagnostics$catch,        2, object@targets$catch, '<='), 1, mean, na.rm = TRUE)
-    # (depletion is greater than the depletion at MNPL)
-    object@objectives$depletion    <- apply(sweep(object@diagnostics$depletion,    2, object@targets$depletion, '>='), 1, mean, na.rm = TRUE)
-    # (harvest rate is less than that required to meet MNPL)
-    object@objectives$harvest_rate <- apply(sweep(object@diagnostics$harvest_rate, 2, object@targets$harvest_rate, '<='), 1, mean, na.rm = TRUE)
+    # (prob. that catch is less than that required to meet MNPL)
+    object@objectives$captures     <- array(dim = c(NITER, NTIME - 1))
+    # (prob. that depletion is greater than the depletion at MNPL)
+    object@objectives$depletion    <- array(dim = c(NITER, NTIME))
+    # (prob. that harvest rate is less than that required to meet MNPL)
+    object@objectives$harvest_rate <- array(dim = c(NITER, NTIME - 1))
+    
+    for (i in 1:NITER) {
+        
+        object@objectives$captures[i,]     <- apply(sweep(matrix(object@diagnostics$captures[i,,], nrow = SITER),     1, object@targets$captures[i], p_lower),     2, mean, na.rm = TRUE)
+        object@objectives$depletion[i,]    <- apply(sweep(matrix(object@diagnostics$depletion[i,,], nrow = SITER),    1, object@targets$depletion[i], p_higher),   2, mean, na.rm = TRUE)
+        object@objectives$harvest_rate[i,] <- apply(sweep(matrix(object@diagnostics$harvest_rate[i,,], nrow = SITER), 1, object@targets$harvest_rate[i], p_lower), 2, mean, na.rm = TRUE)
+    }
     
     # dimnames (after calculations)
-    dimnames(n) <- list(age = ages, time = time, iter = 1:niter)
+    #dimnames(object@diagnostics$catch)        <- list(iter = 1:NITER, time = time[-NTIME])
+    #dimnames(object@diagnostics$depletion)    <- list(iter = 1:NITER, time = time)
+    #dimnames(object@diagnostics$harvest_rate) <- list(iter = 1:NITER, time = time[-NTIME])
+    dimnames(N)                               <- list(iter = 1:NITER, stochastic_iter = 1:SITER, age = ages, time = time)
     
     # assign data
-    object@.Data <- n
+    object@.Data <- N
     
+    # return
     return(object)
 })
 #}}}

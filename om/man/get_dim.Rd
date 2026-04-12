@@ -5,14 +5,28 @@
 \alias{get_values}
 \alias{get_dim.om}
 \alias{get_values.om}
-\title{Get dimensions and values stored in \code{\link{om-class}} object.}
+\alias{get_fixed.om}
+\alias{get_seeds.om}
+\alias{get_shape.om}
+\title{Get dimensions and values}
 \usage{
 get_dim(object, ...)
 
-\method{get_dim}{om}(object, env)
+\method{get_dim}{om}(
+  object,
+  projection = TRUE,
+  ref_points = !projection,
+  env = environment()
+)
 
-\method{get_values}{om}(object, iter = 1, env)
+\method{get_values}{om}(object, iter = 1, env = environment())
+
+\method{get_fixed}{om}(object, env = environment())
+
+\method{get_seeds}{om}(object, env = environment())
+
+\method{get_shape}{om}(object, env = environment())
 }
 \description{
-Extract dimensions and/or values from object for use within a function call.
+Extract dimensions and/or values from \code{\link{om-class}} object for use within a function call.
 }

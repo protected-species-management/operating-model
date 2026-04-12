@@ -1,7 +1,8 @@
 #' @title load_life_history
 #' 
-#' @description Load life-history data into \code{om-class} object from \code{lhm-class} object.
-#' 
+#' @description Load life-history data into \code{om-class} object from \code{lhmSimple-class} object. If required, the maximum intrinsic growth is calculated. 
+#' @details The \code{lhmSimple-class} object can store any relevant information necessary for the operating model projection. Once loaded, these values are accessible within the \code{populations_dynamics} function stored in the \code{om-class} object.
+
 #' @import lhmSimple
 #' 
 #' @include om-class.R
@@ -44,8 +45,8 @@ setMethod("load_life_history", signature = c("om", "lhmSimple"), function(object
     return(object)
 })
 
-#{{ prior object
-setMethod("load_life_history", signature = c("om", "prior"), function(object, value, ...) {
+#{{ distribution object
+setMethod("load_life_history", signature = c("om", "distribution"), function(object, value, ...) {
     
     if (is.na(object@iter)) {
         object@iter     <- as.integer(value@iter)
@@ -64,7 +65,7 @@ setMethod("load_life_history", signature = c("om", "prior"), function(object, va
     
     # add dimensions to 
     # reference point
-    object@pst$value <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
+    #object@pst$value <- if (all(is.na(object@time))) matrix(NA_real_, nrow = 1, ncol = object@iter) else matrix(NA_real_, nrow = length(object@time), ncol = object@iter)
     
     # return    
     return(object)

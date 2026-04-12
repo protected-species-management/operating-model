@@ -1,7 +1,3 @@
-^vignettes/om_hak.Rmd
-^vignettes/lh_bsh.Rmd
-^R/catchability.R
-^R/index.R
-^R/age_frequency.R
-^R/load_empirical_data.R
-^R/load_selectivity.R
+^vignettes/*.Rmd
+^R/ignore/*.R
+

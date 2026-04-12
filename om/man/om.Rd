@@ -4,7 +4,7 @@
 \alias{om}
 \title{Create \code{\link{om-class}} object}
 \usage{
-om(ages, pdyn_function = if (is.null(ages)) .logistic else .aspm, ...)
+om(ages, harvest_function = .harvest_rate, ...)
 }
 \description{
 Initialise operating model class object

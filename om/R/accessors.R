@@ -3,9 +3,8 @@
 #' @aliases targets diagnostics pst objectives
 #' @description Access outputs stored in \code{\link{om-class}} object following call to [pdyn()].
 #' @param object \code{\link{om-class}} object. 
-#' @importFrom tibble as_tibble
 #' @importFrom crayon blue
-#' @include om-class.R get_dim.R
+#' @include om-class.R get_dim.R array2dfr.R
 #{{{
 #' @export
 setGeneric("targets", function(object, ...) standardGeneric("targets"))
@@ -14,7 +13,7 @@ setGeneric("targets", function(object, ...) standardGeneric("targets"))
 setMethod("targets", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: management target :::"))
-    lapply(object@targets, function(x) { y <- data.frame(iter = 1:object@iter, value = x[1,]);  as_tibble(y) })  
+    lapply(object@targets, function(x) { y <- data.frame(iter = 1:NITER, value = x);  as_tibble(y) })  
 })
 #}}}
 #{{{
@@ -25,7 +24,7 @@ setGeneric("diagnostics", function(object, ...) standardGeneric("diagnostics"))
 setMethod("diagnostics", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
-    lapply(object@diagnostics, function(x) { dimnames(x) <- list(time = time, iter = 1:niter);  y <- array2DF(x, responseName = "value"); y$iter <- as.integer(y$iter); y$time <- as.integer(y$time); as_tibble(y)})
+    lapply(object@diagnostics, function(x) array2dfr(x, dim.names = list(iteration = 1:dim(x)[1], stochastic_iteration = 1:dim(x)[2], time = object@time)))
 })
 #}}}
 #{{{
@@ -36,8 +35,7 @@ setGeneric("pst", function(object, ...) standardGeneric("pst"))
 setMethod("pst", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
-    x <- object@pst$value
-    dimnames(x) <- list(time = time, iter = 1:niter);  y <- array2DF(x, responseName = "value"); y$iter <- as.integer(y$iter); y$time <- as.integer(y$time); as_tibble(y)
+    array2dfr(object@pst$value, dim.names = list(iteration = 1:NITER, time = object@time))
 })
 #}}}
 
@@ -49,7 +47,18 @@ setGeneric("objectives", function(object, ...) standardGeneric("objectives"))
 setMethod("objectives", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: probability of reaching management target :::"))
-    lapply(object@objectives,  function(x) { y <- data.frame(time = time, value = x);  as_tibble(y) })
+    lapply(object@objectives,  function(x) array2dfr(x, dim.names = list(iteration = 1:NITER, time = object@time)))
 })
 #}}}
+
+#{{{
+#' @export
+setGeneric("pars", function(object, ...) standardGeneric("pars"))
+# accessor function
+#' @rdname targets
+setMethod("pars", signature = c("om"), function(object) {
+    object@pars
+})
+#}}}
+
 

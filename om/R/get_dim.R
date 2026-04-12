@@ -1,7 +1,7 @@
-#' @title Get dimensions and values stored in \code{\link{om-class}} object.
+#' @title Get dimensions and values
 #' @aliases get_values
 #' @description
-#' Extract dimensions and/or values from object for use within a function call.
+#' Extract dimensions and/or values from \code{\link{om-class}} object for use within a function call.
 #' @include om-class.R
 #' @export
 get_dim <- function(object, ...) UseMethod("get_dim")
@@ -28,10 +28,8 @@ get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env 
         STOCHASTIC <- object@stochastic$ref_points
     }
     
-    rm(object)
-    
     if (is.environment(env)) {
-        lapply(ls(), function(x) assign(x, get(x), envir = env))
+        lapply(c("ages", "time", "NITER", "SITER", "NAGES", "NTIME", "STOCHASTIC"), function(x) assign(x, get(x), envir = env))
     } else {
         warning("not a valid environment!")    
     }

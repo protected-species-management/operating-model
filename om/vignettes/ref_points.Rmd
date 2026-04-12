@@ -1,0 +1,120 @@
+---
+title: "Operating model demonstration"
+author: "Charles T T Edwards"
+date: "`r format(Sys.Date(), '%d-%b-%Y')`"
+output:
+  rmarkdown::html_vignette:
+    fig_caption: yes
+    toc: no
+vignette: >
+  %\VignetteIndexEntry{Blue shark (Indian Ocean)}
+  \usepackage[utf8]{inputenc}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = 'fig/om-examples-', fig.width = 6, tidy = TRUE, tidy.opts = list(blank = TRUE, width.cutoff = 95), message = FALSE, warning = FALSE, collapse = TRUE, comment = "#>")
+```
+
+```{r}
+library(om)
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+# setup om-class object
+# for cohort-aggregated 
+# operating model
+om_object <- om(ages = 0:10, iter = 1L, time = time)
+
+# assign rmax
+# (used to estimate the PST)
+rmax <- distribution(list(iter = 0L, density = "lognormal", pars = c(log(0.04) - (0.01^2)/2, 0.01), name = "max. intrinsic growth"))
+om_object <- om_object %>% load_rmax(rmax)
+
+# setup list of pars
+# (list with user-specified elements that
+# should contain all pars required
+# by population dynamics function)
+om_object <- om_object %>% load_pars(list(
+    'r' = distribution(list(value = 0.04, name = "intrinsic growth")),
+    #'r' = distribution(list(iter = 0L, density = "lognormal", pars = c(log(0.04) - (0.01^2)/2, 0.1), name = "intrinsic growth")),
+    'M' = distribution(list(value = 0.05, name = "natural mortality")),
+    'f' = distribution(list(value = 0.00, name = "female fecundity")),
+    'a' = distribution(list(value = 0.00, name = "age at maturity"))
+))
+
+# load fixed inputs
+om_object <- om_object %>% load_fixed(list(
+    'cv_survivorship'   = 0.30,
+	'cv_birth'          = 0.01,
+    'selectivity'       = 1,
+    'K'                 = 1)
+)
+
+# assume shape
+shape(om_object) <- 1
+
+# deterministic ref. points
+om_object0 <- rp(om_object, stochastic = FALSE, equilibrium_time = 200L)
+targets(om_object0)
+
+dfr0 <- sp(om_object0, harvest_rate = seq(0.00, 0.05, length = 101))
+plot(captures ~ depletion, dfr0, type = 'l'); abline(v = om_object0@targets$depletion, lty = 2); points(x = om_object0@targets$depletion, y = om_object0@targets$captures, pch = 19)
+plot(captures ~ harvest_rate, dfr0, type = 'l'); abline(v = om_object0@targets$harvest_rate, lty = 2); points(x = om_object0@targets$harvest_rate, y = om_object0@targets$captures, pch = 19)
+
+# estimate shape for assumed d_mnpl assumption
+om_object1 <- shape(om_object, depletion = 0.7, stochastic = FALSE, equilibrium_time = 200L)
+shape(om_object1)
+
+# deterministic ref. points
+om_object1 <- rp(om_object1)
+targets(om_object1)
+
+dfr1 <- sp(om_object1, harvest_rate = seq(0.00, 0.05, length = 101))
+plot(captures ~ depletion, dfr1, type = 'l'); abline(v = om_object1@targets$depletion, lty = 2); points(x = om_object1@targets$depletion, y = om_object1@targets$captures, pch = 19)
+plot(captures ~ harvest_rate, dfr1, type = 'l'); abline(v = om_object1@targets$harvest_rate, lty = 2); points(x = om_object1@targets$harvest_rate, y = om_object1@targets$captures, pch = 19)
+
+# estimate shape for assumed d_mnpl assumption
+om_object2 <- shape(om_object, depletion = 0.7, stochastic = TRUE, equilibrium_time = 200L, iterations = 300L)
+shape(om_object2)
+
+# stochastic ref. points
+om_object2 <- rp(om_object2)
+targets(om_object2)
+
+dfr2 <- sp(om_object2, harvest_rate = seq(0.00, 0.05, length = 101))
+plot(captures ~ depletion, dfr2, type = 'l'); abline(v = om_object2@targets$depletion, lty = 2); points(x = om_object2@targets$depletion, y = om_object2@targets$captures, pch = 19)
+plot(captures ~ harvest_rate, dfr2, type = 'l'); abline(v = om_object2@targets$harvest_rate, lty = 2); points(x = om_object2@targets$harvest_rate, y = om_object2@targets$captures, pch = 19)
+
+# compare
+plot(captures ~ depletion, dfr1, type = 'l')
+lines(captures ~ depletion, dfr2, col = 2)
+
+plot(captures ~ harvest_rate, dfr1, type = 'l')
+lines(captures ~ harvest_rate, dfr2, col = 2)
+
+# population dynamics
+om_object0 <- pdyn(om_object0, stochastic = FALSE, initial_depletion = 0.1)
+dynplot(om_object0)
+
+diagnostics(om_object0)
+objectives(om_object0)
+
+om_object1 <- pdyn(om_object1, stochastic = FALSE, initial_depletion = 0.3)
+dynplot(om_object1)
+
+diagnostics(om_object1)
+objectives(om_object1)
+
+om_object2 <- pdyn(om_object2, stochastic = TRUE, iterations = 300L, time = 1000L, initial_depletion = 0.7)
+dynplot(om_object2) + geom_segment(x = 0, xend = max(om_object2@time), y = mean(targets(om_object2)$depletion$value), col = "tomato", linetype = "dashed", linewidth = 1) + geom_point(x = max(om_object2@time), y = mean(targets(om_object2)$depletion$value), col = "tomato", size = 3) + labs(x = "Time", y = "Depletion")
+dynplot(om_object2, pars = "captures") + geom_point(x = max(om_object2@time), y = mean(targets(om_object2)$captures$value), col = "tomato", size = 3) + labs(x = "Time", y = "Captures")
+
+diagnostics(om_object2)
+objectives(om_object2)
+```

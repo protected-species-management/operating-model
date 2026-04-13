@@ -1,9 +1,21 @@
 #' @importFrom RTMB AD
-.pdyn <- function(h, shape, survivorship) {
+.pdyn <- function(h, shape, survivorship, maturity, selectivity, lambda) {
     
+	NAGES <- dim(survivorship)[1] #get("NAGES", envir = parent.frame(2))
+    NTIME <- dim(survivorship)[2] #get("NTIME", envir = parent.frame(2))
+	
+	age_mat <- as.integer(maturity)
+	age_pat <- age_mat + 1L
+	age_sel <- as.integer(selectivity)
+	
+	mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+	pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+	sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+			
     n <- AD(array(dim = c(NAGES, NTIME)))
-    p <- vector("numeric", length = NAGES)
-    
+    p <- numeric(NAGES)
+    S <- survivorship[,1]
+	
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
     }
@@ -66,11 +78,23 @@
     return(n)
 }
 
-.pdyn2 <- function(h, shape, survivorship) {
+.pdyn2 <- function(h, shape, survivorship, maturity, selectivity, lambda) {
     
+	NAGES <- get("NAGES", envir = parent.frame(2))
+    NTIME <- get("NTIME", envir = parent.frame(2))
+	
     n <- AD(array(dim = c(NAGES, NTIME)))
-    p <- vector("numeric", length = NAGES)
-    
+    p <- numeric(NAGES)
+    S <- survivorship[,1]
+	
+	age_mat <- as.integer(maturity)
+	age_pat <- age_mat + 1L
+	age_sel <- as.integer(selectivity)
+	
+	mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+	pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+	sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+	
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
     }
@@ -133,39 +157,55 @@
     return(n)
 }
 
-.ff <- function(h, shape, survivorship, env) {
+.ff <- function(h, shape, survivorship, maturity, selectivity, lambda) {
     
+	# dimensions
+	# [NAGES, NTIME]
+	dims <- dim(survivorship)
+	
+	# vectors
+	pat <- c(rep(0, maturity + 1), rep(1, dims[1] - maturity - 1))
+    sel <- c(rep(0, selectivity),  rep(1, dims[1] - selectivity)) 
+	
     # run dynamics
-    N <- do.call(".pdyn", list(h = h, shape = shape, survivorship = survivorship), envir = env)
+    N <- do.call(".pdyn", list(h = h, shape = shape, survivorship = survivorship, maturity = maturity, selectivity = selectivity, lambda = lambda))
     
     # equilibrium female captures
-    captures <- sum(N[, NTIME] * sel * h)
+    captures <- sum(N[, dims[2]] * sel * h)
     
     # equilibrium depletion
-    depletion <- sum(N[-1, NTIME])
+    depletion <- sum(N[-1, dims[2]])
     
     # equilibrium per-capita birth
-    production <- N[1, NTIME] / sum(N[-1, NTIME] * pat[-1])
+    production <- N[1, dims[2]] / sum(N[-1, dims[2]] * pat[-1])
     
     # terminal growth rate
-    lambda <- sum(N[, NTIME]) / sum(N[, NTIME - 1])
+    lambda <- sum(N[, dims[2]]) / sum(N[, dims[2] - 1])
     
     # return dynamics
     return(list(captures = captures, depletion = depletion, production = production, lambda = lambda))
 }
 
-.ff2 <- function(h, shape, survivorship, env) {
+.ff2 <- function(h, shape, survivorship, maturity, selectivity, lambda) {
     
+	# dimensions
+	# [SITER, NAGES, NTIME]
+	dims <- dim(survivorship)
+	
+	# vectors
+	pat <- c(rep(0, maturity + 1), rep(1, dims[2] - maturity - 1))
+    sel <- c(rep(0, selectivity),  rep(1, dims[2] - selectivity)) 
+	
     # setup
-    N <- array(dim = c(dim(survivorship)[1], NAGES, NTIME))
+    N <- array(dim = dims)
     
     # run dynamics
-    for (i in 1:dim(survivorship)[1]) {
-        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = survivorship[i,,]), envir = env)
+    for (i in 1:dims[1]) {
+        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = survivorship[i,,], maturity = maturity, selectivity = selectivity, lambda = lambda))
     }
     
     # recent time
-    recent_time <- ceiling((2 / 3) * NTIME):NTIME
+    recent_time <- ceiling((2 / 3) * dims[3]):dims[3]
     
     # equilibrium female captures
     captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))
@@ -176,7 +216,7 @@
     # equilibrium per-capita birth
     production <- mean(apply(N[,1,recent_time], 1, sum) / apply(sweep(N[,-1, recent_time], 2, pat[-1], "*"), 1, sum))
     
-    # growth rate
+    # equilibrium growth rate
     lambda <- mean(apply(N[,, recent_time], 3, sum) / apply(N[,, recent_time - 1], 3, sum)) 
     
     # return dynamics

@@ -78,10 +78,10 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
             shape <- exp(x[2])
             
             # get pars
-            a <- get_a()
+            a <- DataEval(get_a)
             r <- DataEval(get_r)
             v <- get_v()
-            s <- get_s()
+            s <- DataEval(get_s)
             
             # spin spinner
             cli_progress_update(.envir = ENV)
@@ -171,7 +171,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         a <- pars_sample$a
         r <- pars_sample$r
         M <- pars_sample$M
-        v <- object@fixed$selectivity
+        v <- as.integer(object@fixed$selectivity)
         
         s <- array(dim = c(NAGES, NTIME))
         for (j in 1:NAGES) {
@@ -288,7 +288,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 				a <- pars_sample$a
 				r <- pars_sample$r
 				M <- pars_sample$M
-				v <- object@fixed$selectivity
+				v <- as.integer(object@fixed$selectivity)
 				
 				s <- array(dim = c(NAGES, NTIME))
 				for (j in 1:NAGES) {
@@ -298,8 +298,9 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 # re-compile function to estimate h_mnpl
                 # given shape
                 #h1 <- MakeTape(obj1, c(log(0.02), log(1)))
-				h1$force.update()
-                h2 <- h1$newton(1)
+				#h2 <- h1$newton(1)
+				
+				h2$force.update()
                 
                 # record estimate if
                 # necessary

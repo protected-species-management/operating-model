@@ -1,8 +1,8 @@
 #' @importFrom RTMB AD
 .pdyn <- function(h, shape, survivorship, maturity, selectivity, lambda) {
     
-	NAGES <- dim(survivorship)[1] #get("NAGES", envir = parent.frame(2))
-    NTIME <- dim(survivorship)[2] #get("NTIME", envir = parent.frame(2))
+	NAGES <- dim(survivorship)[1] 
+    NTIME <- dim(survivorship)[2] 
 	
 	suppressWarnings({
 		age_mat <- as.integer(maturity)
@@ -27,7 +27,7 @@
     # population
     p[1] <- 0.5
     for(a in 2:NAGES) {
-        p[a] <- p[a-1] * S[a - 1]
+        p[a] <- p[a - 1] * S[a - 1]
     }
     p[a] <- p[a] / (1 - S[a])
     
@@ -82,20 +82,22 @@
 
 .pdyn2 <- function(h, shape, survivorship, maturity, selectivity, lambda) {
     
-	NAGES <- get("NAGES", envir = parent.frame(2))
-    NTIME <- get("NTIME", envir = parent.frame(2))
+	NAGES <- dim(survivorship)[1] 
+    NTIME <- dim(survivorship)[2] 
 	
-    n <- AD(array(dim = c(NAGES, NTIME)))
-    p <- numeric(NAGES)
-    S <- survivorship[,1]
-	
-	age_mat <- as.integer(maturity)
-	age_pat <- age_mat + 1L
-	age_sel <- as.integer(selectivity)
+	suppressWarnings({
+		age_mat <- as.integer(maturity)
+		age_pat <- age_mat + 1L
+		age_sel <- as.integer(selectivity)
+	})
 	
 	mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
 	pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
 	sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+			
+    n <- AD(array(dim = c(NAGES, NTIME)))
+    p <- AD(numeric(NAGES))
+    S <- survivorship[,1]
 	
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
@@ -106,7 +108,7 @@
     # population
     p[1] <- 0.5
     for(a in 2:NAGES) {
-        p[a] <- p[a-1] * S[a - 1]
+        p[a] <- p[a - 1] * S[a - 1]
     }
     p[a] <- p[a] / (1 - S[a])
     

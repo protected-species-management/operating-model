@@ -16,6 +16,49 @@
 setGeneric("rp", function(object, stochastic, equilibrium_time, iterations, ...) standardGeneric("rp"))
 setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time, iterations, ...) {
     
+	.survivorship <- function(M, a, cv_survivorship = 0) {
+		
+		age_mat <- as.integer(a)
+		mat     <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+		S       <- exp(-c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat)))    
+		
+		if (cv_survivorship > 0) {
+			
+			# process error term
+			sigma <- cv_survivorship * S
+			
+			# calculate mu given sigma
+			mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+			
+			mu <- numeric(NAGES)
+			for (a in 1:NAGES) {
+				mu[a] <- mu_calc(S[a], sigma[a])
+			}
+			
+			s <- array(dim = c(SITER, NAGES, NTIME))
+			
+			for (a in 1:NAGES) {
+				
+				e <- rnorm(SITER * NTIME, mu[a], sigma[a])
+				
+				s[,a,] <- pnorm(e)
+				
+				# first year is
+				# equal to expectation
+				s[,a,1] <- S[a]
+			}
+			
+		} else {
+		
+			s <- array(dim = c(NAGES, NTIME))
+			for (a in 1:NAGES) {
+				s[a,] <- S[a]
+			}    
+		}
+		
+		return(s)
+	}
+	
     # current environment
     ENV <- environment()
     
@@ -37,10 +80,12 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
     # (depletion)
     object@targets$depletion <- rep(NA_real_, NITER)
     # (harvest rate)
-    if (all(is.na(object@targets$harvest_rate))) {
+    if (any(is.na(object@targets$harvest_rate))) {
         object@targets$harvest_rate <- rep(NA_real_, NITER)
+		ESTIMATE_HMNPL <- TRUE
     } else {
-        cli_alert_info("'object' already contains 'harvest_rate' reference point estimates (no estimation needed)")    
+        #cli_alert_info("'object' already contains 'harvest_rate' reference point estimates (no estimation needed)")  
+		ESTIMATE_HMNPL <- FALSE		
     }
     
     # PT model
@@ -51,15 +96,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
     } else {
     # AGE-STRUCTURED MODEL    
     # {{{
-        
-        # check environment for function call is
-        # consistent with current environment
-        #environment(.pdyn) <- ENV
-        #environment(.ff)   <- ENV
-        
-        # accessor function
-        #get_pars <- function() get("pars_sample", envir = ENV)
-        
+                
 		# accessor functions
         get_a <- function() get("a", envir = ENV)
         get_r <- function() get("r", envir = ENV)
@@ -80,11 +117,13 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
             # get pars
             a <- DataEval(get_a)
             r <- DataEval(get_r)
-            v <- get_v()
             s <- DataEval(get_s)
+			
+			# get fixed values
+            v <- get_v()
             
             # spin spinner
-            cli_progress_update(.envir = ENV)
+            #cli_progress_update(.envir = ENV)
             
             # deterministic dynamics
             n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r)))
@@ -98,11 +137,6 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         
         if (STOCHASTIC) {
             
-            # check environment for function call is
-            # consistent with current environment
-            #environment(.pdyn2) <- ENV
-            #environment(.ff2)   <- ENV
-            
             # set up objective
             # function to estimate
             # harvest rate at 
@@ -113,22 +147,30 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 h     <- 1 / (1 + exp(-x[1]))
                 shape <- exp(x[2])
                 
+				# get pars
+				a <- DataEval(get_a)
+				r <- DataEval(get_r)
+				s <- DataEval(get_s)
+				
+				# get fixed values
+				v <- get_v()
+            
                 objective <- 0
                 
-                for (i in 1:SITER) {
+                for (i in 1:dim(s)[1]) {
                     
                     # spin spinner
                     cli_progress_update(.envir = ENV)
                     
                     # stochastic dynamics
-                    n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,]))
+                    n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,], maturity = a, selectivity = v, lambda = exp(r)))
                     
                     # recent time
                     loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
                     
                     # log of the equilibrium catch
                     # per iteration
-                    objective <- objective - log(sum(sweep(n[, loc], 1, sel, "*") * h) / length(loc))
+                    objective <- objective - log(sum(n[(v + 1):dim(n)[1], loc] * h) / length(loc))
                 }
                 
                 # return
@@ -171,15 +213,12 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         a <- pars_sample$a
         r <- pars_sample$r
         M <- pars_sample$M
-        v <- as.integer(object@fixed$selectivity)
+        v <- object@fixed$selectivity
         
-        s <- array(dim = c(NAGES, NTIME))
-        for (j in 1:NAGES) {
-            s[j,] <- exp(-M)
-        }
+        s <- .survivorship(M, a)
         
         # progress message
-        if (all(is.na(object@targets$harvest_rate))) {
+        if (ESTIMATE_HMNPL) {
             if (STOCHASTIC) {
                 cli_progress_step("Estimating stochastic reference points ...", spinner = TRUE, msg_done = "Estimated stochastic reference points", .envir = ENV)
             } else {
@@ -201,33 +240,11 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         
         if (STOCHASTIC) {
             
-            # process error term
-            sigmap <- object@fixed$cv_survivorship * S
-            
-            # calculate mu given sigmap
-            mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-            
-            mu <- numeric(NAGES)
-            for (j in 1:NAGES) {
-                mu[j] <- mu_calc(S[j], sigmap[j])
-            }
-            
-            s <- array(dim = c(SITER, NAGES, NTIME))
-            
-            for (j in 1:NAGES) {
-                
-                e <- rnorm(SITER * NTIME, mu[j], sigmap[j])
-                
-                s[,j,] <- pnorm(e)
-                
-                # first year is
-                # equal to expectation
-                s[,j,1] <- S[j]
-            }
+            s <- .survivorship(M, a, object@fixed$cv_survivorship)
             
             # estimate h_mnpl only
             # if not already estimated
-            if (is.na(object@targets$harvest_rate[1])) {
+            if (ESTIMATE_HMNPL) {
             
                 # function to estimate
                 # stochastic h_mnpl
@@ -245,7 +262,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
             
             # record deterministic estimate only
             # if not already estimated
-            if (is.na(object@targets$harvest_rate[1])) {
+            if (ESTIMATE_HMNPL) {
                 object@targets$harvest_rate[1] <- .ilogit(h_logit_init)
             }
         
@@ -285,26 +302,28 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 #lambda <- exp(r)
 				
 				# assign pars
-				a <- pars_sample$a
+				#a <- pars_sample$a
 				r <- pars_sample$r
-				M <- pars_sample$M
-				v <- as.integer(object@fixed$selectivity)
+				#M <- pars_sample$M
+				#v <- object@fixed$selectivity
 				
-				s <- array(dim = c(NAGES, NTIME))
-				for (j in 1:NAGES) {
-					s[j,] <- exp(-M)
-				}
+				#if (STOCHASTIC) {
+				#
+				#	s <- .survivorship(M, a, object@fixed$cv_survivorship)
+				#} else {
+				#
+				#	s <- .survivorship(M, a)
+				#}
                 
                 # re-compile function to estimate h_mnpl
                 # given shape
                 #h1 <- MakeTape(obj1, c(log(0.02), log(1)))
 				#h2 <- h1$newton(1)
-				
-				h2$force.update()
                 
                 # record estimate if
                 # necessary
-                if (is.na(object@targets$harvest_rate[i])) {
+                if (ESTIMATE_HMNPL) {
+					h2$force.update()
                     object@targets$harvest_rate[i] <- .ilogit(h2(log(object@shape)))
                 }
                 

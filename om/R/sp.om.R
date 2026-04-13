@@ -21,23 +21,6 @@ sp.om <- function(object, harvest_rate, ...) {
     # get seeds
     get_seeds(object, env = ENV)
     
-    if (STOCHASTIC) {
-
-        # make sure
-        # functions have correct
-        # environment
-        environment(.pdyn2) <- ENV
-        environment(.ff2)   <- ENV
-        
-    } else {
-        
-        # make sure
-        # functions have correct
-        # environment
-        environment(.pdyn) <- ENV
-        environment(.ff)   <- ENV
-    }
-    
     # output
     out <- list()
     
@@ -54,22 +37,11 @@ sp.om <- function(object, harvest_rate, ...) {
         # sample pars
         pars_sample <- lapply(object@pars, sample, n = 1)
         
-        # setup (1)
-        age_mat <- as.integer(pars_sample$a)
-        age_pat <- age_mat + 1L
-        age_sel <- as.integer(object@fixed$selectivity)
-        
-        # setup (2)
-        r <- pars_sample$r
-        M <- pars_sample$M
-        
-        # setup (3)
-        mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-        pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
-        sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
-        M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
-        S      <- exp(-M)
-        lambda <- exp(r)
+        # assign pars
+		a <- pars_sample$a
+		r <- pars_sample$r
+		M <- pars_sample$M
+		v <- as.integer(object@fixed$selectivity)
         
         dvalue <- numeric(length(harvest_rate))
         cvalue <- numeric(length(harvest_rate))
@@ -105,7 +77,7 @@ sp.om <- function(object, harvest_rate, ...) {
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape, survivorship = s, env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -118,17 +90,17 @@ sp.om <- function(object, harvest_rate, ...) {
         } else {
             
             s <- array(dim = c(NAGES, NTIME))
-            for (a in 1:NAGES) {
-                s[a,] <- S[a]
+            for (j in 1:NAGES) {
+                s[j,] <- exp(-M)
             }
             
-            for (j in 1:length(harvest_rate)) {
+            for (k in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[j], shape = object@shape, survivorship = s, env = ENV)
+                tmp <- .ff(harvest_rate[k], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))
                 
-                cvalue[j] <- tmp$captures
-                dvalue[j] <- tmp$depletion
-                pvalue[j] <- tmp$production
+                cvalue[k] <- tmp$captures
+                dvalue[k] <- tmp$depletion
+                pvalue[k] <- tmp$production
             }
         }
         

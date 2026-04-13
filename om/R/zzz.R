@@ -1,10 +1,10 @@
 .onAttach <- function(libname, pkgname) {
-    packageStartupMessage("om version 0.0.1 (12-Apr-2026)")
+    packageStartupMessage("om version 0.1.1 (12-Apr-2026)")
 }
  
 .onLoad <- function(libname, pkgname) {
   invisible(suppressPackageStartupMessages(
-    sapply(c("rlang", "dplyr"),
+    sapply(c("rlang", "dplyr", "TMB"),
         requireNamespace, quietly = TRUE)
   ))
 }

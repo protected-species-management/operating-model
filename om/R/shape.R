@@ -309,10 +309,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             pars_sample <- lapply(object@pars, sample, n = 1)
             
             # assign pars
-			#a <- pars_sample$a
+			a <- pars_sample$a
 			r <- pars_sample$r
-			#M <- pars_sample$M
-			#v <- as.integer(object@fixed$selectivity)
+			M <- pars_sample$M
+			v <- object@fixed$selectivity
 
 			#if (STOCHASTIC) {
             # 

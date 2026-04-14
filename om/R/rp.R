@@ -8,7 +8,7 @@
 #' @note This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function. 
 #' @seealso [targets()]
 #' @export
-#' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R dot-check.R dot-logit.R
+#' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
 #' @import cli
 #{{{ rp()
@@ -16,36 +16,6 @@
 setGeneric("rp", function(object, stochastic, equilibrium_time, iterations, ...) standardGeneric("rp"))
 setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time, iterations, ...) {
     
-	.survivorship <- function(M, cv_survivorship = 0) {
-			
-		S <- exp(-M)
-		
-		if (cv_survivorship > 0) {
-			
-			# process error term
-			sigma <- cv_survivorship * S
-			
-			# calculate mu given sigma
-			mu <- uniroot(function(x) S - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-			
-			s <- array(dim = c(SITER, NTIME))
-            e <- rnorm(SITER * NTIME, mu, sigma)
-				
-            s[] <- pnorm(e)
-				
-			# first year is
-			# equal to expectation
-			s[,1] <- S
-			
-		} else {
-		
-			s   <- array(dim = c(NTIME))
-			s[] <- S
-		}
-		
-		return(s)
-	}
-	
     # current environment
     ENV <- environment()
     
@@ -185,7 +155,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         r <- pars_sample$r
         M <- pars_sample$M
         v <- object@fixed$selectivity
-        s <- .survivorship(M)
+        s <- .survivorship(M, env = ENV)
         
         # progress message
         if (ESTIMATE_HMNPL) {
@@ -213,7 +183,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 		
         if (STOCHASTIC) {
             
-            s <- .survivorship(M, object@fixed$cv_survivorship)
+            s <- .survivorship(M, object@fixed$cv_survivorship, env = ENV)
             
             # estimate h_mnpl only
             # if not already estimated
@@ -265,21 +235,8 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 				r <- pars_sample$r
 				M <- pars_sample$M
 				#v <- object@fixed$selectivity
-				
-				#if (STOCHASTIC) {
-				#
-				#	s <- .survivorship(M, a, object@fixed$cv_survivorship)
-				#} else {
-				#
-				#	s <- .survivorship(M, a)
-				#}
-                
-                # re-compile function to estimate h_mnpl
-                # given shape
-                #h1 <- MakeTape(obj1, c(log(0.02), log(1)))
-				#h2 <- h1$newton(1)
-                
-				s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0))
+				            
+				s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0), env = ENV)
 				
                 # record estimate if
                 # necessary

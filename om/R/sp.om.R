@@ -2,7 +2,7 @@
 #' @description Extracts data frame containing deterministic relationships between the depletion, sustainable captures and the harvest rate. Depletion is measured using the 1+ age classes.
 #' @details This function is designed to facilitate the easy creation of plots of the production function, that can be used to validate operating model assumptions regarding the depletion at MNPL.
 #' @return A data frame containing depletion, sustainable captures and the harvest rate, for each of the input harvest rate values. If life-history inputs are uncertain, iterations are sampled. These iterations do not represent any process error, only uncertainty in the operating model conditioning. 
-#' @include dot-pdyn.R
+#' @include dot-pdyn.R dot-survivorship.R
 #' @importFrom dplyr bind_rows
 #' @export
 sp <- function(object, harvest_rate, ...) UseMethod("sp")
@@ -51,33 +51,11 @@ sp.om <- function(object, harvest_rate, ...) {
             
             cli_progress_step("Calculating stochastic surplus production function ...", spinner = TRUE, msg_done = "Calculated stochastic production function", .envir = ENV)
             
-            # process error term
-            sigmap <- object@fixed$cv_survivorship * S
-            
-            # calculate mu given sigmap
-            mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-            
-            mu <- numeric(NAGES)
-            for (a in 1:NAGES) {
-                mu[a] <- mu_calc(S[a], sigmap[a])
-            }
-            
-            s <- array(dim = c(SITER, NAGES, NTIME))
-            
-            for (a in 1:NAGES) {
-                
-                e <- rnorm(SITER * NTIME, mu[a], sigmap[a])
-                
-                s[,a,] <- pnorm(e)
-                
-                # first year is
-                # equal to expectation
-                s[,a,1] <- S[a]
-            }
+            s <- .survivorship(M, object@fixed$cv_survivorship, env = ENV)
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -89,14 +67,11 @@ sp.om <- function(object, harvest_rate, ...) {
             
         } else {
             
-            s <- array(dim = c(NAGES, NTIME))
-            for (j in 1:NAGES) {
-                s[j,] <- exp(-M)
-            }
+            s <- .survivorship(M, env = ENV)
             
             for (k in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[k], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff(harvest_rate[k], shape = object@shape[i], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[k] <- tmp$captures
                 dvalue[k] <- tmp$depletion

@@ -8,7 +8,7 @@
 #' @param iterations Process error iterations used for stochastic projection
 #' @seealso [rp()]
 #' @export
-#' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R
+#' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
 #' @import cli
 #{{{ shape()
@@ -18,40 +18,6 @@
 setGeneric("shape", function(object, depletion, stochastic, equilibrium_time, iterations, ...) standardGeneric("shape"))
 setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, equilibrium_time, iterations, ...) {
     
-	.survivorship <- function(M, cv_survivorship = 0, env) {
-		
-		NTIME <- get("NTIME", envir = env)
-		
-		S <- exp(-M)
-		
-		if (cv_survivorship > 0) {
-			
-			SITER <- get("SITER", envir = env)
-			
-			# process error term
-			sigma <- cv_survivorship * S
-			
-			# calculate mu given sigma
-			mu <- uniroot(function(x) S - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-			
-			s <- array(dim = c(SITER, NTIME))
-            e <- rnorm(SITER * NTIME, mu, sigma)
-				
-            s[] <- pnorm(e)
-				
-			# first year is
-			# equal to expectation
-			s[,1] <- S
-			
-		} else {
-		
-			s   <- array(dim = c(NTIME))
-			s[] <- S
-		}
-		
-		return(s)
-	}
-
     # current environment
     ENV <- environment()
     
@@ -244,7 +210,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	r <- pars_sample$r
 	M <- pars_sample$M
 	v <- object@fixed$selectivity
-    s <- .survivorship(M)
+    s <- .survivorship(M, env = ENV)
     
     # function to estimate h_mnpl
     # given shape
@@ -268,7 +234,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		
 	    # simulate stochastic
 		# survivorship
-	    s <- .survivorship(M, object@fixed$cv_survivorship)
+	    s <- .survivorship(M, object@fixed$cv_survivorship, env = ENV)
 	    
 		# recompile with 
 		# initial values
@@ -306,27 +272,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			r <- pars_sample$r
 			M <- pars_sample$M
 			#v <- object@fixed$selectivity
-
-			#if (STOCHASTIC) {
-            # 
-			#	s <- .survivorship(M, object@fixed$cv_survivorship)
-			#	
-			#	# function to estimate h_mnpl
-			#	# given shape
-			#	h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
-			#	h2 <- h1$newton(1)
-			#	
-			#	# function to estimate
-			#	# shape given target
-			#	i1 <- MakeTape(obj4, c(shape_log_init, depletion))
-			#	i2 <- i1$newton(1)
-			#
-			#} else {
-			#
-			#	s <- .survivorship(M, a)
-			#}
 			
-			s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0))
+			s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0), env = ENV)
 			
 			h2$force.update()
 			i2$force.update()
@@ -361,14 +308,14 @@ setMethod("shape<-",
           signature(object = "om", value = "numeric"),
           function(object, value) {
               
-			  if (lenght(value) < object@iter) {
+			  if (length(value) < object@iter[1]) {
 				if (length(value) == 1) {
 				value <- rep(value, object@iter[1])
 				} else {
 					stop("'value' should be of length '1' or 'object@iter'")
 				}
 			  } else {
-				if (lenght(value) > object@iter) {
+				if (length(value) > object@iter[1]) {
 					stop("'value' should be of length '1' or 'object@iter'")
 				}
 			  }

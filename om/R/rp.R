@@ -203,12 +203,12 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 		
 			# function to estimate h_mnpl
 			# given shape
-			h1 <- MakeTape(obj1, c(.logit(0.02), log(object@shape)))
+			h1 <- MakeTape(obj1, c(.logit(0.02), log(object@shape[1])))
 			h2 <- h1$newton(1)
 			
 			# record initial 
 			# deterministic estimates
-			h_logit_init <- h2(c(log(object@shape)))
+			h_logit_init <- h2(c(log(object@shape[1])))
         }
 		
         if (STOCHASTIC) {
@@ -224,15 +224,15 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 
 				# function to estimate
                 # stochastic h_mnpl
-                h1 <- MakeTape(obj2, c(h_logit_init, log(object@shape)))
+                h1 <- MakeTape(obj2, c(h_logit_init, log(object@shape[1])))
                 h2 <- h1$newton(1)
                 
                 # record stochastic estimate
-                object@targets$harvest_rate[1] <- .ilogit(h2(c(log(object@shape))))
+                object@targets$harvest_rate[1] <- .ilogit(h2(c(log(object@shape[1]))))
             }
             
-            object@targets$captures[1]  <- .ff2(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
-            object@targets$depletion[1] <- .ff2(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion
+            object@targets$captures[1]  <- .ff2(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
+            object@targets$depletion[1] <- .ff2(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion
                 
         } else {
             
@@ -242,8 +242,8 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 object@targets$harvest_rate[1] <- .ilogit(h_logit_init)
             }
         
-            object@targets$captures[1]  <- .ff(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
-            object@targets$depletion[1] <- .ff(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion  
+            object@targets$captures[1]  <- .ff(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
+            object@targets$depletion[1] <- .ff(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion  
         }
         
         #######################
@@ -285,18 +285,18 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 # necessary
                 if (ESTIMATE_HMNPL) {
 					h2$force.update()
-                    object@targets$harvest_rate[i] <- .ilogit(h2(log(object@shape)))
+                    object@targets$harvest_rate[i] <- .ilogit(h2(log(object@shape[i])))
                 }
                 
                 if (STOCHASTIC) {
                     
-                    object@targets$captures[i]  <- .ff2(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
-                    object@targets$depletion[i] <- .ff2(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion
+                    object@targets$captures[i]  <- .ff2(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
+                    object@targets$depletion[i] <- .ff2(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion
                     
                 } else {
                     
-                    object@targets$captures[i]  <- .ff(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
-                    object@targets$depletion[i] <- .ff(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion    
+                    object@targets$captures[i]  <- .ff(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
+                    object@targets$depletion[i] <- .ff(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion    
                 }
             }
         }

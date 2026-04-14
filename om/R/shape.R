@@ -18,11 +18,15 @@
 setGeneric("shape", function(object, depletion, stochastic, equilibrium_time, iterations, ...) standardGeneric("shape"))
 setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, equilibrium_time, iterations, ...) {
     
-	.survivorship <- function(M, cv_survivorship = 0) {
-			
+	.survivorship <- function(M, cv_survivorship = 0, env) {
+		
+		NTIME <- get("NTIME", envir = env)
+		
 		S <- exp(-M)
 		
 		if (cv_survivorship > 0) {
+			
+			SITER <- get("SITER", envir = env)
 			
 			# process error term
 			sigma <- cv_survivorship * S
@@ -134,7 +138,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     if (STOCHASTIC) {
         
         # progress message
-        cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(object@shape, 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
         
         # set up objective
         # function and tape
@@ -219,7 +223,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     } else {
         
         # progress message
-        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = FALSE, msg_done = "Estimated shape = {round(object@shape, 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = FALSE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
     }
     
     ###################
@@ -261,7 +265,6 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	
 		# tidy up
 		rm(obj1, obj2, h1, h2, i1, i2)
-		gc()
 		
 	    # simulate stochastic
 		# survivorship
@@ -335,8 +338,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     }
     
     # average across
-    # samples
-    object@shape <- mean(shape_values)
+    # samples ??
+    object@shape <- shape_values
     
     # record harvest rates
     object@targets$harvest_rate <- h_values
@@ -358,7 +361,18 @@ setMethod("shape<-",
           signature(object = "om", value = "numeric"),
           function(object, value) {
               
-              if (value <= 0) {
+			  if (lenght(value) < object@iter) {
+				if (length(value) == 1) {
+				value <- rep(value, object@iter[1])
+				} else {
+					stop("'value' should be of length '1' or 'object@iter'")
+				}
+			  } else {
+				if (lenght(value) > object@iter) {
+					stop("'value' should be of length '1' or 'object@iter'")
+				}
+			  }
+              if (any(value <= 0)) {
                   stop('Assigned value must be >0')
               }
 

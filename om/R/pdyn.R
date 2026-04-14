@@ -3,7 +3,7 @@
 #' @description The population dynamics function is called per-iteration.
 #' 
 #' @export
-#' @include om-class.R get_dim.R
+#' @include om-class.R get_dim.R dot-survivorship.R
 #' @import RTMB
 #' @import cli
 #' @import glue
@@ -31,9 +31,6 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     # get seeds
     get_seeds(object, env = ENV)
     
-    # set seed
-    set.seed(rng_seed[1])
-    
     # get shape
     get_shape(object, env = ENV)
     
@@ -60,6 +57,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     msg <- ""
     cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
     
+	# observation error function
+	obs_error <- function(a, cv, qn = 0) {
+        exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(ifelse(qn > 0, abs(qnorm(qn)), 0) * sqrt(log(1 + cv^2)))
+    }
+	
     # {{{
     # PT model
     if (all(is.na(object@ages)) | !(length(object@ages) > 1)) {
@@ -71,7 +73,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         # objective function for
         # estimation of h at
         # initial depletion
-        obj_fun <- function(x, target) {
+        obj_fun <- function(x, shape, target) {
             
             h <- 1 / (1 + exp(-x[1]))
             n <- matrix(k, nrow = NAGES, ncol = 2)
@@ -107,7 +109,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
         # set-up birth function
         birth <- function(y) {
-            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape)) 
+            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape[i])) 
         }
         
         #######################
@@ -130,86 +132,32 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             # spin spinner
             cli_progress_update()
             
-            # record pars sample
-            # value if missing or 
-            # overwrite
-            invisible(lapply(1:length(pars_sample), function(j) {
-                if (is.na(object@pars[[j]]@.Data[i])) {
-                    object@pars[[j]]@.Data[i] <<- pars_sample[[j]]
-                } else {
-                    pars_sample[[j]] <<- object@pars[[j]]@.Data[i] 
-                }
-            }))
-            
-            # record rmax sample or
-            # overwrite
-            if (is.na(object@pst$rmax@.Data[i])) {
-                object@pst$rmax@.Data[i] <- rmax_sample
-            } else {
-                rmax_sample <- object@pst$rmax@.Data[i] 
-            }
-            
-            # setup (1)
-            age_mat <- as.integer(pars_sample$a)
-            age_pat <- age_mat + 1L
-            age_sel <- as.integer(object@fixed$selectivity)
-            
-            # setup (2)
-            r <- pars_sample$r
-            M <- pars_sample$M
-            
-            # setup (3)
-            mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-            pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
-            sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
-            M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
-            S      <- exp(-M)
-            lambda <- exp(r)
-            K      <- object@fixed$K
-            
-            if (STOCHASTIC) {
-                
-                # process error term
-                sigmap <- object@fixed$cv_survivorship * S
-                
-                # calculate mu given sigmap
-                mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-                
-                mu <- numeric(NAGES)
-                for (a in 1:NAGES) {
-                    mu[a] <- mu_calc(S[a], sigmap[a])
-                }
-                
-                s <- array(dim = c(SITER, NAGES, NTIME))
-                
-                for (a in 1:NAGES) {
-                    
-                    e <- rnorm(SITER * NTIME, mu[a], sigmap[a])
-                    
-                    s[,a,] <- pnorm(e)
-                    
-                    # first year is
-                    # equal to expectation
-                    s[,a,1] <- S[a]
-                }
-            
-            } else {
-                
-                s <- array(dim = c(SITER, NAGES, NTIME))
-                
-                for (a in 1:NAGES) {
-                    s[,a,] <- S[a]
-                }
-            }
+            # assign pars
+			a <- pars_sample$a
+			r <- pars_sample$r
+			M <- pars_sample$M
+			v <- object@fixed$selectivity
+            K <- object@fixed$K
+			S <- c(rep((exp(-M)^2), a), rep(exp(-M), NAGES - a))
+			
+			age_mat <- as.integer(a)
+			age_pat <- age_mat + 1L
+			age_sel <- as.integer(v)
+		
+			mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+			pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+			sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+			
+			lambda <- exp(r)
             
             # set up unexploited 
             # equilibrium female
             # population
             p[1] <- 0.5
             for(a in 2:NAGES) {
-                p[a] <- p[a-1] * S[a - 1]
+                p[a] <- p[a - 1] * S[a - 1]
             }
-            p[NAGES] <- p[NAGES] / (1 - S[NAGES])
+            p[a] <- p[a] / (1 - S[a])
             
             # replacement birth rate
             # per female
@@ -217,7 +165,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # maximum birth rate
             # per female
-            b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / (S[1]^age_mat * S[age_mat+1])
+            b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / prod(S[1:(age_mat + 1)])
             
             # initialise population
             # at equilibrium
@@ -229,7 +177,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # initial conditions
             if (initial_depletion < 1) {
-                h_init <- .ilogit(optimise(obj_fun, interval = c(-10,-1), target = initial_depletion)$minimum)
+                h_init <- .ilogit(optimise(obj_fun, interval = c(-10,-1), shape = shape[i], target = initial_depletion)$minimum)
             } else {
                 h_init <- 0    
             }
@@ -244,9 +192,18 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h_init)
                 }
                 n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
-                n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape))
+                n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape[i]))
             }
-            
+			
+			# construct survivorship
+			# array
+            if (STOCHASTIC) {
+				survivorship <- .survivorship(M, object@fixed$cv_survivorship, env = ENV)
+			} else {
+				survivorship <- .survivorship(M, env = ENV)
+				survivorship <- matrix(survivorship, nrow = SITER, ncol = NTIME, byrow = TRUE)
+			}
+			
             # loop over stochastic
             # process error
             for (j in 1:SITER) {
@@ -254,6 +211,10 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 # initialise
                 n[, 1] <- n_init[,2]
                 
+				# survivorship matrix
+				s <- matrix(survivorship[j,], ncol = NTIME, nrow = NAGES, byrow = TRUE)
+				s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
+				
                 # project under harvest rate
                 # function
                 # {{{
@@ -262,11 +223,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     proj_h[j, y - 1] <- object@harvest_rate(object, i)
                     
                     for (a in 2:NAGES) {
-                        n[a, y] <- n[a - 1, y - 1] * s[j, a - 1, y - 1] * (1 - sel[a - 1] * proj_h[j, y - 1]) 
+                        n[a, y] <- n[a - 1, y - 1] * s[a - 1, y - 1] * (1 - sel[a - 1] * proj_h[j, y - 1]) 
                     }
                     
                     # plus group
-                    n[a, y] <- n[a, y] + n[a, y - 1] * s[j, a - 1, y - 1] * (1 - sel[a] * proj_h[j, y - 1])
+                    n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * proj_h[j, y - 1])
                     
                     # birth
                     n[1, y] <- birth(y)
@@ -279,7 +240,6 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 
                 # spin spinner
                 cli_progress_update()
-            
             }
             
             # update time series diagnostics

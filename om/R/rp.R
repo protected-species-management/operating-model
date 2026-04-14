@@ -16,11 +16,9 @@
 setGeneric("rp", function(object, stochastic, equilibrium_time, iterations, ...) standardGeneric("rp"))
 setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time, iterations, ...) {
     
-	.survivorship <- function(M, a, cv_survivorship = 0) {
-		
-		age_mat <- as.integer(a)
-		mat     <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-		S       <- exp(-c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat)))    
+	.survivorship <- function(M, cv_survivorship = 0) {
+			
+		S <- exp(-M)
 		
 		if (cv_survivorship > 0) {
 			
@@ -28,32 +26,21 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 			sigma <- cv_survivorship * S
 			
 			# calculate mu given sigma
-			mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+			mu <- uniroot(function(x) S - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
 			
-			mu <- numeric(NAGES)
-			for (a in 1:NAGES) {
-				mu[a] <- mu_calc(S[a], sigma[a])
-			}
-			
-			s <- array(dim = c(SITER, NAGES, NTIME))
-			
-			for (a in 1:NAGES) {
+			s <- array(dim = c(SITER, NTIME))
+            e <- rnorm(SITER * NTIME, mu, sigma)
 				
-				e <- rnorm(SITER * NTIME, mu[a], sigma[a])
+            s[] <- pnorm(e)
 				
-				s[,a,] <- pnorm(e)
-				
-				# first year is
-				# equal to expectation
-				s[,a,1] <- S[a]
-			}
+			# first year is
+			# equal to expectation
+			s[,1] <- S
 			
 		} else {
 		
-			s <- array(dim = c(NAGES, NTIME))
-			for (a in 1:NAGES) {
-				s[a,] <- S[a]
-			}    
+			s   <- array(dim = c(NTIME))
+			s[] <- S
 		}
 		
 		return(s)
@@ -83,8 +70,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
     if (any(is.na(object@targets$harvest_rate))) {
         object@targets$harvest_rate <- rep(NA_real_, NITER)
 		ESTIMATE_HMNPL <- TRUE
-    } else {
-        #cli_alert_info("'object' already contains 'harvest_rate' reference point estimates (no estimation needed)")  
+    } else { 
 		ESTIMATE_HMNPL <- FALSE		
     }
     
@@ -126,7 +112,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
             #cli_progress_update(.envir = ENV)
             
             # deterministic dynamics
-            n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r)))
+            n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
             
             # objective function
             objective <- -1 * log(sum(n[(v + 1):dim(n)[1], dim(n)[2]] * h))
@@ -134,6 +120,8 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
             # return
             return(objective)
         }
+		
+		
         
         if (STOCHASTIC) {
             
@@ -163,7 +151,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                     cli_progress_update(.envir = ENV)
                     
                     # stochastic dynamics
-                    n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,], maturity = a, selectivity = v, lambda = exp(r)))
+                    n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
                     
                     # recent time
                     loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -191,31 +179,13 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         
         # check data present
         stopifnot(length(object@fixed) > 0)
-        
-        # setup (1)
-        #age_mat <- as.integer(pars_sample$a)
-        #age_pat <- age_mat + 1L
-        #age_sel <- as.integer(object@fixed$selectivity)
-        
-        # setup (2)
-        #r <- pars_sample$r
-        #M <- pars_sample$M
-        
-        # setup (3)
-        #mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-        #pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
-        #sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
-        #M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
-        #S      <- exp(-M)
-        #lambda <- exp(r)
 		
 		# assign pars
         a <- pars_sample$a
         r <- pars_sample$r
         M <- pars_sample$M
         v <- object@fixed$selectivity
-        
-        s <- .survivorship(M, a)
+        s <- .survivorship(M)
         
         # progress message
         if (ESTIMATE_HMNPL) {
@@ -240,7 +210,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         
         if (STOCHASTIC) {
             
-            s <- .survivorship(M, a, object@fixed$cv_survivorship)
+            s <- .survivorship(M, object@fixed$cv_survivorship)
             
             # estimate h_mnpl only
             # if not already estimated
@@ -255,8 +225,8 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 object@targets$harvest_rate[1] <- .ilogit(h2(c(log(object@shape))))
             }
             
-            object@targets$captures[1]  <- .ff2(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))$captures
-            object@targets$depletion[1] <- .ff2(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))$depletion
+            object@targets$captures[1]  <- .ff2(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
+            object@targets$depletion[1] <- .ff2(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion
                 
         } else {
             
@@ -266,8 +236,8 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 object@targets$harvest_rate[1] <- .ilogit(h_logit_init)
             }
         
-            object@targets$captures[1]  <- .ff(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))$captures
-            object@targets$depletion[1] <- .ff(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))$depletion  
+            object@targets$captures[1]  <- .ff(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
+            object@targets$depletion[1] <- .ff(object@targets$harvest_rate[1], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion  
         }
         
         #######################
@@ -283,23 +253,6 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 
                 # sample pars
                 pars_sample <- lapply(object@pars, sample, n = 1)
-                
-                # setup (1)
-                #age_mat <- as.integer(pars_sample$a)
-                #age_pat <- age_mat + 1L
-                #age_sel <- as.integer(object@fixed$selectivity)
-                
-                # setup (2)
-                #r <- pars_sample$r
-                #M <- pars_sample$M
-                
-                # setup (3)
-                #mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-                #pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
-                #sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
-                #M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
-                #S      <- exp(-M)
-                #lambda <- exp(r)
 				
 				# assign pars
 				#a <- pars_sample$a
@@ -329,13 +282,13 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 
                 if (STOCHASTIC) {
                     
-                    object@targets$captures[i]  <- .ff2(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))$captures
-                    object@targets$depletion[i] <- .ff2(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))$depletion
+                    object@targets$captures[i]  <- .ff2(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
+                    object@targets$depletion[i] <- .ff2(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion
                     
                 } else {
                     
-                    object@targets$captures[i]  <- .ff(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))$captures
-                    object@targets$depletion[i] <- .ff(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))$depletion    
+                    object@targets$captures[i]  <- .ff(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$captures
+                    object@targets$depletion[i] <- .ff(object@targets$harvest_rate[i], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion    
                 }
             }
         }

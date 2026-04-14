@@ -77,7 +77,7 @@ sp.om <- function(object, harvest_rate, ...) {
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))
+                tmp <- .ff2(harvest_rate[j], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -96,7 +96,7 @@ sp.om <- function(object, harvest_rate, ...) {
             
             for (k in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[k], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r))
+                tmp <- .ff(harvest_rate[k], shape = object@shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[k] <- tmp$captures
                 dvalue[k] <- tmp$depletion

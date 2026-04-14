@@ -1,8 +1,6 @@
 
 .check_rp <- function(object, stochastic, equilibrium_time, iterations) {
  
-    #get("stochastic", envir = env)
-    
     if (missing(stochastic)) {
         if (is.na(object@stochastic$ref_points)) {
             stop("'stochastic' argument unspecified (ref. points)")    

@@ -18,11 +18,9 @@
 setGeneric("shape", function(object, depletion, stochastic, equilibrium_time, iterations, ...) standardGeneric("shape"))
 setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, equilibrium_time, iterations, ...) {
     
-	.survivorship <- function(M, a, cv_survivorship = 0) {
-		
-		age_mat <- as.integer(a)
-		mat     <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-		S       <- exp(-c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat)))    
+	.survivorship <- function(M, cv_survivorship = 0) {
+			
+		S <- exp(-M)
 		
 		if (cv_survivorship > 0) {
 			
@@ -30,32 +28,21 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			sigma <- cv_survivorship * S
 			
 			# calculate mu given sigma
-			mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+			mu <- uniroot(function(x) S - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
 			
-			mu <- numeric(NAGES)
-			for (a in 1:NAGES) {
-				mu[a] <- mu_calc(S[a], sigma[a])
-			}
-			
-			s <- array(dim = c(SITER, NAGES, NTIME))
-			
-			for (a in 1:NAGES) {
+			s <- array(dim = c(SITER, NTIME))
+            e <- rnorm(SITER * NTIME, mu, sigma)
 				
-				e <- rnorm(SITER * NTIME, mu[a], sigma[a])
+            s[] <- pnorm(e)
 				
-				s[,a,] <- pnorm(e)
-				
-				# first year is
-				# equal to expectation
-				s[,a,1] <- S[a]
-			}
+			# first year is
+			# equal to expectation
+			s[,1] <- S
 			
 		} else {
 		
-			s <- array(dim = c(NAGES, NTIME))
-			for (a in 1:NAGES) {
-				s[a,] <- S[a]
-			}    
+			s   <- array(dim = c(NTIME))
+			s[] <- S
 		}
 		
 		return(s)
@@ -106,7 +93,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		v <- get_v()
 			
 		# deterministic dynamics
-        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r)))
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * log(sum(n[(v + 1):dim(n)[1], dim(n)[2]] * h))
@@ -135,7 +122,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		v <- get_v()
 			
 		# deterministic dynamics
-        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r)))
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * dnorm(sum(n[-1, dim(n)[2]]), target, 0.01, log = TRUE)
@@ -175,7 +162,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,], maturity = a, selectivity = v, lambda = exp(r)))
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -215,7 +202,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,], maturity = a, selectivity = v, lambda = exp(r)))
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -253,8 +240,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	r <- pars_sample$r
 	M <- pars_sample$M
 	v <- object@fixed$selectivity
-
-    s <- .survivorship(M, a)
+    s <- .survivorship(M)
     
     # function to estimate h_mnpl
     # given shape
@@ -273,20 +259,23 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	
 	if (STOCHASTIC) {
 	
-	    # 
-	    s <- .survivorship(M, a, object@fixed$cv_survivorship)
+	    # simulate stochastic
+		# survivorship
+	    s <- .survivorship(M, object@fixed$cv_survivorship)
 	    
 		# recompile with 
 		# initial values
 		h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
 		h2 <- h1$newton(1)
-
 		i1 <- MakeTape(obj4, c(shape_log_init, depletion))
 		i2 <- i1$newton(1)
 		
 		# record estimate
 		shape_values[1] <- exp(i2(depletion))
 		h_values[1]     <- .ilogit(h2(log(shape_values[1])))
+		
+		# check
+		cli_alert_info(paste0("depletion = ", round(.ff2(h_values[1], shape = shape_values, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion, 3)))
 		
 	} else {
 	
@@ -309,14 +298,14 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             pars_sample <- lapply(object@pars, sample, n = 1)
             
             # assign pars
-			a <- pars_sample$a
+			#a <- pars_sample$a
 			r <- pars_sample$r
-			M <- pars_sample$M
-			v <- object@fixed$selectivity
+			#M <- pars_sample$M
+			#v <- object@fixed$selectivity
 
 			#if (STOCHASTIC) {
             # 
-			#	s <- .survivorship(M, a, object@fixed$cv_survivorship)
+			#	s <- .survivorship(M, object@fixed$cv_survivorship)
 			#	
 			#	# function to estimate h_mnpl
 			#	# given shape

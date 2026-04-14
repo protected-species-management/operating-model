@@ -199,15 +199,18 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         # check shape exists
         stopifnot(length(object@shape) > 0)
         
-        # function to estimate h_mnpl
-        # given shape
-        h1 <- MakeTape(obj1, c(.logit(0.02), log(object@shape)))
-        h2 <- h1$newton(1)
-        
-        # record initial 
-        # deterministic estimates
-        h_logit_init <- h2(c(log(object@shape)))
-        
+		if (ESTIMATE_HMNPL) {
+		
+			# function to estimate h_mnpl
+			# given shape
+			h1 <- MakeTape(obj1, c(.logit(0.02), log(object@shape)))
+			h2 <- h1$newton(1)
+			
+			# record initial 
+			# deterministic estimates
+			h_logit_init <- h2(c(log(object@shape)))
+        }
+		
         if (STOCHASTIC) {
             
             s <- .survivorship(M, object@fixed$cv_survivorship)
@@ -215,8 +218,11 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
             # estimate h_mnpl only
             # if not already estimated
             if (ESTIMATE_HMNPL) {
-            
-                # function to estimate
+				
+				# tidy up
+				rm(obj1, h1, h2)
+                
+				# function to estimate
                 # stochastic h_mnpl
                 h1 <- MakeTape(obj2, c(h_logit_init, log(object@shape)))
                 h2 <- h1$newton(1)
@@ -257,7 +263,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 				# assign pars
 				#a <- pars_sample$a
 				r <- pars_sample$r
-				#M <- pars_sample$M
+				M <- pars_sample$M
 				#v <- object@fixed$selectivity
 				
 				#if (STOCHASTIC) {
@@ -273,6 +279,8 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 #h1 <- MakeTape(obj1, c(log(0.02), log(1)))
 				#h2 <- h1$newton(1)
                 
+				s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0))
+				
                 # record estimate if
                 # necessary
                 if (ESTIMATE_HMNPL) {

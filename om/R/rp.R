@@ -231,10 +231,10 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
                 pars_sample <- lapply(object@pars, sample, n = 1)
 				
 				# assign pars
-				#a <- pars_sample$a
+				a <- pars_sample$a
 				r <- pars_sample$r
 				M <- pars_sample$M
-				#v <- object@fixed$selectivity
+				v <- object@fixed$selectivity
 				            
 				s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0), env = ENV)
 				

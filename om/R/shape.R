@@ -259,6 +259,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	
 	if (STOCHASTIC) {
 	
+		# tidy up
+		rm(obj1, obj2, h1, h2, i1, i2)
+		gc()
+		
 	    # simulate stochastic
 		# survivorship
 	    s <- .survivorship(M, object@fixed$cv_survivorship)
@@ -273,9 +277,6 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		# record estimate
 		shape_values[1] <- exp(i2(depletion))
 		h_values[1]     <- .ilogit(h2(log(shape_values[1])))
-		
-		# check
-		cli_alert_info(paste0("depletion = ", round(.ff2(h_values[1], shape = shape_values, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)$depletion, 3)))
 		
 	} else {
 	
@@ -300,7 +301,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             # assign pars
 			#a <- pars_sample$a
 			r <- pars_sample$r
-			#M <- pars_sample$M
+			M <- pars_sample$M
 			#v <- object@fixed$selectivity
 
 			#if (STOCHASTIC) {
@@ -321,6 +322,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			#
 			#	s <- .survivorship(M, a)
 			#}
+			
+			s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0))
 			
 			h2$force.update()
 			i2$force.update()

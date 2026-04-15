@@ -8,7 +8,7 @@
 #' @param iterations Process error iterations used for stochastic projection
 #' @seealso [rp()]
 #' @export
-#' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R
+#' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
 #' @import cli
 #{{{ shape()
@@ -37,11 +37,11 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     shape_values <- numeric(NITER)
     h_values     <- numeric(NITER)
 	
-	# make sure dynamic
-    # functions have correct
-    # environment
-	environment(.pdyn)  <- ENV
-    environment(.pdyn2) <- ENV
+	# accessor functions
+	get_a <- function() get("a", envir = ENV)
+	get_r <- function() get("r", envir = ENV)
+	get_v <- function() get("v", envir = ENV)
+	get_s <- function() get("s", envir = ENV)
     
 	# set up objective
 	# function
@@ -54,10 +54,19 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		h     <- 1 / (1 + exp(-x[1]))
 		shape <- exp(x[2])
 		
-		n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s), envir = ENV)
+		# get pars
+		a <- DataEval(get_a)
+		r <- DataEval(get_r)
+		s <- DataEval(get_s)
+		
+		# get fixed values
+		v <- get_v()
+			
+		# deterministic dynamics
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
-		objective <- -1 * log(sum(n[, dim(n)[2]] * sel * h))
+		objective <- -1 * log(sum(n[(v + 1):dim(n)[1], dim(n)[2]] * h))
 		
 		# return lambda
 		return(objective)
@@ -74,7 +83,16 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		h      <- 1 / (1 + exp(-h2(x[1]))) # internal estimation of h_mnpl given shape
 		target <- x[2]
 		
-		n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s), envir = ENV)
+		# get pars
+		a <- DataEval(get_a)
+		r <- DataEval(get_r)
+		s <- DataEval(get_s)
+		
+		# get fixed values
+		v <- get_v()
+			
+		# deterministic dynamics
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * dnorm(sum(n[-1, dim(n)[2]]), target, 0.01, log = TRUE)
@@ -86,7 +104,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     if (STOCHASTIC) {
         
         # progress message
-        cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(object@shape, 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
         
         # set up objective
         # function and tape
@@ -98,22 +116,30 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             h     <- 1 / (1 + exp(-x[1]))
             shape <- exp(x[2])
             
+			# get pars
+			a <- DataEval(get_a)
+			r <- DataEval(get_r)
+			s <- DataEval(get_s)
+			
+			# get fixed values
+			v <- get_v()
+				
             objective <- 0
             
-            for (i in 1:SITER) {
+            for (i in 1:dim(s)[1]) {
                 
                 # spin spinner
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,]), envir = ENV)
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
                 
                 # log of the equilibrium catch
                 # per iteration
-                objective <- objective - log(sum(sweep(n[, loc], 1, sel, "*") * h) / length(loc))
+                objective <- objective - log(sum(n[(v + 1):dim(n)[1], loc] * h) / length(loc))
             }
             
             # return
@@ -130,15 +156,23 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             h      <- 1 / (1 + exp(-h2(x[1]))) # internal estimation of h_mnpl given shape
             target <- x[2]
             
+			# get pars
+			a <- DataEval(get_a)
+			r <- DataEval(get_r)
+			s <- DataEval(get_s)
+			
+			# get fixed values
+			v <- get_v()
+				
             objective <- 0
             
-            for (i in 1:SITER) {
+            for (i in 1:dim(s)[1]) {
                 
                 # spin spinner
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,,]), envir = ENV)
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -155,7 +189,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     } else {
         
         # progress message
-        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = FALSE, msg_done = "Estimated shape = {round(object@shape, 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = FALSE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
     }
     
     ###################
@@ -171,27 +205,12 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # check fixed inputs present
     stopifnot(length(object@fixed) > 0)
     
-    # setup (1)
-    age_mat <- as.integer(pars_sample$a)
-    age_pat <- age_mat + 1L
-    age_sel <- as.integer(object@fixed$selectivity)
-    
-    # setup (2)
-    r <- pars_sample$r
-    M <- pars_sample$M
-    
-    # setup (3)
-    mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-    pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
-    sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
-    M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
-    S      <- exp(-M)
-    lambda <- exp(r)
-    
-    s <- array(dim = c(NAGES, NTIME))
-    for (a in 1:NAGES) {
-        s[a,] <- S[a]
-    }
+    # assign pars
+	a <- pars_sample$a
+	r <- pars_sample$r
+	M <- pars_sample$M
+	v <- object@fixed$selectivity
+    s <- .survivorship(M, env = ENV)
     
     # function to estimate h_mnpl
     # given shape
@@ -210,35 +229,17 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	
 	if (STOCHASTIC) {
 	
-	    # process error term
-	    sigmap <- object@fixed$cv_survivorship * S
-	    
-	    # calculate mu given sigmap
-	    mu_calc <- function(survivorship, sigma) uniroot(function(mu) survivorship - pnorm(mu / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-	    
-	    mu <- numeric(NAGES)
-	    for (a in 1:NAGES) {
-	        mu[a] <- mu_calc(S[a], sigmap[a])
-	    }
-	    
-	    s <- array(dim = c(SITER, NAGES, NTIME))
-	    
-	    for (a in 1:NAGES) {
-	        
-	        e <- rnorm(SITER * NTIME, mu[a], sigmap[a])
-	        
-	        s[,a,] <- pnorm(e)
-	        
-	        # first year is
-	        # equal to expectation
-	        s[,a,1] <- S[a]
-	    }
+		# tidy up
+		rm(obj1, obj2, h1, h2, i1, i2)
+		
+	    # simulate stochastic
+		# survivorship
+	    s <- .survivorship(M, object@fixed$cv_survivorship, env = ENV)
 	    
 		# recompile with 
 		# initial values
 		h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
 		h2 <- h1$newton(1)
-
 		i1 <- MakeTape(obj4, c(shape_log_init, depletion))
 		i2 <- i1$newton(1)
 		
@@ -266,32 +267,16 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             # sample pars
             pars_sample <- lapply(object@pars, sample, n = 1)
             
-            # setup (1)
-            age_mat <- as.integer(pars_sample$a)
-            age_pat <- age_mat + 1L
-            age_sel <- as.integer(object@fixed$selectivity)
-            
-            # setup (2)
-            r <- pars_sample$r
-            M <- pars_sample$M
-            
-            # setup (3)
-            mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-            pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
-            sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
-            M      <- c(rep(sqrt(M), age_mat), rep(M, NAGES - age_mat))
-            S      <- exp(-M)
-            lambda <- exp(r)
-        
-            # function to estimate h_mnpl
-            # given shape
-            #h1 <- MakeTape(obj1, c(log(0.02), log(1)))
-            #h2 <- h1$newton(1)
-            
-            # function to estimate
-            # shape given target
-            #i1 <- MakeTape(obj2, c(log(1), 0.5))
-            #i2 <- i1$newton(1)
+            # assign pars
+			a <- pars_sample$a
+			r <- pars_sample$r
+			M <- pars_sample$M
+			v <- object@fixed$selectivity
+			
+			s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0), env = ENV)
+			
+			h2$force.update()
+			i2$force.update()
             
             # record estimate
             shape_values[i] <- exp(i2(depletion))
@@ -300,8 +285,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     }
     
     # average across
-    # samples
-    object@shape <- mean(shape_values)
+    # samples ??
+    object@shape <- shape_values
     
     # record harvest rates
     object@targets$harvest_rate <- h_values
@@ -323,7 +308,18 @@ setMethod("shape<-",
           signature(object = "om", value = "numeric"),
           function(object, value) {
               
-              if (value <= 0) {
+			  if (length(value) < object@iter[1]) {
+				if (length(value) == 1) {
+				value <- rep(value, object@iter[1])
+				} else {
+					stop("'value' should be of length '1' or 'object@iter'")
+				}
+			  } else {
+				if (length(value) > object@iter[1]) {
+					stop("'value' should be of length '1' or 'object@iter'")
+				}
+			  }
+              if (any(value <= 0)) {
                   stop('Assigned value must be >0')
               }
 

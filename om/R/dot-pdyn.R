@@ -1,9 +1,26 @@
 #' @importFrom RTMB AD
-.pdyn <- function(h, shape, survivorship) {
+.pdyn <- function(h, shape, survivorship, maturity, selectivity, lambda, env) {
     
+	NAGES <- get("NAGES", envir = env)
+	NTIME <- get("NTIME", envir = env)
+	
+	suppressWarnings({
+		age_mat <- as.integer(maturity)
+		age_pat <- age_mat + 1L
+		age_sel <- as.integer(selectivity)
+	})
+	
+	mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+	pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+	sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+			
     n <- AD(array(dim = c(NAGES, NTIME)))
-    p <- vector("numeric", length = NAGES)
-    
+    p <- AD(numeric(NAGES))
+    S <- c(rep(survivorship[1]^2, age_mat), rep(survivorship[1], NAGES - age_mat))
+	
+	s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
+	s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
+	
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
     }
@@ -13,7 +30,7 @@
     # population
     p[1] <- 0.5
     for(a in 2:NAGES) {
-        p[a] <- p[a-1] * S[a - 1]
+        p[a] <- p[a - 1] * S[a - 1]
     }
     p[a] <- p[a] / (1 - S[a])
     
@@ -53,11 +70,11 @@
     for (y in 2:NTIME) {
         
         for (a in 2:NAGES) {
-            n[a, y] <- n[a - 1, y - 1] * survivorship[a - 1, y - 1] * (1 - sel[a - 1] * h) 
+            n[a, y] <- n[a - 1, y - 1] * s[a - 1, y - 1] * (1 - sel[a - 1] * h) 
         }
         
         # plus group
-        n[a, y] <- n[a, y] + n[a, y - 1] * survivorship[a, y - 1] * (1 - sel[a] * h)
+        n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * h)
         
         # birth
         n[1, y] <- birth(y)
@@ -66,11 +83,28 @@
     return(n)
 }
 
-.pdyn2 <- function(h, shape, survivorship) {
+.pdyn2 <- function(h, shape, survivorship, maturity, selectivity, lambda, env) {
     
+	NAGES <- get("NAGES", envir = env)
+	NTIME <- get("NTIME", envir = env)
+	
+	suppressWarnings({
+		age_mat <- as.integer(maturity)
+		age_pat <- age_mat + 1L
+		age_sel <- as.integer(selectivity)
+	})
+	
+	mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+	pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+	sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+			
     n <- AD(array(dim = c(NAGES, NTIME)))
-    p <- vector("numeric", length = NAGES)
-    
+    p <- AD(numeric(NAGES))
+	S <- c(rep(survivorship[1]^2, age_mat), rep(survivorship[1], NAGES - age_mat))
+	
+	s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
+	s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
+	
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape))
     }
@@ -80,7 +114,7 @@
     # population
     p[1] <- 0.5
     for(a in 2:NAGES) {
-        p[a] <- p[a-1] * S[a - 1]
+        p[a] <- p[a - 1] * S[a - 1]
     }
     p[a] <- p[a] / (1 - S[a])
     
@@ -120,11 +154,11 @@
     for (y in 2:NTIME) {
         
         for (a in 2:NAGES) {
-            n[a, y] <- n[a - 1, y - 1] * survivorship[a - 1, y - 1] * (1 - sel[a - 1] * h) 
+            n[a, y] <- n[a - 1, y - 1] * s[a - 1, y - 1] * (1 - sel[a - 1] * h) 
         }
         
         # plus group
-        n[a, y] <- n[a, y] + n[a, y - 1] * survivorship[a, y - 1] * (1 - sel[a] * h)
+        n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * h)
         
         # birth
         n[1, y] <- birth(y)
@@ -133,10 +167,18 @@
     return(n)
 }
 
-.ff <- function(h, shape, survivorship, env) {
+.ff <- function(h, shape, survivorship, maturity, selectivity, lambda, env) {
     
+	# dimensions
+	NAGES <- get("NAGES", envir = env)
+	NTIME <- get("NTIME", envir = env)
+	
+	# vectors
+	pat <- c(rep(0, maturity + 1), rep(1, NAGES - maturity - 1))
+    sel <- c(rep(0, selectivity),  rep(1, NAGES - selectivity)) 
+	
     # run dynamics
-    N <- do.call(".pdyn", list(h = h, shape = shape, survivorship = survivorship), envir = env)
+    N <- do.call(".pdyn", list(h = h, shape = shape, survivorship = survivorship, maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
     
     # equilibrium female captures
     captures <- sum(N[, NTIME] * sel * h)
@@ -154,14 +196,23 @@
     return(list(captures = captures, depletion = depletion, production = production, lambda = lambda))
 }
 
-.ff2 <- function(h, shape, survivorship, env) {
-    
+.ff2 <- function(h, shape, survivorship, maturity, selectivity, lambda, env) {
+
+    # dimensions
+	NAGES <- get("NAGES", envir = env)
+	NTIME <- get("NTIME", envir = env)
+	SITER <- get("SITER", envir = env)
+	
+	# vectors
+	pat <- c(rep(0, maturity + 1), rep(1, NAGES - maturity - 1))
+    sel <- c(rep(0, selectivity),  rep(1, NAGES - selectivity)) 
+	
     # setup
-    N <- array(dim = c(dim(survivorship)[1], NAGES, NTIME))
+    N <- array(dim = c(SITER, NAGES, NTIME))
     
     # run dynamics
-    for (i in 1:dim(survivorship)[1]) {
-        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = survivorship[i,,]), envir = env)
+    for (i in 1:SITER) {
+        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = survivorship[i,], maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
     }
     
     # recent time
@@ -176,7 +227,7 @@
     # equilibrium per-capita birth
     production <- mean(apply(N[,1,recent_time], 1, sum) / apply(sweep(N[,-1, recent_time], 2, pat[-1], "*"), 1, sum))
     
-    # growth rate
+    # equilibrium growth rate
     lambda <- mean(apply(N[,, recent_time], 3, sum) / apply(N[,, recent_time - 1], 3, sum)) 
     
     # return dynamics

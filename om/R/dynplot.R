@@ -1,15 +1,13 @@
 #' @title Plot dynamics from \code{om} object
 #' @description
-#' Plots the dynamics over time of the estimated biomass, depletion, harvest rate or surplus production.
-#' @details
-#' Depletion is measured as the biomass over the carrying capacity, harvest rate is the catch over the estimated biomass, and surplus production is the production function multiplied by the process error residual. Multiple model runs can be provided, in which case the are superimposed.
+#' Plots the dynamics over time of the projected captures, depletion or harvest rate.
 #' 
 #' @param object \code{om} class object.
-#' @param pars character vector of model parameters to be plotted. Must be one or more of \code{'depletion'} or \code{'harvest_rate'}.
+#' @param pars character vector of model parameters to be plotted. Must be one or more of \code{'depletion'}, \code{'captures'} or \code{'harvest_rate'}.
 #' @param labels character vector of labels per model run
 #' @param ... additional \code{om} class objects
 #' 
-#' @return Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles. The posterior median is shown as a dashed line. 
+#' @return Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles. 
 #' @include array2dfr.R
 #' @import ggplot2
 #' @importFrom rlang .data
@@ -59,8 +57,8 @@ dynplot.om <- function(object, pars = 'depletion') {
     gg <- gg + 
         stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = 'ribbon', alpha = 0.3) +
         stat_summary(fun.min = function(x) quantile(x, 0.125), fun.max = function(x) quantile(x, 0.875), geom = 'ribbon', alpha = 0.3) +
-        stat_summary(fun = function(x) mean(x), geom = 'line', lwd = 1) +
-        stat_summary(fun = function(x) median(x), geom = 'line', lwd = 0.5, linetype = "dashed")
+        stat_summary(fun = function(x) mean(x), geom = 'line', lwd = 1)
+        #stat_summary(fun = function(x) median(x), geom = 'line', lwd = 0.5, linetype = "dashed")
     
     if (length(pars) > 1) {
         gg <- gg + facet_grid(.data$par2~., scales  =  'free_y')

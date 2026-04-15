@@ -1,7 +1,7 @@
 Package: om
 Type: Package
 Title: Operating model
-Version: 0.1.1
+Version: 0.1.2
 Date: 2026-04-15
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
@@ -35,11 +35,11 @@ Collate:
     'dot-pdyn.R'
     'dot-survivorship.R'
     'dynplot.R'
+    'load_cvs.R'
     'load_fixed.R'
     'load_pars.R'
     'sample.distribution.R'
     'load_rmax.R'
-    'load_settings.R'
     'load_targets.R'
     'om.R'
     'pdyn.R'

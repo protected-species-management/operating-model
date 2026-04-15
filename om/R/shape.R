@@ -234,7 +234,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		
 	    # simulate stochastic
 		# survivorship
-	    s <- .survivorship(M, object@fixed$cv_survivorship, env = ENV)
+	    s <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
 	    
 		# recompile with 
 		# initial values
@@ -273,7 +273,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			M <- pars_sample$M
 			v <- object@fixed$selectivity
 			
-			s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0), env = ENV)
+			s <- .survivorship(M, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 			
 			h2$force.update()
 			i2$force.update()
@@ -308,15 +308,15 @@ setMethod("shape<-",
           signature(object = "om", value = "numeric"),
           function(object, value) {
               
-			  if (length(value) < object@iter[1]) {
+			  if (length(value) < object@samples) {
 				if (length(value) == 1) {
-				value <- rep(value, object@iter[1])
+				value <- rep(value, object@samples)
 				} else {
-					stop("'value' should be of length '1' or 'object@iter'")
+					stop("'value' should be of length '1' or 'object@samples'")
 				}
 			  } else {
-				if (length(value) > object@iter[1]) {
-					stop("'value' should be of length '1' or 'object@iter'")
+				if (length(value) > object@samples) {
+					stop("'value' should be of length '1' or 'object@samples'")
 				}
 			  }
               if (any(value <= 0)) {

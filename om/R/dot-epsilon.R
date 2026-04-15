@@ -11,7 +11,7 @@
 		
 		e[] <- exp(log(1 / sqrt(1 + cv^2)) + rnorm(SITER * NTIME) * sqrt(log(1 + cv^2)))
 		
-	else {
+	} else {
 	
 		e   <- array(dim = c(NTIME))
 		e[] <- 1

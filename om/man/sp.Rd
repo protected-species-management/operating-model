@@ -13,8 +13,8 @@ sp(object, harvest_rate, ...)
 A data frame containing depletion, sustainable captures and the harvest rate, for each of the input harvest rate values. If life-history inputs are uncertain, iterations are sampled. These iterations do not represent any process error, only uncertainty in the operating model conditioning.
 }
 \description{
-Extracts data frame containing deterministic relationships between the depletion, sustainable captures and the harvest rate. Depletion is measured using the 1+ age classes.
+Extracts data frame containing relationships between the depletion, sustainable captures and the harvest rate. Depletion is measured using the 1+ age classes.
 }
 \details{
-This function is designed to facilitate the easy creation of plots of the production function, that can be used to validate operating model assumptions regarding the depletion at MNPL.
+This function is designed to facilitate the easy creation of plots of the production function, that can be used to validate operating model assumptions regarding the depletion and harvest rate at MNPL. The production function is calculated assuming either deterministic or stochastic reference point calculations, depending on the setting stored in \code{object@settings$ref_points}.
 }

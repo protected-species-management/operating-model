@@ -198,7 +198,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			# construct survivorship
 			# array
             if (STOCHASTIC) {
-				survivorship <- .survivorship(M, object@fixed$cv_survivorship, env = ENV)
+				survivorship <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
 			} else {
 				survivorship <- .survivorship(M, env = ENV)
 				survivorship <- matrix(survivorship, nrow = SITER, ncol = NTIME, byrow = TRUE)

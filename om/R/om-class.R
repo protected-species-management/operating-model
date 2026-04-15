@@ -18,11 +18,11 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', iter = 'integer', stochastic = 'list', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', fixed = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
+setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', fixed = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
 #}}}
 #{{{
 # initialisation function
-setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, time, shape = 1, phi = 1, ...) {
+setMethod("initialize", "om", function(.Object, ages, harvest_function, samples = 1, time, shape = 1, phi = 1, ...) {
     
     if(missing(harvest_function) | missing(ages)) {
         .Object@harvest_rate <- function() NA_real_
@@ -32,10 +32,10 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     
     if (!grepl("object", deparse1(harvest_function))) stop("'harvest_function' must contain 'object' as its first argument")
     
-    if(missing(iter)) {
-        stop("'iter' is a required input")
+    if(missing(samples)) {
+        stop("'samples' is a required input")
     } else {
-        .Object@iter <- if(length(iter) < 2) c(iter, NA_integer_) else if(length(iter) == 2) iter else stop("length(iter) > 2")
+        .Object@samples <- samples
     }
     
     if(missing(time)) {
@@ -54,18 +54,12 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
         .Object@ages <- ages
     }
     
-    # no default
-    .Object@stochastic <- list(ref_points = NA, projection = NA) 
-    
     # setup settings required
     # for reference point
     # estimation and projection
-    .Object@settings$samples               <- .Object@iter[1]
-    .Object@settings$stochastic_iterations <- .Object@iter[2]
-    .Object@settings$ref_points <- list(stochastic = NA, iterations = NA_integer_, equilibrium_time = NA_integer_)
+    .Object@settings$ref_points <- list(stochastic = NA, iterations = NA_integer_, time = NA_integer_)
     .Object@settings$projection <- list(stochastic = NA, iterations = NA_integer_, time = length(.Object@time))
-    .Object@settings$equilibrium_time      <- NA_integer_
-    .Object@settings$cv <- list(survivorship = 0.0, birth = 0.0, observation = 0.0, mortality = 0.0)
+    .Object@settings$cv         <- list(survivorship = 0.0, birth = 0.0, observation = 0.0, mortality = 0.0)
     
     # setup PST limit
     # reference point
@@ -101,8 +95,8 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     .Object@objectives$harvest_rate <- NA_real_
 
     # record rng seeds
-    seeds <- floor(runif(iter, 1, 1e6))
-    while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(iter, 1, 1e6))
+    seeds <- floor(runif(samples, 1, 1e6))
+    while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(samples, 1, 1e6))
     .Object@seeds <- as.integer(seeds)
     
     # return
@@ -118,8 +112,9 @@ setMethod("show", "om",
               message("\t")
               message("ntime: ", if (all(is.na(object@time))) NA_character_ else length(object@time))
               message("nages: ", if (all(is.na(object@ages))) NA_character_ else length(object@ages))
-              message("niter: ", object@iter[1])
-              message("siter: ", object@iter[2])
+              message("niter: ", object@samples)
+              message("siter: ", object@settings$ref_points$iterations, " (ref. points)")
+			  message("siter: ", object@settings$projections$iterations, " (projections)")
               message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
               message("shape: ", if (length(object@shape) > 0) round(object@shape, 2) else red("EMPTY"))
               message("\nharvest rate function:")

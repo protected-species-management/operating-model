@@ -12,20 +12,20 @@ get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env 
     ages   <- object@ages
     time   <- object@time
     
-    NITER  <- object@iter[1]
-    SITER  <- ifelse(is.na(object@iter[2]), 1L, object@iter[2])
+    NITER  <- object@samples
+    SITER  <- ifelse(is.na(object@settings$projection$iterations), 1L, object@settings$projection$iterations)
     
     NAGES  <- length(ages)
     NTIME  <- length(time)
     
-    STOCHASTIC <- object@stochastic$projection
+    STOCHASTIC <- object@settings$projection$stochastic
     
     if (ref_points) {
         
-        NTIME <- object@settings$equilibrium_time
-        SITER <- object@settings$stochastic_iterations
+        NTIME <- object@settings$ref_points$time
+        SITER <- object@settings$ref_points$iterations
         
-        STOCHASTIC <- object@stochastic$ref_points
+        STOCHASTIC <- object@settings$ref_points$stochastic
     }
     
     if (is.environment(env)) {

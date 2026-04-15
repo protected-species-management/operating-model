@@ -183,7 +183,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 		
         if (STOCHASTIC) {
             
-            s <- .survivorship(M, object@fixed$cv_survivorship, env = ENV)
+            s <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
             
             # estimate h_mnpl only
             # if not already estimated
@@ -236,7 +236,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 				M <- pars_sample$M
 				v <- object@fixed$selectivity
 				            
-				s <- .survivorship(M, ifelse(STOCHASTIC, object@fixed$cv_survivorship, 0), env = ENV)
+				s <- .survivorship(M, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 				
                 # record estimate if
                 # necessary

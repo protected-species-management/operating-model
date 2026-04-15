@@ -1,79 +1,84 @@
 
-.check_rp <- function(object, stochastic, equilibrium_time, iterations) {
+.check_rp <- function(object, stochastic, time, iterations) {
  
+	object_settings <- object@settings$ref_points
+	
     if (missing(stochastic)) {
-        if (is.na(object@stochastic$ref_points)) {
-            stop("'stochastic' argument unspecified (ref. points)")    
+        if (is.na(object_settings$stochastic)) {
+            stop("'stochastic' argument unspecified")    
         } else {
-            cli_alert_info(paste0("'stochastic' = ", ifelse(object@stochastic$ref_points, "TRUE", "FALSE"), " (ref. points)"))
+            cli_alert_info(paste0("'stochastic' = ", ifelse(object_settings$stochastic, "TRUE", "FALSE")))
         }
     } else {
         if (is.logical(stochastic)) {
-            if (!is.na(object@stochastic$ref_points) & object@stochastic$ref_points != stochastic) {
-                cli_alert_info("'stochastic' argument updates value in 'object@stochastic$ref_points'")
+            if (!is.na(object_settings$stochastic) & object_settings$stochastic != stochastic) {
+                cli_alert_info("'stochastic' argument updates value in 'object@settings$ref_points'")
             }
-            object@stochastic$ref_points <- stochastic
+            object_settings$stochastic <- stochastic
         } else {
             stop("'stochastic' is not logical")    
         }
     }
-    if (missing(equilibrium_time)) {
-        if (is.na(object@settings$equilibrium_time)) {
-            stop("'equilibrium_time' argument unspecified")    
+    if (missing(time)) {
+        if (is.na(object_settings$time)) {
+            stop("'time' argument unspecified")    
         } else {
-            cli_alert_info(paste0("'equilibrium_time' = ", object@settings$equilibrium_time))
+            cli_alert_info(paste0("'time' = ", object_settings$time))
         }
     } else {
-        if (equilibrium_time %% 1 == 0) {
-            equilibrium_time <- as.integer(equilibrium_time)
-            if (!is.na(object@settings$equilibrium_time) & object@settings$equilibrium_time != equilibrium_time) {
-                cli_alert_info("'equilibrium_time' argument updates value in 'object@settings$equilibrium_time'")
+        if (time %% 1 == 0) {
+            time <- as.integer(time)
+            if (!is.na(object_settings$time) & object_settings$time != time) {
+                cli_alert_info("'time' argument updates value in 'object@settings$ref_points'")
             }
-            object@settings$equilibrium_time <- equilibrium_time
+            object_settings$time <- time
         } else {
-            stop("'equilibrium_time' is not an integer")    
+            stop("'time' is not an integer")    
         }
     }
     if (missing(iterations)) {
-        if (is.na(object@settings$stochastic_iterations) & object@stochastic$ref_points) {
+        if (is.na(object_settings$iterations) & object_settings$stochastic) {
             stop("'iterations' argument unspecified for stochastic model")    
         } else {
-            if (object@stochastic$ref_points) {
-                cli_alert_info(paste0("'iterations' = ", object@settings$stochastic_iterations))
+            if (object_settings$stochastic) {
+                cli_alert_info(paste0("'iterations' = ", object_settings$iterations))
             }
         }
     } else {
         if (iterations %% 1 == 0) {
             iterations <- as.integer(iterations)
-            if (!is.na(object@settings$stochastic_iterations) & !object@stochastic$ref_points) {
+            if (!is.na(object_settings$iterations) & !object_settings$stochastic) {
                 stop("'iterations' argument specified but model is not stochastic")
             }
-            if (!is.na(object@settings$stochastic_iterations) & object@settings$stochastic_iterations != iterations) {
-                cli_alert_info("'iterations' argument updates value in 'object@settings$stochastic_iterations'")
+            if (!is.na(object_settings$iterations) & object_settings$iterations != iterations) {
+                cli_alert_info("'iterations' argument updates value in 'object@settings$ref_points'")
             }
-            object@settings$stochastic_iterations <- iterations
+            object_settings$iterations <- iterations
         } else {
             stop("'iterations' is not an integer")    
         }
     }
-    
+    object@settings$ref_points <- object_settings
+	
     return(object)   
 }
 
 .check_pdyn <- function(object, stochastic, time, iterations) {
     
+	object_settings <- object@settings$projection
+	
     if (missing(stochastic)) {
-        if (is.na(object@stochastic$projection)) {
-            stop("'stochastic' argument unspecified (projection)")    
+        if (is.na(object_settings$stochastic)) {
+            stop("'stochastic' argument unspecified")    
         } else {
-            cli_alert_info(paste0("'stochastic' = ", ifelse(object@stochastic$projection, "TRUE", "FALSE"), " (projection)"))
+            cli_alert_info(paste0("'stochastic' = ", ifelse(object_settings$stochastic, "TRUE", "FALSE")))
         }
     } else {
         if (is.logical(stochastic)) {
-            if (!is.na(object@stochastic$projection) & object@stochastic$projection != stochastic) {
-                cli_alert_info("'stochastic' argument updates value in 'object@stochastic$projection'")
+            if (!is.na(object_settings$stochastic) & object_settings$stochastic != stochastic) {
+                cli_alert_info("'stochastic' argument updates value in 'object@settings$projection'")
             }
-            object@stochastic$projection <- stochastic
+            object_settings$stochastic <- stochastic
         } else {
             stop("'stochastic' is not logical")    
         }
@@ -99,27 +104,28 @@
         
     }
     if (missing(iterations)) {
-        if (is.na(object@iter[2]) & object@stochastic$projection) {
+        if (is.na(object_settings$iterations) & object_settings$stochastic) {
             stop("'iterations' argument unspecified for stochastic model")    
         } else {
-            if (object@stochastic$projection) {
-                cli_alert_info(paste0("'iterations' = ", object@iter[2]))
+            if (object_settings$stochastic) {
+                cli_alert_info(paste0("'iterations' = ", object_settings$iterations))
             }
         }
     } else {
         if (iterations %% 1 == 0) {
             iterations <- as.integer(iterations)
-            if (!is.na(object@iter[2]) & !object@stochastic$projection) {
+            if (!is.na(object_settings$iterations) & !object_settings$stochastic) {
                 stop("'iterations' argument specified but model is not stochastic")
             }
-            if (!is.na(object@iter[2]) & object@iter[2] != iterations) {
-                cli_alert_info("'iterations' argument updates value in 'object@iter[2]'")
+            if (!is.na(object_settings$iterations) & object_settings$iterations != iterations) {
+                cli_alert_info("'iterations' argument updates value in 'object@settings$projection'")
             }
-            object@iter[2] <- iterations
+            object_settings$iterations <- iterations
         } else {
             stop("'iterations' is not an integer")    
         }
     }
+	object@settings$projection <- object_settings
     
     return(object)   
 }

@@ -62,10 +62,10 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, iter, ti
     # estimation and projection
     .Object@settings$samples               <- .Object@iter[1]
     .Object@settings$stochastic_iterations <- .Object@iter[2]
+    .Object@settings$ref_points <- list(stochastic = NA, iterations = NA_integer_, equilibrium_time = NA_integer_)
+    .Object@settings$projection <- list(stochastic = NA, iterations = NA_integer_, time = length(.Object@time))
     .Object@settings$equilibrium_time      <- NA_integer_
-    .Object@settings$cv_survivorship       <- 0.0
-    .Object@settings$cv_birth              <- 0.0
-    .Object@settings$cv_observe            <- 0.0
+    .Object@settings$cv <- list(survivorship = 0.0, birth = 0.0, observation = 0.0, mortality = 0.0)
     
     # setup PST limit
     # reference point

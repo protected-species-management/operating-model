@@ -123,7 +123,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             set.seed(rng_seed[i])
             
             # progress iteration
-            msg <- glue(", iteration {i}/", NITER)
+            msg <- glue(", sample {i}/", NITER)
             
             # sample
             pars_sample <- lapply(object@pars, sample, n = 1)

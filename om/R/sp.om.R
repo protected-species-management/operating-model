@@ -59,10 +59,11 @@ sp.om <- function(object, harvest_rate, ...) {
         if (STOCHASTIC) {
             
             s <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
+			e <- .epsilon(object@settings$cv$birth, env = ENV)
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -75,10 +76,11 @@ sp.om <- function(object, harvest_rate, ...) {
         } else {
             
             s <- .survivorship(M, env = ENV)
+			e <- .epsilon(env = ENV)
             
             for (k in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[k], shape = object@shape[i], survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff(harvest_rate[k], shape = object@shape[i], survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[k] <- tmp$captures
                 dvalue[k] <- tmp$depletion

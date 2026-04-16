@@ -51,14 +51,19 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     object@diagnostics$harvest_rate <- array(dim = c(NITER, SITER, NTIME - 1))
     
     # pst
-    object@pst$value <- array(dim = c(NITER, SITER, NTIME))
+    object@pst$value <- array(dim = c(NITER, SITER, NTIME - 1))
     
     # progress
     msg <- ""
     cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
     
 	# observation error function
-	obs_error <- function(a, cv, qn = 0) {
+	obs_error <- function(a, cv = 0, qn = 0) {
+        exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(ifelse(qn > 0, abs(qnorm(qn)), 0) * sqrt(log(1 + cv^2)))
+    }
+	
+	# harvest rate error function
+	harvest_error <- function(a, cv = 0, qn = 0) {
         exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(ifelse(qn > 0, abs(qnorm(qn)), 0) * sqrt(log(1 + cv^2)))
     }
 	
@@ -101,11 +106,13 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         n      <- array(dim = c(NAGES, NTIME))
         p      <- vector("numeric", length = NAGES)
         n_init <- vector("numeric", length = NAGES)
+		pst    <- vector("numeric", length = NTIME - 1)
         
         proj_n         <- array(dim = c(SITER, NAGES, NTIME))
         proj_h         <- array(dim = c(SITER, NTIME - 1))
         proj_catch     <- array(dim = c(SITER, NTIME - 1))
         proj_depletion <- array(dim = c(SITER, NTIME))
+		proj_pst       <- array(dim = c(SITER, NTIME - 1))
         
         # set-up birth function
         birth <- function(y) {
@@ -199,9 +206,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			# array
             if (STOCHASTIC) {
 				survivorship <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
+				epsilon      <- .epsilon(object@settings$cv$birth, env = ENV)
 			} else {
 				survivorship <- .survivorship(M, env = ENV)
 				survivorship <- matrix(survivorship, nrow = SITER, ncol = NTIME, byrow = TRUE)
+				epsilon      <- .epsilon(env = ENV)
+				epsilon      <- matrix(epsilon, nrow = SITER, ncol = NTIME, byrow = TRUE)
 			}
 			
             # loop over stochastic
@@ -215,13 +225,22 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 				s <- matrix(survivorship[j,], ncol = NTIME, nrow = NAGES, byrow = TRUE)
 				s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
 				
+				# birth rate deviation
+				e <- epsilon[j,]
+				
                 # project under harvest rate
                 # function
                 # {{{
                 for (y in 2:NTIME) {
                     
-                    proj_h[j, y - 1] <- object@harvest_rate(object, i)
-                    
+					# observe pst
+					pst[y - 1] <- (1 / 2) * object@pst$phi * sample(object@pst$rmax, n = 1) * obs_error(sum(n[, y - 1] * mat), cv = object@settings$cv$observation)
+					
+					# calculate harvest rate
+                    proj_h[j, y - 1] <- harvest_error(object@harvest_rate(object, i), cv = object@settings$cv$mortality)
+					
+					# apply harvest rate
+					# and mortality
                     for (a in 2:NAGES) {
                         n[a, y] <- n[a - 1, y - 1] * s[a - 1, y - 1] * (1 - sel[a - 1] * proj_h[j, y - 1]) 
                     }
@@ -230,13 +249,14 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * proj_h[j, y - 1])
                     
                     # birth
-                    n[1, y] <- birth(y)
+                    n[1, y] <- birth(y) * e[y]
                 }
                 
                 # values per-year
                 proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-NTIME] * proj_h[j,] 
                 proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
                 proj_n[j,,]        <- n
+				proj_pst[j,]       <- pst
                 
                 # spin spinner
                 cli_progress_update()
@@ -254,9 +274,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             N[i,,,] <- proj_n
             
             # pst
-            for (j in 1:SITER) {
-                object@pst$value[i,j,] <- (1 / 2) * object@pst$phi * sample(object@pst$rmax, n = 1) * apply(sweep(N[i,j,,], 1, mat, "*"), 2, sum)
-            }
+            object@pst$value[i,,] <- proj_pst
             
             # spin spinner
             cli_progress_update()
@@ -283,10 +301,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     }
     
     # dimnames (after calculations)
-    #dimnames(object@diagnostics$catch)        <- list(iter = 1:NITER, time = time[-NTIME])
-    #dimnames(object@diagnostics$depletion)    <- list(iter = 1:NITER, time = time)
-    #dimnames(object@diagnostics$harvest_rate) <- list(iter = 1:NITER, time = time[-NTIME])
-    dimnames(N)                               <- list(iter = 1:NITER, stochastic_iter = 1:SITER, age = ages, time = time)
+	# [life-history samples, process error iterations, ages, time]
+    dimnames(N) <- list(sample = 1:NITER, iteration = 1:SITER, age = ages, time = time)
     
     # assign data
     object@.Data <- N

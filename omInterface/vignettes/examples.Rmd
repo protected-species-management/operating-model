@@ -46,7 +46,7 @@ om_object <- om_object %>% load_pars(list(
     'a' = distribution(list(value = 0,    name = "age at maturity"))
 ))
 
-# load fixed inputs
+# load cv inputs
 om_object <- om_object %>% load_cvs(list(
     'survivorship'   = 0.20,
   	'birth'          = 0.01)

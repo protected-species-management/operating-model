@@ -7,7 +7,7 @@ output:
     fig_caption: yes
     toc: no
 vignette: >
-  %\VignetteIndexEntry{Blue shark (Indian Ocean)}
+  %\VignetteIndexEntry{Shiny example}
   \usepackage[utf8]{inputenc}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -20,13 +20,11 @@ knitr::opts_chunk$set(fig.path = 'fig/om-examples-', fig.width = 6, tidy = TRUE,
 
 ```{r}
 library(om)
+library(omInterface)
 library(dplyr)
-library(bslib)
 ```
 
-
 ```{r}
-
 # setup om-class object
 # for cohort-aggregated 
 # operating model
@@ -61,6 +59,10 @@ om_object <- om_object %>% load_fixed(list(
 )
 ```
 
-```{r}
+```{r, eval = FALSE}
 run_mnpl(om_object)
+```
+
+```{r, echo = FALSE, out.width="50%", fig.cap="Example shiny output"}
+knitr::include_graphics("images/example.png")
 ```

@@ -42,6 +42,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	get_r <- function() get("r", envir = ENV)
 	get_v <- function() get("v", envir = ENV)
 	get_s <- function() get("s", envir = ENV)
+	get_e <- function() get("e", envir = ENV)
     
 	# set up objective
 	# function
@@ -58,12 +59,13 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		a <- DataEval(get_a)
 		r <- DataEval(get_r)
 		s <- DataEval(get_s)
+		e <- DataEval(get_e)
 		
 		# get fixed values
 		v <- get_v()
 			
 		# deterministic dynamics
-        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * log(sum(n[(v + 1):dim(n)[1], dim(n)[2]] * h))
@@ -87,12 +89,13 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		a <- DataEval(get_a)
 		r <- DataEval(get_r)
 		s <- DataEval(get_s)
+		e <- DataEval(get_e)
 		
 		# get fixed values
 		v <- get_v()
 			
 		# deterministic dynamics
-        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * dnorm(sum(n[-1, dim(n)[2]]), target, 0.01, log = TRUE)
@@ -120,6 +123,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			a <- DataEval(get_a)
 			r <- DataEval(get_r)
 			s <- DataEval(get_s)
+			e <- DataEval(get_e)
 			
 			# get fixed values
 			v <- get_v()
@@ -132,7 +136,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], epsilon = e[i,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -160,6 +164,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			a <- DataEval(get_a)
 			r <- DataEval(get_r)
 			s <- DataEval(get_s)
+			e <- DataEval(get_e)
 			
 			# get fixed values
 			v <- get_v()
@@ -172,7 +177,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], epsilon = e[i,], maturity = a, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -211,6 +216,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	M <- pars_sample$M
 	v <- object@fixed$selectivity
     s <- .survivorship(M, env = ENV)
+	e <- .epsilon(env = ENV)
     
     # function to estimate h_mnpl
     # given shape
@@ -236,6 +242,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		# survivorship
 	    s <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
 	    
+		# stochastic birth
+		# deviation
+		e <- .epsilon(object@settings$cv$birth, env = ENV)
+		
 		# recompile with 
 		# initial values
 		h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
@@ -274,6 +284,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			v <- object@fixed$selectivity
 			
 			s <- .survivorship(M, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
+			e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)
 			
 			h2$force.update()
 			i2$force.update()

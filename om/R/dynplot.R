@@ -41,9 +41,9 @@ dynplot.om <- function(object, pars = 'depletion') {
         dimnames(dfr) <- dm
         dfr <- array2DF(dfr, responseName = "value")
         
-        dfr$time <- as.numeric(dfr$time)
-        dfr$iter <- as.numeric(dfr$iter)
-        dfr$stochastic_iter  <- as.numeric(dfr$stochastic_iter )
+        dfr$time      <- as.numeric(dfr$time)
+        dfr$sample    <- as.numeric(dfr$sample)
+        dfr$iteration <- as.numeric(dfr$iteration)
         
         lst[[par]] <- na.omit(dfr)
     }

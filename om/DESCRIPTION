@@ -2,7 +2,7 @@ Package: om
 Type: Package
 Title: Operating model
 Version: 0.1.2
-Date: 2026-04-15
+Date: 2026-04-16
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation module for managed populations
@@ -11,16 +11,14 @@ Depends:
     R (>= 4.4),
 	utils (>= 4.5),
     methods (>= 4.3),
-    RTMB (>= 1.8),
-    shiny (>= 1.12)
+    RTMB (>= 1.8)
 Repos:
     kaskr/RTMB
 Suggests:
     rmarkdown (>= 2.6),
     knitr (>= 1.31),
     testthat (>= 3.0),
-    kableExtra (>= 1.3),
-    bslib (>= 0.0)
+    kableExtra (>= 1.3)
 Collate: 
     'array2dfr.R'
     'om-class.R'

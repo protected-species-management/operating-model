@@ -26,7 +26,6 @@ library(ggplot2)
 
 
 ```{r}
-
 # setup om-class object
 # for cohort-aggregated 
 # operating model
@@ -42,17 +41,20 @@ om_object <- om_object %>% load_rmax(rmax)
 # should contain all pars required
 # by population dynamics function)
 om_object <- om_object %>% load_pars(list(
-    #'r' = distribution(list(value = 0.04, name = "intrinsic growth")),
     'r' = distribution(list(iter = 0L, density = "lognormal", pars = c(log(0.04) - (0.05^2)/2, 0.05), name = "intrinsic growth")),
     'M' = distribution(list(value = 0.05, name = "natural mortality")),
     'f' = distribution(list(value = 0.00, name = "female fecundity")),
     'a' = distribution(list(value = 0, name = "age at maturity"))
 ))
 
+# load cv inputs
+om_object <- om_object %>% load_cvs(list(
+    'survivorship'   = 0.20,
+  	'birth'          = 0.01)
+)
+
 # load fixed inputs
 om_object <- om_object %>% load_fixed(list(
-    'cv_survivorship'   = 0.20,
-	'cv_birth'          = 0.01,
     'selectivity'       = 1,
     'K'                 = 1)
 )

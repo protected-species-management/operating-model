@@ -4,7 +4,7 @@
 \alias{rp}
 \title{Stochastic reference point calculation}
 \usage{
-rp(object, stochastic, equilibrium_time, iterations, ...)
+rp(object, ...)
 }
 \arguments{
 \item{object}{\code{om} class object}

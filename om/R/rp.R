@@ -13,15 +13,15 @@
 #' @import cli
 #{{{ rp()
 # wrapper for execution of function
-setGeneric("rp", function(object, stochastic, equilibrium_time, iterations, ...) standardGeneric("rp"))
-setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time, iterations, ...) {
+setGeneric("rp", function(object, ...) standardGeneric("rp"))
+setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time, iterations, verbose = TRUE, ...) {
     
     # current environment
     ENV <- environment()
     
     # check and update object with
     # function arguments
-    object <- .check_rp(object, stochastic, equilibrium_time, iterations)
+    object <- .check_rp(object, stochastic, equilibrium_time, iterations, verbose)
     
     # load time, age and
     # iteration dimensions

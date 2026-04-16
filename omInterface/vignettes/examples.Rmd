@@ -1,0 +1,68 @@
+---
+title: "Operating model shiny app demonstration"
+author: "Charles T T Edwards"
+date: "`r format(Sys.Date(), '%d-%b-%Y')`"
+output:
+  rmarkdown::html_vignette:
+    fig_caption: yes
+    toc: no
+vignette: >
+  %\VignetteIndexEntry{Shiny example}
+  \usepackage[utf8]{inputenc}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.path = 'fig/om-examples-', fig.width = 6, tidy = TRUE, tidy.opts = list(blank = TRUE, width.cutoff = 95), message = FALSE, warning = FALSE, collapse = TRUE, comment = "#>")
+```
+
+```{r}
+library(om)
+library(omInterface)
+library(dplyr)
+```
+
+```{r}
+# setup om-class object
+# for cohort-aggregated 
+# operating model
+om_object <- om(ages = 0:8, samples = 1L, time = 0:200)
+
+# assign rmax
+# (used to estimate the PST)
+rmax <- distribution(list(iter = 0L, density = "lognormal", pars = c(log(0.04) - (0.05^2)/2, 0.05), name = "max. intrinsic growth"))
+om_object <- om_object %>% load_rmax(rmax)
+
+# setup list of pars
+# (list with user-specified elements that
+# should contain all pars required
+# by population dynamics function)
+om_object <- om_object %>% load_pars(list(
+    'r' = distribution(list(value = 0.04, name = "intrinsic growth")),
+    'M' = distribution(list(value = 0.05, name = "natural mortality")),
+    'f' = distribution(list(value = 0.00, name = "female fecundity")),
+    'a' = distribution(list(value = 0,    name = "age at maturity"))
+))
+
+# load cv inputs
+om_object <- om_object %>% load_cvs(list(
+    'survivorship'   = 0.20,
+  	'birth'          = 0.01)
+)
+
+# load fixed inputs
+om_object <- om_object %>% load_fixed(list(
+    'selectivity'       = 1,
+    'K'                 = 1)
+)
+```
+
+```{r, eval = FALSE}
+run_mnpl(om_object)
+```
+
+```{r, echo = FALSE, out.width="50%", fig.cap="Example shiny output"}
+knitr::include_graphics("images/example.png")
+```

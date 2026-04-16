@@ -7,9 +7,9 @@
 \alias{shape<-,om,numeric-method}
 \title{Calculate shape}
 \usage{
-shape(object, depletion, stochastic, equilibrium_time, iterations, ...)
+shape(object, depletion, ...)
 
-\S4method{shape}{om,ANY}(object, depletion, stochastic, equilibrium_time, iterations, ...)
+\S4method{shape}{om,ANY}(object, depletion, ...)
 
 shape(object, ...) <- value
 

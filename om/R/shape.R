@@ -15,15 +15,15 @@
 # wrapper for execution of population
 # dynamics function
 # -- executes object@pdyn for each monte-carlo sample
-setGeneric("shape", function(object, depletion, stochastic, equilibrium_time, iterations, ...) standardGeneric("shape"))
-setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, equilibrium_time, iterations, ...) {
+setGeneric("shape", function(object, depletion, ...) standardGeneric("shape"))
+setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, equilibrium_time, iterations, verbose = TRUE, ...) {
     
     # current environment
     ENV <- environment()
     
     # check and update object with
     # function arguments
-    object <- .check_rp(object, stochastic, equilibrium_time, iterations)
+    object <- .check_rp(object, stochastic, equilibrium_time, iterations, verbose)
     
     # load time, age and
     # iteration dimensions

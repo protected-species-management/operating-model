@@ -9,7 +9,7 @@
 #' @import glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = TRUE, ...) {
     
     # current environment
     ENV <- environment()
@@ -21,7 +21,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # check and update object with
     # function arguments
-    object <- .check_pdyn(object, stochastic, time, iterations)
+    object <- .check_pdyn(object, stochastic, time, iterations, verbose)
     
     # load time, age and
     # iteration dimensions

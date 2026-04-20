@@ -50,7 +50,7 @@ sp.om <- function(object, harvest_rate, ...) {
 		a <- pars_sample$a
 		r <- pars_sample$r
 		M <- pars_sample$M
-		v <- as.integer(object@fixed$selectivity)
+		v <- a + 1L
         
         dvalue <- numeric(length(harvest_rate))
         cvalue <- numeric(length(harvest_rate))

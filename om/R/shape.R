@@ -40,7 +40,6 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	# accessor functions
 	get_a <- function() get("a", envir = ENV)
 	get_r <- function() get("r", envir = ENV)
-	get_v <- function() get("v", envir = ENV)
 	get_s <- function() get("s", envir = ENV)
 	get_e <- function() get("e", envir = ENV)
     
@@ -61,8 +60,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		s <- DataEval(get_s)
 		e <- DataEval(get_e)
 		
-		# get fixed values
-		v <- get_v()
+		# get selectivity
+		suppressMessages({
+			v <- as.integer(a) + 1L
+		})
 			
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
@@ -91,8 +92,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		s <- DataEval(get_s)
 		e <- DataEval(get_e)
 		
-		# get fixed values
-		v <- get_v()
+		# get selectivity
+		suppressMessages({
+			v <- as.integer(a) + 1L
+		})
 			
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
@@ -125,8 +128,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			s <- DataEval(get_s)
 			e <- DataEval(get_e)
 			
-			# get fixed values
-			v <- get_v()
+			# get selectivity
+            suppressMessages({
+				v <- as.integer(a) + 1L
+			})
 				
             objective <- 0
             
@@ -166,8 +171,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			s <- DataEval(get_s)
 			e <- DataEval(get_e)
 			
-			# get fixed values
-			v <- get_v()
+			# get selectivity
+            suppressMessages({
+				v <- as.integer(a) + 1L
+			})
 				
             objective <- 0
             
@@ -214,7 +221,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	a <- pars_sample$a
 	r <- pars_sample$r
 	M <- pars_sample$M
-	v <- object@fixed$selectivity
+	v <- a + 1L
     s <- .survivorship(M, env = ENV)
 	e <- .epsilon(env = ENV)
     
@@ -281,7 +288,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			a <- pars_sample$a
 			r <- pars_sample$r
 			M <- pars_sample$M
-			v <- object@fixed$selectivity
+			v <- a + 1L
 			
 			s <- .survivorship(M, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 			e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)

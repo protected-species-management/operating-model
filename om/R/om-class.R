@@ -18,7 +18,7 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', fixed = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
+setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
 #}}}
 #{{{
 # initialisation function
@@ -76,6 +76,10 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@pars$f <- NA_real_
     # (age at female maturity)
     .Object@pars$a <- NA_real_
+    # (selectivity)
+    .Object@pars$v <- NA_real_
+    # (carrying capacity)
+    .Object@pars$K <- NA_real_
     
     # setup management
     # target reference points

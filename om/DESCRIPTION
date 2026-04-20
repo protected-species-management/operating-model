@@ -35,6 +35,7 @@ Collate:
     'dot-survivorship.R'
     'dynplot.R'
     'load_cvs.R'
+    'update_pars.R'
     'load_pars.R'
     'load_rmax.R'
     'load_targets.R'
@@ -44,7 +45,6 @@ Collate:
     'rp.R'
     'shape.R'
     'sp.om.R'
-    'update_pars.R'
     'zzz.R'
 RoxygenNote: 7.3.3
 Encoding: UTF-8

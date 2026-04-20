@@ -6,7 +6,7 @@
 \alias{distribution}
 \title{Class containing a probability distribution}
 \usage{
-distribution(value, ...)
+distribution(...)
 }
 \arguments{
 \item{object}{either an integer specifiying the length of an empty vector or a vector of derived values}
@@ -29,12 +29,34 @@ The \code{object} input contains a list of values that determine how the distrib
 
 \examples{
 # create object containing
-# vector of r values
-iter <- 100
-mu <- 0.1
+# vector of values
+iter <- 1e5
 cv <- 0.2
-sd <- sqrt(log(1+cv^2))
-x <- rlnorm(iter,log(mu)-sd^2/2,sd)
-r <- distribution(list(value = x, density = "lognormal"))
+sd <- sqrt(log(1 + cv^2))
+mu <- log(1) - sd^2/2
+x <- rlnorm(iter, mu, sd)
+y <- distribution(value = x, density = "lognormal")
 
+# show
+y
+
+# plot histogram
+hist(y)
+abline(v = mean(y), col = 2)
+
+# summarise
+summary(y)
+
+# create object
+# without values
+y <- distribution(pars = c(mu, sd), density = "lognormal")
+summary(y)
+
+# parametric sampling
+hist(om::sample(y, n = 1e5))
+
+# non-parametric sampling
+y <- distribution(values = 0:10, density = "unspecified")
+om::sample(y)
+ 
 }

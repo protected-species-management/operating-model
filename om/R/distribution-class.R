@@ -11,7 +11,7 @@
 #' @export
 setClass("distribution", contains = "numeric", slots = list(iter = "integer", name = "character", pars = "numeric", density = "character"))
 
-setMethod("initialize", "distribution", function(.Object, x) {
+setMethod("initialize", "distribution", function(.Object, ...) {
     
     .Object@.Data         <- numeric()
     .Object@iter          <- 0L
@@ -19,6 +19,7 @@ setMethod("initialize", "distribution", function(.Object, x) {
     .Object@pars          <- c(NA_real_, NA_real_)
     .Object@name          <- character()
     
+    x <- list(...)
     
     if (!missing(x)) {
         

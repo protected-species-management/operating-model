@@ -5,20 +5,44 @@
 #' 
 #' @examples
 #' # create object containing
-#' # vector of r values
-#' iter <- 100
-#' mu <- 0.1
+#' # vector of values
+#' iter <- 1e5
 #' cv <- 0.2
-#' sd <- sqrt(log(1+cv^2))
-#' x <- rlnorm(iter,log(mu)-sd^2/2,sd)
-#' r <- distribution(list(value = x, density = "lognormal"))
-#'
-#' @include distribution-class.R
+#' sd <- sqrt(log(1 + cv^2))
+#' mu <- log(1) - sd^2/2
+#' x <- rlnorm(iter, mu, sd)
+#' y <- distribution(value = x, density = "lognormal")
+#' 
+#' # show
+#' y
+#' 
+#' # plot histogram
+#' hist(y)
+#' abline(v = mean(y), col = 2)
+#' 
+#' # summarise
+#' summary(y)
+#' 
+#' # create object
+#' # without values
+#' y <- distribution(pars = c(mu, sd), density = "lognormal")
+#' summary(y)
+#' 
+#' # parametric sampling
+#' hist(om::sample(y, n = 1e5))
+#' 
+#' # non-parametric sampling
+#' y <- distribution(values = 0:10, density = "unspecified")
+#' om::sample(y)
+#'  
+#' @include distribution-class.R sample.distribution.R
 #' 
 #' @export
-distribution <- function(value, ...) UseMethod("distribution")
+distribution <- function(...) UseMethod("distribution")
 #' @export
-distribution.list <- function(value, ...) new("distribution", value, ...)
+distribution.numeric <- function(...) new("distribution", ...)
+#' @export
+distribution.character <- function(...) new("distribution", ...)
     
 # functionality
 # add vector plus distribution -> calculate parameters

@@ -38,6 +38,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	
 	# function to extract real values
 	# from advector-type
+	# (https://github.com/kaskr/RTMB/blob/master/RTMB/R/RcppExports.R)
 	getValues <- function(x) {
 		.Call("_RTMB_getValues", x, PACKAGE = "RTMB")
 	}

@@ -55,6 +55,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         
 		# function to extract real values
 		# from advector-type
+		# (https://github.com/kaskr/RTMB/blob/master/RTMB/R/RcppExports.R)
 		getValues <- function(x) {
 			.Call("_RTMB_getValues", x, PACKAGE = "RTMB")
 		}

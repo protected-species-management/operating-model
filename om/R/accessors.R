@@ -35,7 +35,7 @@ setGeneric("pst", function(object, ...) standardGeneric("pst"))
 setMethod("pst", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
-    array2dfr(object@pst$value, dim.names = list(sample = 1:NITER, time = object@time))
+    array2dfr(object@pst$value, dim.names = list(sample = 1:NITER, iteration = 1:SITER, time = object@time))
 })
 #}}}
 

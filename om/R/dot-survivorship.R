@@ -22,7 +22,7 @@
 			
 		# first year is
 		# equal to expectation
-		#s[,1] <- S
+		s[,1] <- S
 		
 	} else {
 	

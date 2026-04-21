@@ -18,11 +18,11 @@ shape(object, ...) <- value
 \arguments{
 \item{object}{\code{om} class object}
 
-\item{depletion}{Assumed 1+ depletion at MNPL}
+\item{depletion}{Assumed a+ depletion at MNPL}
 
 \item{stochastic}{Logical indicating whether stochastic dynamics are assumed}
 
-\item{equilibrium_time}{Time horizon used for projection to assumed equilibrium}
+\item{time}{Time horizon used for projection to assumed equilibrium}
 
 \item{iterations}{Process error iterations used for stochastic projection}
 }

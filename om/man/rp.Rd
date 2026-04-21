@@ -11,7 +11,7 @@ rp(object, ...)
 
 \item{stochastic}{Logical indicating whether stochastic dynamics are assumed}
 
-\item{equilibrium_time}{Time horizon used for projection to assumed equilibrium}
+\item{time}{Time horizon used for projection to assumed equilibrium}
 
 \item{iterations}{Process error iterations used for stochastic projection}
 }

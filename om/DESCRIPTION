@@ -37,6 +37,7 @@ Collate:
     'load_cvs.R'
     'update_pars.R'
     'load_pars.R'
+    'load_quantile.R'
     'load_rmax.R'
     'load_targets.R'
     'om.R'

@@ -92,11 +92,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n[a, 2] <- n[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
                 }
                 n[a, 2] <- n[a, 2] + n[a, 1] * S[a] * (1 -  sel[a] * h)
-                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2]) / sum(k[-1]))^shape))
+                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]))^shape))
             }
                 
             # log of the equilibrium depletion
-            objective <- -1 * dnorm(sum(n[-1, 2]) / sum(k[-1]), target, 0.01, log = TRUE)
+            objective <- -1 * dnorm(sum(n[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]), target, 0.01, log = TRUE)
             
             # return
             return(objective)
@@ -116,7 +116,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
         # set-up birth function
         birth <- function(y) {
-            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape[i])) 
+            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]) / sum(k[-1] * pat[-1]))^shape[i])) 
         }
         
         #######################
@@ -143,8 +143,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			a <- pars_sample$a
 			r <- pars_sample$r
 			M <- pars_sample$M
-			v <- object@fixed$selectivity
-            K <- object@fixed$K
+			v <- pars_sample$v
+            K <- pars_sample$K
 			S <- c(rep((exp(-M)^2), a), rep(exp(-M), NAGES - a))
 			
 			age_mat <- as.integer(a)
@@ -180,7 +180,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # initial conditions
             # (1+ depletion = K)
-            k <- K * k_prime / sum(k_prime[-1])
+            k <- K * k_prime / sum(k_prime[-1] * pat[-1])
             
             # initial conditions
             if (initial_depletion < 1) {
@@ -199,7 +199,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h_init)
                 }
                 n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
-                n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]) / sum(k[-1]))^shape[i]))
+                n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]))^shape[i]))
             }
 			
 			# construct survivorship
@@ -234,7 +234,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 for (y in 2:NTIME) {
                     
 					# observe pst
-					pst[y - 1] <- (1 / 2) * object@pst$phi * sample(object@pst$rmax, n = 1) * obs_error(sum(n[, y - 1] * mat), cv = object@settings$cv$observation)
+					pst[y - 1] <- (1 / 2) * object@pst$phi * sample(object@pst$rmax, n = 1) * obs_error(sum(n[, y - 1] * pat), cv = object@settings$cv$observation)
 					
 					# calculate harvest rate
                     proj_h[j, y - 1] <- harvest_error(object@harvest_rate(object, i), cv = object@settings$cv$mortality)
@@ -254,7 +254,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 
                 # values per-year
                 proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-NTIME] * proj_h[j,] 
-                proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
+                proj_depletion[j,] <- apply(sweep(n[-1,], 1, pat[-1], "*"), 2, sum) / sum(k[-1] * pat[-1])
                 proj_n[j,,]        <- n
 				proj_pst[j,]       <- pst
                 

@@ -3,7 +3,7 @@
 #' Calculate the Maximum Net Productivity reference points.
 #' @param object \code{om} class object
 #' @param stochastic Logical indicating whether stochastic dynamics are assumed
-#' @param equilibrium_time Time horizon used for projection to assumed equilibrium
+#' @param time Time horizon used for projection to assumed equilibrium
 #' @param iterations Process error iterations used for stochastic projection
 #' @note This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function. 
 #' @seealso [targets()]
@@ -14,14 +14,14 @@
 #{{{ rp()
 # wrapper for execution of function
 setGeneric("rp", function(object, ...) standardGeneric("rp"))
-setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time, iterations, verbose = TRUE, ...) {
+setMethod("rp", signature = "om", function(object, stochastic, time, iterations, verbose = TRUE, ...) {
     
     # current environment
     ENV <- environment()
     
     # check and update object with
     # function arguments
-    object <- .check_rp(object, stochastic, equilibrium_time, iterations, verbose)
+    object <- .check_rp(object, stochastic, time, iterations, verbose)
     
     # load time, age and
     # iteration dimensions
@@ -52,7 +52,13 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
     } else {
     # AGE-STRUCTURED MODEL    
     # {{{
-                
+        
+		# function to extract real values
+		# from advector-type
+		getValues <- function(x) {
+			.Call("_RTMB_getValues", x, PACKAGE = "RTMB")
+		}
+
 		# accessor functions
         get_a <- function() get("a", envir = ENV)
         get_r <- function() get("r", envir = ENV)
@@ -77,10 +83,9 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 			e <- DataEval(get_e)
 			
 			# get selectivity
-            suppressMessages({
-				v <- as.integer(a) + 1L
-			})
-            
+			a <- as.integer(getValues(a))
+			v <- a + 1L
+			
             # spin spinner
             #cli_progress_update(.envir = ENV)
             
@@ -115,9 +120,8 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 				e <- DataEval(get_e)				
 				
 				# get selectivity
-				suppressMessages({
-					v <- as.integer(a) + 1L
-				})
+				a <- as.integer(getValues(a))
+				v <- a + 1L
             
                 objective <- 0
                 
@@ -152,9 +156,6 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
         
         # sample pars
         pars_sample <- lapply(object@pars, sample, n = 1)
-        
-        # check data present
-        stopifnot(length(object@fixed) > 0)
 		
 		# assign pars
         a <- pars_sample$a
@@ -180,7 +181,7 @@ setMethod("rp", signature = "om", function(object, stochastic, equilibrium_time,
 		
 			# function to estimate h_mnpl
 			# given shape
-			h1 <- MakeTape(obj1, c(.logit(0.02), log(object@shape[1])))
+			h1 <- MakeTape(obj1, c(.logit(0.03), log(object@shape[1])))
 			h2 <- h1$newton(1)
 			
 			# record initial 

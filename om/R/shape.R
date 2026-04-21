@@ -2,9 +2,9 @@
 #' 
 #' @description Calculates shape parameter given assumed depletion at MNPL.
 #' @param object \code{om} class object
-#' @param depletion Assumed 1+ depletion at MNPL
+#' @param depletion Assumed a+ depletion at MNPL
 #' @param stochastic Logical indicating whether stochastic dynamics are assumed
-#' @param equilibrium_time Time horizon used for projection to assumed equilibrium
+#' @param time Time horizon used for projection to assumed equilibrium
 #' @param iterations Process error iterations used for stochastic projection
 #' @seealso [rp()]
 #' @export
@@ -14,16 +14,15 @@
 #{{{ shape()
 # wrapper for execution of population
 # dynamics function
-# -- executes object@pdyn for each monte-carlo sample
 setGeneric("shape", function(object, depletion, ...) standardGeneric("shape"))
-setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, equilibrium_time, iterations, verbose = TRUE, ...) {
+setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = TRUE, ...) {
     
     # current environment
     ENV <- environment()
     
     # check and update object with
     # function arguments
-    object <- .check_rp(object, stochastic, equilibrium_time, iterations, verbose)
+    object <- .check_rp(object, stochastic, time, iterations, verbose)
     
     # load time, age and
     # iteration dimensions
@@ -37,6 +36,12 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     shape_values <- numeric(NITER)
     h_values     <- numeric(NITER)
 	
+	# function to extract real values
+	# from advector-type
+	getValues <- function(x) {
+		.Call("_RTMB_getValues", x, PACKAGE = "RTMB")
+	}
+		
 	# accessor functions
 	get_a <- function() get("a", envir = ENV)
 	get_r <- function() get("r", envir = ENV)
@@ -61,10 +66,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		e <- DataEval(get_e)
 		
 		# get selectivity
-		suppressMessages({
-			v <- as.integer(a) + 1L
-		})
-			
+		a <- as.integer(getValues(a))
+		v <- a + 1L
+		
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
@@ -93,15 +97,14 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		e <- DataEval(get_e)
 		
 		# get selectivity
-		suppressMessages({
-			v <- as.integer(a) + 1L
-		})
+		a <- as.integer(getValues(a))
+		v <- a + 1L
 			
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
-		objective <- -1 * dnorm(sum(n[-1, dim(n)[2]]), target, 0.01, log = TRUE)
+		objective <- -1 * dnorm(sum(n[(v + 1):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
 		
 		# return objective
 		return(objective)
@@ -129,9 +132,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			e <- DataEval(get_e)
 			
 			# get selectivity
-            suppressMessages({
-				v <- as.integer(a) + 1L
-			})
+			a <- as.integer(getValues(a))
+			v <- a + 1L
 				
             objective <- 0
             
@@ -172,9 +174,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			e <- DataEval(get_e)
 			
 			# get selectivity
-            suppressMessages({
-				v <- as.integer(a) + 1L
-			})
+			a <- as.integer(getValues(a))
+			v <- a + 1L
 				
             objective <- 0
             
@@ -191,7 +192,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 
                 # log of the equilibrium catch
                 # per iteration
-                objective <- objective - dnorm(mean(apply(n[-1, loc], 2, sum)), target, 0.01, log = TRUE)
+                objective <- objective - dnorm(mean(apply(n[(v + 1):dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
             }
             
             # return objective
@@ -214,14 +215,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # sample pars
     pars_sample <- lapply(object@pars, sample, n = 1)
     
-    # check fixed inputs present
-    stopifnot(length(object@fixed) > 0)
-    
     # assign pars
 	a <- pars_sample$a
 	r <- pars_sample$r
 	M <- pars_sample$M
-	v <- a + 1L
     s <- .survivorship(M, env = ENV)
 	e <- .epsilon(env = ENV)
     
@@ -288,7 +285,6 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			a <- pars_sample$a
 			r <- pars_sample$r
 			M <- pars_sample$M
-			v <- a + 1L
 			
 			s <- .survivorship(M, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 			e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)
@@ -328,7 +324,7 @@ setMethod("shape<-",
               
 			  if (length(value) < object@samples) {
 				if (length(value) == 1) {
-				value <- rep(value, object@samples)
+					value <- rep(value, object@samples)
 				} else {
 					stop("'value' should be of length '1' or 'object@samples'")
 				}

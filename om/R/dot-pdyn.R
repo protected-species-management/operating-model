@@ -4,11 +4,9 @@
 	NAGES <- get("NAGES", envir = env)
 	NTIME <- get("NTIME", envir = env)
 	
-	suppressWarnings({
-		age_mat <- as.integer(maturity)
-		age_pat <- age_mat + 1L
-		age_sel <- as.integer(selectivity)
-	})
+	age_mat <- as.integer(maturity)
+	age_pat <- age_mat + 1L
+	age_sel <- as.integer(selectivity)
 	
 	mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
 	pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
@@ -22,7 +20,7 @@
 	s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
 	
     birth <- function(y) {
-        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]))^shape))
+        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]))^shape))
     }
     
     # set up unexploited 
@@ -47,7 +45,7 @@
     
     # initial conditions
     # (1+ depletion = 1)
-    k <- k_prime / sum(k_prime[-1])
+    k <- k_prime / sum(k_prime[-1] * pat[-1])
     
     # use iteration to calculate
     # initial age structure
@@ -60,7 +58,7 @@
             n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
         }
         n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
-        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]))^shape))
+        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]))^shape))
     }
     
     # initialise
@@ -88,11 +86,9 @@
 	NAGES <- get("NAGES", envir = env)
 	NTIME <- get("NTIME", envir = env)
 	
-	suppressWarnings({
-		age_mat <- as.integer(maturity)
-		age_pat <- age_mat + 1L
-		age_sel <- as.integer(selectivity)
-	})
+	age_mat <- as.integer(maturity)
+	age_pat <- age_mat + 1L
+	age_sel <- as.integer(selectivity)
 	
 	mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
 	pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
@@ -106,7 +102,7 @@
 	s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
 	
     birth <- function(y) {
-        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]))^shape))
+        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]))^shape))
     }
     
     # set up unexploited 
@@ -131,7 +127,7 @@
     
     # initial conditions
     # (1+ depletion = 1)
-    k <- k_prime / sum(k_prime[-1])
+    k <- k_prime / sum(k_prime[-1] * pat[-1])
     
     # use iteration to calculate
     # initial age structure
@@ -144,7 +140,7 @@
             n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
         }
         n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
-        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]))^shape))
+        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]))^shape))
     }
     
     # initialise
@@ -184,7 +180,7 @@
     captures <- sum(N[, NTIME] * sel * h)
     
     # equilibrium depletion
-    depletion <- sum(N[-1, NTIME])
+    depletion <- sum(N[-1, NTIME] * pat[-1])
     
     # equilibrium per-capita birth
     production <- N[1, NTIME] / sum(N[-1, NTIME] * pat[-1])
@@ -222,7 +218,8 @@
     captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))
     
     # equilibrium depletion
-    depletion <- mean(apply(N[, -1, recent_time], 1, sum) / length(recent_time))
+	depletion <- mean(apply(sweep(N[, -1, recent_time], 2, pat[-1], "*"), 1, sum) / length(recent_time))
+    #depletion <- mean(apply(N[, -1, recent_time], 1, sum) / length(recent_time))
     
     # equilibrium per-capita birth
     production <- mean(apply(N[,1,recent_time], 1, sum) / apply(sweep(N[,-1, recent_time], 2, pat[-1], "*"), 1, sum))

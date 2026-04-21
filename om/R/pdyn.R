@@ -9,7 +9,7 @@
 #' @import glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = TRUE, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, ...) {
     
     # current environment
     ENV <- environment()
@@ -63,8 +63,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     }
 	
 	# harvest rate error function
-	harvest_error <- function(a, cv = 0, qn = 0) {
-        exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(ifelse(qn > 0, abs(qnorm(qn)), 0) * sqrt(log(1 + cv^2)))
+	harvest_error <- function(a, cv = 0, ...) {
+        exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
     }
 	
     # {{{
@@ -228,13 +228,16 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 				# birth rate deviation
 				e <- epsilon[j,]
 				
+				# apply
+				n[1, 1] <- n[1, 1] * e[1]
+				
                 # project under harvest rate
                 # function
                 # {{{
                 for (y in 2:NTIME) {
                     
 					# observe pst
-					pst[y - 1] <- (1 / 2) * object@pst$phi * sample(object@pst$rmax, n = 1) * obs_error(sum(n[, y - 1] * pat), cv = object@settings$cv$observation)
+					pst[y - 1] <- (1 / 2) * object@pst$phi * sample(object@pst$rmax, n = 1) * obs_error(sum(n[, y - 1] * pat), cv = object@settings$cv$observation, qn = object@settings$qn$observation)
 					
 					# calculate harvest rate
                     proj_h[j, y - 1] <- harvest_error(object@harvest_rate(object, i), cv = object@settings$cv$mortality)

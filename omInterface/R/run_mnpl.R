@@ -60,7 +60,7 @@
       object <- shape(object, depletion = input$depletion, stochastic = input$stochastic, equilibrium_time = input$time, iterations = 300L, verbose = FALSE)
       object <- rp(object, verbose = FALSE)
       
-      dfr <- sp(object, harvest_rate = seq(0.00, 0.05, length = 101))
+      dfr <- spf(object, harvest_rate = seq(0.00, 0.05, length = 101))
       
       plot(captures ~ depletion, data = dfr, xlab = "Harvest rate", ylab = "Depletion", cex.lab = 2, type = 'l')
       plot(captures ~ depletion, dfr, type = 'l'); abline(v = object@targets$depletion, lty = 2); points(x = object@targets$depletion, y = object@targets$captures, pch = 19)

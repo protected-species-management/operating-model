@@ -37,7 +37,7 @@ setMethod("load_rps", signature = c("om", "list"), function(object, value) {
     
     # assign
     for (i in 1:length(value)) {
-        if (names(value)[i], names(object@targets)) {
+        if (names(value)[i] %in% names(object@targets)) {
             object@targets[[which(names(object@targets) %in% names(value)[i])]] <- value[[i]]
         } else {
             stop(paste0("'", names(value)[i], "' not assigned"))

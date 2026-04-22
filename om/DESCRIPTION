@@ -37,7 +37,7 @@ Collate:
     'load_bias.R'
     'load_cvs.R'
     'load_pars.R'
-    'load_quantile.R'
+    'load_quantiles.R'
     'load_rmax.R'
     'load_rps.R'
     'om.R'

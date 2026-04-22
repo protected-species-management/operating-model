@@ -2,13 +2,16 @@
 % Please edit documentation in R/load_pars.R
 \name{load_pars}
 \alias{load_pars}
-\title{Load parameters into \code{\link{om-class}} object.}
+\alias{update_pars}
+\title{Load or update parameters}
 \usage{
 load_pars(object, value, ...)
+
+update_pars(object, value, ...)
 }
 \arguments{
-\item{value}{named list object containing parameters}
+\item{value}{named list object containing parameter distributions.}
 }
 \description{
-Load parameters for use within the \code{\link{population_dynamics}} function.
+Load or update parameters in \code{\link{om-class}} object. Each parameter should be provided as a \code{\link{distribution-class}}.
 }

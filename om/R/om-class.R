@@ -18,7 +18,7 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', fixed = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
+setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
 #}}}
 #{{{
 # initialisation function
@@ -60,12 +60,15 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@settings$ref_points <- list(stochastic = NA, iterations = NA_integer_, time = NA_integer_)
     .Object@settings$projection <- list(stochastic = NA, iterations = NA_integer_, time = length(.Object@time))
     .Object@settings$cv         <- list(survivorship = 0.0, birth = 0.0, observation = 0.0, mortality = 0.0)
+    .Object@settings$qn         <- list(observation = 0.0)
+    .Object@settings$bias       <- list(observation = 1.0, mortality = 1.0)
     
     # setup PST limit
     # reference point
-    .Object@pst$phi     <- phi
-    .Object@pst$rmax    <- NA_real_
-    .Object@pst$value   <- NA_real_
+    .Object@pst$phi      <- phi
+    .Object@pst$rmax     <- NA_real_
+    .Object@pst$ogive    <- NA_real_
+    .Object@pst$value    <- NA_real_
     
     # setup pars
     # (intrinsic growth)
@@ -76,6 +79,12 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@pars$f <- NA_real_
     # (age at female maturity)
     .Object@pars$a <- NA_real_
+    # (age at observation)
+    .Object@pars$o <- NA_real_
+    # (selectivity)
+    .Object@pars$v <- NA_real_
+    # (carrying capacity)
+    .Object@pars$K <- NA_real_
     
     # setup management
     # target reference points

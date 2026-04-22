@@ -1,19 +1,28 @@
 #' @title Surplus production function
-#' @description Extracts data frame containing relationships between the depletion, sustainable captures and the harvest rate. Depletion is measured using the 1+ age classes.
+#' @description Extracts data frame containing relationships between the depletion, sustainable captures and the harvest rate. Depletion is measured using the breeding age classes.
 #' @details This function is designed to facilitate the easy creation of plots of the production function, that can be used to validate operating model assumptions regarding the depletion and harvest rate at MNPL. The production function is calculated assuming either deterministic or stochastic reference point calculations, depending on the setting stored in \code{object@settings$ref_points}.
+#' @param harvest_rate numeric vector of harvest rates over which surplus production should be calculated 
+#' @param stochastic logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})
+#' @param time equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})
+#' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
+#' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
 #' @return A data frame containing depletion, sustainable captures and the harvest rate, for each of the input harvest rate values. If life-history inputs are uncertain, iterations are sampled. These iterations do not represent any process error, only uncertainty in the operating model conditioning. 
 #' @include dot-pdyn.R dot-survivorship.R
 #' @importFrom dplyr bind_rows
 #' @import cli
 #' @import glue
 #' @export
-sp <- function(object, harvest_rate, ...) UseMethod("sp")
-#' @rdname sp
+setGeneric("spf", function(object, harvest_rate, ...) standardGeneric("spf"))
+#' @rdname spf
 #' @export
-sp.om <- function(object, harvest_rate, ...) {
+setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), function(object, harvest_rate, stochastic, time, iterations, verbose = FALSE, ...) {
     
     # current environment
     ENV <- environment()
+    
+    # check and update object with
+    # function arguments
+    object <- .check_rp(object, stochastic, time, iterations, verbose)
     
     # load time, age and
     # iteration dimensions
@@ -50,7 +59,7 @@ sp.om <- function(object, harvest_rate, ...) {
 		a <- pars_sample$a
 		r <- pars_sample$r
 		M <- pars_sample$M
-		v <- as.integer(object@fixed$selectivity)
+		v <- a + 1L
         
         dvalue <- numeric(length(harvest_rate))
         cvalue <- numeric(length(harvest_rate))
@@ -96,6 +105,6 @@ sp.om <- function(object, harvest_rate, ...) {
     
     # return
     return(bind_rows(out, .id = "iteration"))
-}
+})
 
 

@@ -4,6 +4,7 @@
 #' @description Access outputs stored in \code{\link{om-class}} object following call to [pdyn()].
 #' @param object \code{\link{om-class}} object. 
 #' @importFrom crayon blue
+#' @importFrom dplyr bind_rows
 #' @include om-class.R get_dim.R array2dfr.R
 #{{{
 #' @export
@@ -35,7 +36,7 @@ setGeneric("pst", function(object, ...) standardGeneric("pst"))
 setMethod("pst", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
-    array2dfr(object@pst$value, dim.names = list(sample = 1:NITER, time = object@time))
+    array2dfr(object@pst$value, dim.names = list(sample = 1:NITER, iteration = 1:SITER, time = object@time))
 })
 #}}}
 
@@ -58,6 +59,15 @@ setGeneric("pars", function(object, ...) standardGeneric("pars"))
 #' @rdname targets
 setMethod("pars", signature = c("om"), function(object) {
     object@pars
+})
+#}}}
+#{{{
+#' @export
+setGeneric("settings", function(object, ...) standardGeneric("settings"))
+# accessor function
+#' @rdname targets
+setMethod("settings", signature = c("om"), function(object) {
+    lapply(lapply(object@settings, bind_rows), data.frame)
 })
 #}}}
 

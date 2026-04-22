@@ -45,6 +45,7 @@ Collate:
     'rp.R'
     'shape.R'
     'sp.om.R'
+    'spf.R'
     'zzz.R'
 RoxygenNote: 7.3.3
 Encoding: UTF-8

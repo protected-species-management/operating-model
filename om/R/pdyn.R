@@ -58,14 +58,19 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
     
 	# observation error function
-	obs_error <- function(a, cv = 0, qn = 0) {
+	.obs_error <- function(a, cv = 0, qn = 0) {
         exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(ifelse(qn > 0, abs(qnorm(qn)), 0) * sqrt(log(1 + cv^2)))
     }
 	
 	# harvest rate error function
-	harvest_error <- function(a, cv = 0, ...) {
+	.harvest_error <- function(a, cv = 0, ...) {
         exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
-    }
+	}
+	
+	# pst observation function
+	.pst_calc <- function(object, numbers, ...) {
+	    (1 / 2) * object@pst$phi * sample(object@pst$rmax) * .obs_error(sum(numbers * object@pst$ogive), cv = object@settings$cv$observation, qn = object@settings$cv$observation)
+	}
 	
     # {{{
     # PT model
@@ -144,18 +149,23 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			r <- pars_sample$r
 			M <- pars_sample$M
 			v <- pars_sample$v
+			o <- pars_sample$o
             K <- pars_sample$K
 			S <- c(rep((exp(-M)^2), a), rep(exp(-M), NAGES - a))
 			
 			age_mat <- as.integer(a)
 			age_pat <- age_mat + 1L
 			age_sel <- as.integer(v)
+			age_obs <- as.integer(o)
 		
-			mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-			pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
-			sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+			mat <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+			pat <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+			sel <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+			obs <- c(rep(0, age_obs), rep(1, NAGES - age_obs))
 			
 			lambda <- exp(r)
+			
+			object@pst$ogive <- obs
             
             # set up unexploited 
             # equilibrium female
@@ -237,10 +247,10 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 for (y in 2:NTIME) {
                     
 					# observe pst
-					pst[y - 1] <- (1 / 2) * object@pst$phi * sample(object@pst$rmax, n = 1) * obs_error(sum(n[, y - 1] * pat), cv = object@settings$cv$observation, qn = object@settings$qn$observation)
+					pst[y - 1] <- .pst_calc(object, numbers = n[, y - 1])
 					
 					# calculate harvest rate
-                    proj_h[j, y - 1] <- harvest_error(object@harvest_rate(object, i), cv = object@settings$cv$mortality)
+                    proj_h[j, y - 1] <- .harvest_error(object@harvest_rate(object, numbers = n[, y - 1], selectivity = sel), cv = object@settings$cv$mortality)
 					
 					# apply harvest rate
 					# and mortality

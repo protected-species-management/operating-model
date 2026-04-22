@@ -9,11 +9,13 @@ rp(object, ...)
 \arguments{
 \item{object}{\code{om} class object}
 
-\item{stochastic}{Logical indicating whether stochastic dynamics are assumed}
+\item{stochastic}{logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})}
 
-\item{time}{Time horizon used for projection to assumed equilibrium}
+\item{time}{equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})}
 
-\item{iterations}{Process error iterations used for stochastic projection}
+\item{iterations}{numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})}
+
+\item{verbose}{logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed}
 }
 \description{
 Calculate the Maximum Net Productivity reference points.

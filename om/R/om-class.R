@@ -64,9 +64,10 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     
     # setup PST limit
     # reference point
-    .Object@pst$phi     <- phi
-    .Object@pst$rmax    <- NA_real_
-    .Object@pst$value   <- NA_real_
+    .Object@pst$phi   <- phi
+    .Object@pst$rmax  <- NA_real_
+    .Object@pst$ogive <- NA_real_
+    .Object@pst$value <- NA_real_
     
     # setup pars
     # (intrinsic growth)
@@ -77,6 +78,8 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@pars$f <- NA_real_
     # (age at female maturity)
     .Object@pars$a <- NA_real_
+    # (age at observation)
+    .Object@pars$o <- NA_real_
     # (selectivity)
     .Object@pars$v <- NA_real_
     # (carrying capacity)

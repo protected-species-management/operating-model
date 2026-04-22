@@ -2,10 +2,11 @@
 #' 
 #' @description Calculates shape parameter given assumed depletion at MNPL.
 #' @param object \code{om} class object
-#' @param depletion Assumed a+ depletion at MNPL
-#' @param stochastic Logical indicating whether stochastic dynamics are assumed
-#' @param time Time horizon used for projection to assumed equilibrium
-#' @param iterations Process error iterations used for stochastic projection
+#' @param depletion Assumed depletion of breeding-age individuals at MNPL
+#' @param stochastic logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})
+#' @param time equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})
+#' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
+#' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
 #' @seealso [rp()]
 #' @export
 #' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R

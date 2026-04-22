@@ -1,7 +1,7 @@
-#' @title Update parameters in \code{\link{om-class}} object. 
+#' @title Update parameters 
 #' 
-#' @description Update parameters already loaded in \code{\link{om-class}} object for use within the \code{\link{population_dynamics}} function.
-#' @param value named list object containing parameters
+#' @description Update parameters in \code{\link{om-class}} object. Each parameter should be provided as a \code{\link{distribution-class}}.
+#' @param value named list object containing parameter distributions. 
 #' @seealso [load_pars()]
 #' @include om-class.R distribution-class.R
 #' @export
@@ -15,7 +15,11 @@ setMethod("update_pars", signature = c("om", "list"), function(object, value, ..
     # assign
     for (i in 1:length(value)) {
 		if (is(value[[i]], 'distribution')) {
-			object@pars[[which(names(object@pars) %in% names(value)[i])]] <- value[[i]]
+			if (names(value)[i], names(object@pars)) {
+			    object@pars[[which(names(object@pars) %in% names(value)[i])]] <- value[[i]]
+			} else {
+			    stop(paste0("'", names(value)[i], "' not assigned"))
+			}
 		} else {
 			stop("value must be of class 'distribution'")
 		}

@@ -51,25 +51,69 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     object@diagnostics$harvest_rate <- array(dim = c(NITER, SITER, NTIME - 1))
     
     # pst
-    object@pst$value <- array(dim = c(NITER, SITER, NTIME - 1))
+    object@pst$value <- array(dim = c(NITER, SITER, NTIME))
     
     # progress
     msg <- ""
     cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
     
-	# observation error function
-	.obs_error <- function(a, cv = 0, qn = 0) {
-        exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(ifelse(qn > 0, abs(qnorm(qn)), 0) * sqrt(log(1 + cv^2)))
-    }
-	
-	# harvest rate error function
-	.harvest_error <- function(a, cv = 0, ...) {
-        exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+	# define observation error function
+	# using: cv, quantile (qn) and/or bias
+	if (object@settings$cv$observation > 0) {
+		if (object@settings$qn$observation > 0) {
+			if (object@settings$bias$observation != 1.0) {
+				.obs_error <- function(a, cv = object@settings$cv$observation, qn = object@settings$qn$observation, bias = object@settings$bias$observation) {
+					bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn)) * sqrt(log(1 + cv^2)))
+				}
+			} else {
+				.obs_error <- function(a, cv = object@settings$cv$observation, qn = object@settings$qn$observation) {
+					exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn)) * sqrt(log(1 + cv^2)))
+				}
+			}
+		} else {
+			if (object@settings$bias$observation != 1.0) {
+				.obs_error <- function(a, cv = object@settings$cv$observation, bias = object@settings$bias$observation) {
+					bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+				}
+			} else {
+				.obs_error <- function(a, cv = object@settings$cv$observation) {
+					exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+				}
+			}
+		}
+	} else {
+		if (object@settings$bias$observation != 1.0) {
+			.obs_error <- function(a, bias = object@settings$bias$observation) {
+				bias * a
+			}
+		} else {
+			.obs_error <- function(a) {
+				a
+			}
+		}
 	}
 	
-	# pst observation function
-	.pst_calc <- function(object, numbers, ...) {
-	    (1 / 2) * object@pst$phi * sample(object@pst$rmax) * .obs_error(sum(numbers * object@pst$ogive), cv = object@settings$cv$observation, qn = object@settings$cv$observation)
+	# harvest rate error function
+	if (object@settings$cv$mortality > 0) {
+		if (object@settings$bias$mortality != 1.0) {
+			.harvest_error <- function(a, cv = object@settings$cv$mortality, bias = object@settings$bias$mortality) {
+				bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+			}
+		} else {
+			.harvest_error <- function(a, cv = object@settings$cv$mortality) {
+				exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+			}
+		}
+	} else {
+		if (object@settings$bias$mortality != 1.0) {
+			.harvest_error <- function(a, bias = object@settings$bias$mortality) {
+				bias * a
+			}
+		} else {
+			.harvest_error <- function(a) {
+				a
+			}
+		}
 	}
 	
     # {{{
@@ -108,22 +152,27 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         }
         
         # set-up arrays
-        n      <- array(dim = c(NAGES, NTIME))
-        p      <- vector("numeric", length = NAGES)
-        n_init <- vector("numeric", length = NAGES)
-		pst    <- vector("numeric", length = NTIME - 1)
+        n   <- array(dim = c(NAGES, NTIME))
+        p   <- vector("numeric", length = NAGES)
+		pst <- vector("numeric", length = NTIME)
+		h   <- vector("numeric", length = NTIME - 1)
         
         proj_n         <- array(dim = c(SITER, NAGES, NTIME))
         proj_h         <- array(dim = c(SITER, NTIME - 1))
         proj_catch     <- array(dim = c(SITER, NTIME - 1))
         proj_depletion <- array(dim = c(SITER, NTIME))
-		proj_pst       <- array(dim = c(SITER, NTIME - 1))
+		proj_pst       <- array(dim = c(SITER, NTIME))
         
         # set-up birth function
         birth <- function(y) {
             0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]) / sum(k[-1] * pat[-1]))^shape[i])) 
         }
         
+		# pst observation function
+		pst_calc <- function(numbers) {
+			(1 / 2) * object@pst$phi * sample(object@pst$rmax) * .obs_error(sum(numbers * object@pst$ogive))
+		}
+	
         #######################
         # monte-carlo samples #
         # from life-history   #
@@ -189,7 +238,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             k_prime <- b_eq * p
             
             # initial conditions
-            # (1+ depletion = K)
+            # (breeding+ depletion = K)
             k <- K * k_prime / sum(k_prime[-1] * pat[-1])
             
             # initial conditions
@@ -239,34 +288,38 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 				e <- epsilon[j,]
 				
 				# apply
-				n[1, 1] <- n[1, 1] * e[1]
+				n[, 1] <- n[, 1] * e[1]
 				
+				# observe initial pst
+				pst[1] <- pst_calc(n[, 1])
+					
                 # project under harvest rate
                 # function
                 # {{{
                 for (y in 2:NTIME) {
                     
-					# observe pst
-					pst[y - 1] <- .pst_calc(object, numbers = n[, y - 1])
-					
 					# calculate harvest rate
-                    proj_h[j, y - 1] <- .harvest_error(object@harvest_rate(object, numbers = n[, y - 1], selectivity = sel), cv = object@settings$cv$mortality)
+					h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i)
 					
 					# apply harvest rate
 					# and mortality
                     for (a in 2:NAGES) {
-                        n[a, y] <- n[a - 1, y - 1] * s[a - 1, y - 1] * (1 - sel[a - 1] * proj_h[j, y - 1]) 
+                        n[a, y] <- n[a - 1, y - 1] * s[a - 1, y - 1] * (1 - sel[a - 1] * h[y - 1]) 
                     }
                     
                     # plus group
-                    n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * proj_h[j, y - 1])
+                    n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * h[y - 1])
                     
                     # birth
                     n[1, y] <- birth(y) * e[y]
+					
+					# observe pst
+					pst[y] <- pst_calc(n[, y])
                 }
                 
                 # values per-year
-                proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-NTIME] * proj_h[j,] 
+				proj_h[j,]         <- h
+                proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-NTIME] * h
                 proj_depletion[j,] <- apply(sweep(n[-1,], 1, pat[-1], "*"), 2, sum) / sum(k[-1] * pat[-1])
                 proj_n[j,,]        <- n
 				proj_pst[j,]       <- pst
@@ -286,9 +339,9 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             # numbers
             N[i,,,] <- proj_n
             
-            # pst
+			# pst
             object@pst$value[i,,] <- proj_pst
-            
+			
             # spin spinner
             cli_progress_update()
         }

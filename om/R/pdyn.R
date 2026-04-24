@@ -60,14 +60,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 	# define observation error function
 	# using: cv, quantile (qn) and/or bias
 	if (object@settings$cv$observation > 0) {
-		if (object@settings$qn$observation > 0) {
+		if (object@settings$qn$observation[1] > 0) {
+		    if (is.na(object@settings$qn$observation[2])) {
+		        object@settings$qn$observation[2] <- object@settings$cv$observation
+		    }
 			if (object@settings$bias$observation != 1.0) {
 				.obs_error <- function(a, cv = object@settings$cv$observation, qn = object@settings$qn$observation, bias = object@settings$bias$observation) {
-					bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn)) * sqrt(log(1 + cv^2)))
+					bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
 				}
 			} else {
 				.obs_error <- function(a, cv = object@settings$cv$observation, qn = object@settings$qn$observation) {
-					exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn)) * sqrt(log(1 + cv^2)))
+					exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
 				}
 			}
 		} else {

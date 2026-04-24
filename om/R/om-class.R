@@ -60,7 +60,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@settings$ref_points <- list(stochastic = NA, iterations = NA_integer_, time = NA_integer_)
     .Object@settings$projection <- list(stochastic = NA, iterations = NA_integer_, time = length(.Object@time))
     .Object@settings$cv         <- list(survivorship = 0.0, birth = 0.0, observation = 0.0, mortality = 0.0)
-    .Object@settings$qn         <- list(observation = 0.0)
+    .Object@settings$qn         <- list(observation = c(0.0, NA_real_))
     .Object@settings$bias       <- list(observation = 1.0, mortality = 1.0)
     
     # setup PST limit

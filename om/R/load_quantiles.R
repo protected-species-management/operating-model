@@ -12,7 +12,15 @@ setMethod("load_quantiles", signature = c("om", "list"), function(object, value,
     # assign
     for (i in names(object@settings$qn)) {
         if (i %in% names(value)) {
-            object@settings$qn[[i]] <- value[[i]]
+            if (length(value[[i]]) == 2) {
+                object@settings$qn[[i]] <- value[[i]]
+            } else {
+                if (length(value[[i]]) == 1) {
+                object@settings$qn[[i]] <- c(value[[i]], NA_real_)
+                } else {
+                    stop("'length(value)' must be '1' or '2'")    
+                }
+            }
         }
     }
     

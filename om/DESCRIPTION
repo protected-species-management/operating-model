@@ -42,6 +42,7 @@ Collate:
     'load_rps.R'
     'om.R'
     'pdyn.R'
+    'phi.R'
     'plot.distribution.R'
     'rp.R'
     'shape.R'

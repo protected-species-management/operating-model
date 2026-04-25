@@ -18,7 +18,7 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
+setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', values = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
 #}}}
 #{{{
 # initialisation function
@@ -60,7 +60,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@settings$ref_points <- list(stochastic = NA, iterations = NA_integer_, time = NA_integer_)
     .Object@settings$projection <- list(stochastic = NA, iterations = NA_integer_, time = length(.Object@time))
     .Object@settings$cv         <- list(survivorship = 0.0, birth = 0.0, observation = 0.0, mortality = 0.0)
-    .Object@settings$qn         <- list(observation = 0.0)
+    .Object@settings$qn         <- list(observation = c(0.0, NA_real_))
     .Object@settings$bias       <- list(observation = 1.0, mortality = 1.0)
     
     # setup PST limit
@@ -85,6 +85,16 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@pars$v <- NA_real_
     # (carrying capacity)
     .Object@pars$K <- NA_real_
+    
+    # setup values to 
+    # store pars iterations
+    .Object@values$r <- rep(NA_real_, samples)
+    .Object@values$M <- rep(NA_real_, samples)
+    .Object@values$f <- rep(NA_real_, samples)
+    .Object@values$a <- rep(NA_real_, samples)
+    .Object@values$o <- rep(NA_real_, samples)
+    .Object@values$v <- rep(NA_real_, samples)
+    .Object@values$K <- rep(NA_real_, samples)
     
     # setup management
     # target reference points

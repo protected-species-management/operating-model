@@ -34,6 +34,9 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     # get shape
     get_shape(object, env = ENV)
     
+    # check pars
+    for (a in names(om_object@pars)) if (is.na(object@pars[[a]])) stop("'", a, "' is missing from 'object@pars'")
+    
     # setup numbers array
     # [life-history samples, process-error samples, ages, time]
     if (all(is.na(ages))) {

@@ -203,6 +203,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			v <- pars_sample$v
 			o <- pars_sample$o
             K <- pars_sample$K
+            
+            # transcribe
 			S <- c(rep((exp(-M)^2), a), rep(exp(-M), NAGES - a))
 			
 			age_mat <- as.integer(a)
@@ -347,6 +349,15 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			
             # spin spinner
             cli_progress_update()
+            
+            # record values
+            object@values$r[i] <- r
+            object@values$M[i] <- M
+            object@values$f[i] <- b_max
+            object@values$a[i] <- a
+            object@values$o[i] <- o
+            object@values$v[i] <- v
+            object@values$K[i] <- K
         }
     }
 

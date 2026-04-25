@@ -18,7 +18,7 @@
 #' @importFrom crayon blue red
 #{{{
 # class definition
-setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
+setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'integer', time = 'numeric', shape = 'numeric', settings = 'list', pars = 'list', values = 'list', harvest_rate = 'function', pst = 'list', targets = 'list', diagnostics = 'list', objectives = 'list', seeds = 'integer'))
 #}}}
 #{{{
 # initialisation function
@@ -85,6 +85,16 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@pars$v <- NA_real_
     # (carrying capacity)
     .Object@pars$K <- NA_real_
+    
+    # setup values to 
+    # store pars iterations
+    .Object@values$r <- rep(NA_real_, samples)
+    .Object@values$M <- rep(NA_real_, samples)
+    .Object@values$f <- rep(NA_real_, samples)
+    .Object@values$a <- rep(NA_real_, samples)
+    .Object@values$o <- rep(NA_real_, samples)
+    .Object@values$v <- rep(NA_real_, samples)
+    .Object@values$K <- rep(NA_real_, samples)
     
     # setup management
     # target reference points

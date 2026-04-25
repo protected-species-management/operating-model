@@ -59,7 +59,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
 		a <- pars_sample$a
 		r <- pars_sample$r
 		M <- pars_sample$M
-		v <- a + 1L
+		v <- pars_sample$v
         
         dvalue <- numeric(length(harvest_rate))
         cvalue <- numeric(length(harvest_rate))

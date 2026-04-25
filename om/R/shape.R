@@ -33,6 +33,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # get seeds
     get_seeds(object, env = ENV)
     
+    # check pars
+    for (a in names(om_object@pars)) if (is.na(object@pars[[a]])) stop("'", a, "' is missing from 'object@pars'")
+    
     # create container(s)
     shape_values <- numeric(NITER)
     h_values     <- numeric(NITER)
@@ -49,6 +52,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	get_r <- function() get("r", envir = ENV)
 	get_s <- function() get("s", envir = ENV)
 	get_e <- function() get("e", envir = ENV)
+	get_v <- function() get("v", envir = ENV)
     
 	# set up objective
 	# function
@@ -66,10 +70,11 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		r <- DataEval(get_r)
 		s <- DataEval(get_s)
 		e <- DataEval(get_e)
+		v <- DataEval(get_v)
 		
 		# get selectivity
 		a <- as.integer(getValues(a))
-		v <- a + 1L
+		v <- as.integer(getValues(v))
 		
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
@@ -97,16 +102,17 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		r <- DataEval(get_r)
 		s <- DataEval(get_s)
 		e <- DataEval(get_e)
+		v <- DataEval(get_v)
 		
 		# get selectivity
 		a <- as.integer(getValues(a))
-		v <- a + 1L
+		v <- as.integer(getValues(v))
 			
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
-		objective <- -1 * dnorm(sum(n[(v + 1):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
+		objective <- -1 * dnorm(sum(n[(a + 2):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
 		
 		# return objective
 		return(objective)
@@ -132,10 +138,11 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			r <- DataEval(get_r)
 			s <- DataEval(get_s)
 			e <- DataEval(get_e)
-			
+			v <- DataEval(get_v)
+		
 			# get selectivity
 			a <- as.integer(getValues(a))
-			v <- a + 1L
+			v <- as.integer(getValues(v))
 				
             objective <- 0
             
@@ -174,10 +181,11 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			r <- DataEval(get_r)
 			s <- DataEval(get_s)
 			e <- DataEval(get_e)
-			
+			v <- DataEval(get_v)
+		
 			# get selectivity
 			a <- as.integer(getValues(a))
-			v <- a + 1L
+			v <- as.integer(getValues(v))
 				
             objective <- 0
             
@@ -194,7 +202,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 
                 # log of the equilibrium catch
                 # per iteration
-                objective <- objective - dnorm(mean(apply(n[(v + 1):dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
+                objective <- objective - dnorm(mean(apply(n[(a + 2):dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
             }
             
             # return objective
@@ -223,6 +231,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	M <- pars_sample$M
     s <- .survivorship(M, env = ENV)
 	e <- .epsilon(env = ENV)
+	v <- pars_sample$v
     
     # function to estimate h_mnpl
     # given shape
@@ -287,6 +296,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			a <- pars_sample$a
 			r <- pars_sample$r
 			M <- pars_sample$M
+			v <- pars_sample$v
 			
 			s <- .survivorship(M, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 			e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)

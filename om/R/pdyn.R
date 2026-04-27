@@ -190,7 +190,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             set.seed(rng_seed[i])
             
             # progress iteration
-            msg <- glue(", sample {i}/", NITER)
+            msg <- ifelse(NITER > 1, glue(", sample {i}/", NITER), " ...")
             
             # sample
             pars_sample <- lapply(object@pars, sample, n = 1)
@@ -354,13 +354,13 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             cli_progress_update()
             
             # record values
-            object@values$r[i] <- r
-            object@values$M[i] <- M
+            object@values$r[i] <- pars_sample$r
+            object@values$M[i] <- pars_sample$M
             object@values$f[i] <- b_max
-            object@values$a[i] <- a
-            object@values$o[i] <- o
-            object@values$v[i] <- v
-            object@values$K[i] <- K
+            object@values$a[i] <- pars_sample$a
+            object@values$o[i] <- pars_sample$o
+            object@values$v[i] <- pars_sample$v
+            object@values$K[i] <- pars_sample$K
         }
     }
 

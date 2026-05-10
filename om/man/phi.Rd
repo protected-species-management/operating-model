@@ -16,5 +16,5 @@ phi(object, ...) <- value
 \S4method{phi}{om,numeric}(object) <- value
 }
 \description{
-Access or assign the $$\phi$$ value used to tune the PST reference point.
+Access or assign the \eqn{\phi} value used to tune the PST reference point.
 }

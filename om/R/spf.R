@@ -104,7 +104,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
     }
     
     # return
-    return(bind_rows(out, .id = "iteration"))
+    return(bind_rows(out, .id = "sample"))
 })
 
 

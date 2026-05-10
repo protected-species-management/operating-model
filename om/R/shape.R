@@ -34,7 +34,11 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     get_seeds(object, env = ENV)
     
     # check pars
-    for (a in names(om_object@pars)) if (is.na(object@pars[[a]])) stop("'", a, "' is missing from 'object@pars'")
+    for (a in names(object@pars)) {
+        if (isTRUE(is.na(object@pars[[a]]))) {
+            stop("'", a, "' is missing from 'object@pars'")
+        }
+    }
     
     # create container(s)
     shape_values <- numeric(NITER)

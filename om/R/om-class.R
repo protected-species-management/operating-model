@@ -50,8 +50,17 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     
     if(missing(ages) | is.null(ages)) {
         .Object@ages <- NA_integer_
+		stop("no 'ages' supplied: cohort aggregated model is not currently supported")
     } else {
-        .Object@ages <- ages
+		if (length(ages) > 1) {
+			if (min(ages) == 0) {
+				.Object@ages <- ages
+			} else {
+				stop("minimum age must be zero")
+			}
+		} else {
+			.Object@ages <- 0:ages
+		}
     }
     
     # setup settings required
@@ -75,7 +84,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@pars$r <- NA_real_ 
     # (adult female natural mortality)
     .Object@pars$M <- NA_real_
-    # (females born per adult female)
+    # (annual births per adult female)
     .Object@pars$f <- NA_real_
     # (age at female maturity)
     .Object@pars$a <- NA_real_
@@ -142,8 +151,6 @@ setMethod("show", "om",
               show(object@pst$rmax)
               message("pars:")
               invisible(lapply(object@pars, show))
-              #message("\npopulation dynamics:\t")
-              #print(object@.Data)
           })
 # }}}
 

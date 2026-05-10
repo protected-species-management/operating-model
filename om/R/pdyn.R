@@ -35,8 +35,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     get_shape(object, env = ENV)
     
     # check pars
-    for (a in names(om_object@pars)) if (is.na(object@pars[[a]])) stop("'", a, "' is missing from 'object@pars'")
-    
+    for (a in names(object@pars)) {
+		if (isTRUE(is.na(object@pars[[a]]))) {
+			stop("'", a, "' is missing from 'object@pars'")
+		}
+	}
+	
     # setup numbers array
     # [life-history samples, process-error samples, ages, time]
     if (all(is.na(ages))) {
@@ -121,6 +125,15 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			}
 		}
 	}
+    
+    if (verbose) {
+        message("\nharvest rate function:")
+        message(writeLines(deparse(object@harvest_rate)))
+        message("\ncaptures error function:")
+        message(writeLines(deparse(.harvest_error)))
+        message("\nobservation error function:")
+        message(writeLines(deparse(.obs_error)))
+    }
 	
     # {{{
     # PT model
@@ -307,7 +320,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 for (y in 2:NTIME) {
                     
 					# calculate harvest rate
-					h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i)
+					h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i, y)
 					
 					# apply harvest rate
 					# and mortality

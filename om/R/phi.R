@@ -1,5 +1,5 @@
 #' @title Access or assign phi parameter
-#' @description Access or assign the $$\phi$$ value used to tune the PST reference point. 
+#' @description Access or assign the \eqn{\phi} value used to tune the PST reference point. 
 #' @export
 setGeneric("phi", function(object, ...) standardGeneric("phi"))
 # accessor function

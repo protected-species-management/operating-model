@@ -50,7 +50,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
         set.seed(rng_seed[i])
         
 		# progress sample
-        msg <- glue(", sample {i}/", NITER)
+        msg <- ifelse(NITER > 1, glue(", sample {i}/", NITER), " ...")
 			
         # sample pars
         pars_sample <- lapply(object@pars, sample, n = 1)

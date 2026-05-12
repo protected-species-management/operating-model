@@ -59,11 +59,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # pst
     object@pst$value <- array(dim = c(NITER, SITER, NTIME))
-    
-    # progress
-    msg <- ""
-    cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
-    
+        
 	# define observation error function
 	# using: cv, quantile (qn) and/or bias
 	if (object@settings$cv$observation > 0) {
@@ -133,14 +129,18 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 	}
     
     if (verbose) {
-        message("\nharvest rate function:")
+        message("harvest rate function:")
         message(writeLines(deparse(object@harvest_rate)))
-        message("\ncaptures error function:")
+        message("captures error function:")
         message(writeLines(deparse(.harvest_error)))
-        message("\nobservation error function:")
+        message("observation error function:")
         message(writeLines(deparse(.obs_error)))
     }
 	
+    # progress
+    msg <- ""
+    cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
+
     # {{{
     # PT model
     if (all(is.na(object@ages)) | !(length(object@ages) > 1)) {

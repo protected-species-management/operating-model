@@ -99,10 +99,12 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # store pars iterations
     .Object@values$r <- rep(NA_real_, samples)
     .Object@values$M <- rep(NA_real_, samples)
-    .Object@values$f <- rep(NA_real_, samples)
-    .Object@values$a <- rep(NA_real_, samples)
+    .Object@values$s <- rep(NA_real_, samples)
+    .Object@values$b <- rep(NA_real_, samples)
+    .Object@values$A <- rep(NA_real_, samples)
+    .Object@values$m <- rep(NA_real_, samples)
     .Object@values$o <- rep(NA_real_, samples)
-    .Object@values$v <- rep(NA_real_, samples)
+    .Object@values$u <- rep(NA_real_, samples)
     .Object@values$K <- rep(NA_real_, samples)
     
     # setup management

@@ -265,8 +265,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             k_prime <- b_eq * p
             
             # initial conditions
-            # (breeding+ depletion = K)
-            k <- K * k_prime / sum(k_prime[-1] * pat[-1])
+            # (sum(k * pat) = K)
+            k <- K * k_prime
             
             # initial conditions
             if (initial_depletion < 1) {

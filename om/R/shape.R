@@ -76,7 +76,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		e <- DataEval(get_e)
 		v <- DataEval(get_v)
 		
-		# get selectivity
+		# get values
 		a <- as.integer(getValues(a))
 		v <- as.integer(getValues(v))
 		
@@ -108,7 +108,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		e <- DataEval(get_e)
 		v <- DataEval(get_v)
 		
-		# get selectivity
+		# get values
 		a <- as.integer(getValues(a))
 		v <- as.integer(getValues(v))
 			
@@ -144,7 +144,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			e <- DataEval(get_e)
 			v <- DataEval(get_v)
 		
-			# get selectivity
+			# get values
 			a <- as.integer(getValues(a))
 			v <- as.integer(getValues(v))
 				
@@ -187,7 +187,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			e <- DataEval(get_e)
 			v <- DataEval(get_v)
 		
-			# get selectivity
+			# get values
 			a <- as.integer(getValues(a))
 			v <- as.integer(getValues(v))
 				

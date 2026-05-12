@@ -44,8 +44,8 @@
     k_prime <- b_eq * p
     
     # initial conditions
-    # (1+ depletion = 1)
-    k <- k_prime / sum(k_prime[-1] * pat[-1])
+    # (sum(k * pat) = 1)
+    k <- k_prime
     
     # use iteration to calculate
     # initial age structure
@@ -126,8 +126,8 @@
     k_prime <- b_eq * p
     
     # initial conditions
-    # (1+ depletion = 1)
-    k <- k_prime / sum(k_prime[-1] * pat[-1])
+    # (sum(k * pat) = 1)
+    k <- k_prime
     
     # use iteration to calculate
     # initial age structure
@@ -219,7 +219,6 @@
     
     # equilibrium depletion
 	depletion <- mean(apply(sweep(N[, -1, recent_time], 2, pat[-1], "*"), 1, sum) / length(recent_time))
-    #depletion <- mean(apply(N[, -1, recent_time], 1, sum) / length(recent_time))
     
     # equilibrium per-capita birth
     production <- mean(apply(N[,1,recent_time], 1, sum) / apply(sweep(N[,-1, recent_time], 2, pat[-1], "*"), 1, sum))

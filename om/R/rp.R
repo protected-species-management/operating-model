@@ -96,9 +96,6 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 			# get selectivity
 			a <- as.integer(getValues(a))
 			v <- as.integer(getValues(v))
-			
-            # spin spinner
-            #cli_progress_update(.envir = ENV)
             
             # deterministic dynamics
             n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV))

@@ -9,7 +9,7 @@ Description: Simulation module for managed populations
 VignetteBuilder: knitr
 Depends:
     R (>= 4.4),
-	utils (>= 4.5),
+	  utils (>= 4.5),
     methods (>= 4.3),
     RTMB (>= 1.8)
 Repos:

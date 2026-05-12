@@ -50,8 +50,17 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     
     if(missing(ages) | is.null(ages)) {
         .Object@ages <- NA_integer_
+		stop("no 'ages' supplied: cohort aggregated model is not currently supported")
     } else {
-        .Object@ages <- ages
+		if (length(ages) > 1) {
+			if (min(ages) == 0) {
+				.Object@ages <- ages
+			} else {
+				stop("minimum age must be zero")
+			}
+		} else {
+			.Object@ages <- 0:ages
+		}
     }
     
     # setup settings required
@@ -75,7 +84,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@pars$r <- NA_real_ 
     # (adult female natural mortality)
     .Object@pars$M <- NA_real_
-    # (females born per adult female)
+    # (annual births per adult female)
     .Object@pars$f <- NA_real_
     # (age at female maturity)
     .Object@pars$a <- NA_real_
@@ -90,10 +99,12 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # store pars iterations
     .Object@values$r <- rep(NA_real_, samples)
     .Object@values$M <- rep(NA_real_, samples)
-    .Object@values$f <- rep(NA_real_, samples)
-    .Object@values$a <- rep(NA_real_, samples)
+    .Object@values$s <- rep(NA_real_, samples)
+    .Object@values$b <- rep(NA_real_, samples)
+    .Object@values$A <- rep(NA_real_, samples)
+    .Object@values$m <- rep(NA_real_, samples)
     .Object@values$o <- rep(NA_real_, samples)
-    .Object@values$v <- rep(NA_real_, samples)
+    .Object@values$u <- rep(NA_real_, samples)
     .Object@values$K <- rep(NA_real_, samples)
     
     # setup management
@@ -131,17 +142,17 @@ setMethod("show", "om",
               message("\t")
               message("ntime: ", if (all(is.na(object@time))) NA_character_ else length(object@time))
               message("nages: ", if (all(is.na(object@ages))) NA_character_ else length(object@ages))
-              message("niter: ", object@samples)
+              message("niter: ", object@samples, " (samples)")
               message("siter: ", object@settings$ref_points$iterations, " (ref. points)")
-			  message("siter: ", object@settings$projections$iterations, " (projections)")
+			  message("siter: ", object@settings$projection$iterations, " (projections)")
               message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
               message("shape: ", if (length(object@shape) > 0) round(object@shape, 2) else red("EMPTY"))
               message("\nharvest rate function:")
               message(writeLines(deparse(object@harvest_rate)))
               message("rmax:")
               show(object@pst$rmax)
-              #message("\npopulation dynamics:\t")
-              #print(object@.Data)
+              message("pars:")
+              invisible(lapply(object@pars, show))
           })
 # }}}
 

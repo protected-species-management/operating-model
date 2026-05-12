@@ -32,6 +32,13 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
     # get seeds
     get_seeds(object, env = ENV)
     
+    # check pars
+    for (a in names(object@pars)) {
+        if (isTRUE(is.na(object@pars[[a]]))) {
+            stop("'", a, "' is missing from 'object@pars'")
+        }
+    }
+    
     # reset targets
     # (catch)
     object@targets$captures <- rep(NA_real_, NITER)
@@ -66,6 +73,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         get_r <- function() get("r", envir = ENV)
         get_s <- function() get("s", envir = ENV)
 		get_e <- function() get("e", envir = ENV)
+		get_v <- function() get("v", envir = ENV)
 		
         # set up objective
         # function to estimate
@@ -83,10 +91,11 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
             r <- DataEval(get_r)
             s <- DataEval(get_s)
 			e <- DataEval(get_e)
-			
+			v <- DataEval(get_v)
+		
 			# get selectivity
 			a <- as.integer(getValues(a))
-			v <- a + 1L
+			v <- as.integer(getValues(v))
 			
             # spin spinner
             #cli_progress_update(.envir = ENV)
@@ -120,10 +129,11 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 				r <- DataEval(get_r)
 				s <- DataEval(get_s)
 				e <- DataEval(get_e)				
-				
+				v <- DataEval(get_v)
+		
 				# get selectivity
 				a <- as.integer(getValues(a))
-				v <- a + 1L
+				v <- as.integer(getValues(v))
             
                 objective <- 0
                 
@@ -163,7 +173,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         a <- pars_sample$a
         r <- pars_sample$r
         M <- pars_sample$M
-        v <- a + 1L
+        v <- pars_sample$v
         s <- .survivorship(M, env = ENV)
 		e <- .epsilon(env = ENV)
         
@@ -245,7 +255,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 				a <- pars_sample$a
 				r <- pars_sample$r
 				M <- pars_sample$M
-				v <- a + 1L
+				v <- pars_sample$v
 				            
 				s <- .survivorship(M, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 				e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)

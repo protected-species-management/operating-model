@@ -12,7 +12,7 @@ om <- function(ages, harvest_function = .harvest_rate, ...) new('om', ages, harv
 #}}}
 #{{{
 # default
-.harvest_rate <- function(numbers, selectivity, pst, i) {
+.harvest_rate <- function(numbers, selectivity, pst, i, y) {
     
     # return target harvest rate
     ifelse(all(is.na(object@targets$harvest_rate)), 0, object@targets$harvest_rate[i])

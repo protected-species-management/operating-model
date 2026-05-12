@@ -34,6 +34,13 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     # get shape
     get_shape(object, env = ENV)
     
+    # check pars
+    for (a in names(object@pars)) {
+		if (isTRUE(is.na(object@pars[[a]]))) {
+			stop("'", a, "' is missing from 'object@pars'")
+		}
+	}
+	
     # setup numbers array
     # [life-history samples, process-error samples, ages, time]
     if (all(is.na(ages))) {
@@ -52,11 +59,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # pst
     object@pst$value <- array(dim = c(NITER, SITER, NTIME))
-    
-    # progress
-    msg <- ""
-    cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
-    
+        
 	# define observation error function
 	# using: cv, quantile (qn) and/or bias
 	if (object@settings$cv$observation > 0) {
@@ -100,11 +103,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 	if (object@settings$cv$mortality > 0) {
 		if (object@settings$bias$mortality != 1.0) {
 			.harvest_error <- function(a, cv = object@settings$cv$mortality, bias = object@settings$bias$mortality) {
-				bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+				sigma <- cv * a
+				mu    <- uniroot(function(x) a - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+				e     <- rnorm(1, mu, sigma)
+				bias * pnorm(e)
 			}
 		} else {
 			.harvest_error <- function(a, cv = object@settings$cv$mortality) {
-				exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+				sigma <- cv * a
+				mu    <- uniroot(function(x) a - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+				e     <- rnorm(1, mu, sigma)
+				pnorm(e)
 			}
 		}
 	} else {
@@ -118,7 +127,20 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			}
 		}
 	}
+    
+    if (verbose) {
+        message("harvest rate function:")
+        message(writeLines(deparse(object@harvest_rate)))
+        message("captures error function:")
+        message(writeLines(deparse(.harvest_error)))
+        message("observation error function:")
+        message(writeLines(deparse(.obs_error)))
+    }
 	
+    # progress
+    msg <- ""
+    cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
+
     # {{{
     # PT model
     if (all(is.na(object@ages)) | !(length(object@ages) > 1)) {
@@ -187,7 +209,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             set.seed(rng_seed[i])
             
             # progress iteration
-            msg <- glue(", sample {i}/", NITER)
+            msg <- ifelse(NITER > 1, glue(", sample {i}/", NITER), " ...")
             
             # sample
             pars_sample <- lapply(object@pars, sample, n = 1)
@@ -304,7 +326,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 for (y in 2:NTIME) {
                     
 					# calculate harvest rate
-					h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i)
+					h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i, y)
 					
 					# apply harvest rate
 					# and mortality
@@ -351,13 +373,15 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             cli_progress_update()
             
             # record values
-            object@values$r[i] <- r
-            object@values$M[i] <- M
-            object@values$f[i] <- b_max
-            object@values$a[i] <- a
-            object@values$o[i] <- o
-            object@values$v[i] <- v
-            object@values$K[i] <- K
+            object@values$r[i] <- pars_sample$r
+            object@values$M[i] <- pars_sample$M
+			object@values$s[i] <- exp(-pars_sample$M)
+            object@values$b[i] <- b_max
+			object@values$A[i] <- (b_max - b_eq) / b_eq
+            object@values$m[i] <- pars_sample$a
+            object@values$o[i] <- pars_sample$o
+            object@values$u[i] <- pars_sample$v
+            object@values$K[i] <- pars_sample$K
         }
     }
 

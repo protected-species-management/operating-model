@@ -16,6 +16,6 @@ documentation:
 	-e 'roxygen2::roxygenize()'
 
 install: 
-	R CMD build --no-build-vignettes .
+	R CMD build .
 	R CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
 	rm $(PKGNAME)_$(PKGVERS).tar.gz

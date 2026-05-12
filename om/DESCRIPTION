@@ -2,14 +2,14 @@ Package: om
 Type: Package
 Title: Operating model
 Version: 0.1.5
-Date: 2026-04-25
+Date: 2026-05-12
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation module for managed populations
 VignetteBuilder: knitr
 Depends:
     R (>= 4.4),
-	utils (>= 4.5),
+	  utils (>= 4.5),
     methods (>= 4.3),
     RTMB (>= 1.8)
 Repos:
@@ -47,9 +47,11 @@ Collate:
     'rp.R'
     'shape.R'
     'spf.R'
+    'values.R'
     'zzz.R'
-RoxygenNote: 7.3.3
 Encoding: UTF-8
 Config/testthat/edition: 3
 URL: https://github.com/protected-species-management/operating-model/om
 BugReports: https://github.com/protected-species-management/operating-model/issues
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3

@@ -107,11 +107,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 	if (object@settings$cv$mortality > 0) {
 		if (object@settings$bias$mortality != 1.0) {
 			.harvest_error <- function(a, cv = object@settings$cv$mortality, bias = object@settings$bias$mortality) {
-				bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+				sigma <- cv * a
+				mu    <- uniroot(function(x) a - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+				e     <- rnorm(1, mu, sigma)
+				bias * pnorm(e)
 			}
 		} else {
 			.harvest_error <- function(a, cv = object@settings$cv$mortality) {
-				exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+				sigma <- cv * a
+				mu    <- uniroot(function(x) a - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
+				e     <- rnorm(1, mu, sigma)
+				pnorm(e)
 			}
 		}
 	} else {
@@ -369,10 +375,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             # record values
             object@values$r[i] <- pars_sample$r
             object@values$M[i] <- pars_sample$M
-            object@values$f[i] <- b_max
-            object@values$a[i] <- pars_sample$a
+			object@values$s[i] <- exp(-pars_sample$M)
+            object@values$b[i] <- b_max
+			object@values$A[i] <- (b_max - b_eq) / b_eq
+            object@values$m[i] <- pars_sample$a
             object@values$o[i] <- pars_sample$o
-            object@values$v[i] <- pars_sample$v
+            object@values$u[i] <- pars_sample$v
             object@values$K[i] <- pars_sample$K
         }
     }

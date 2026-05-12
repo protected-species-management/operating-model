@@ -1,7 +1,7 @@
 Package: om
 Type: Package
 Title: Operating model
-Version: 0.1.5
+Version: 0.1.6
 Date: 2026-05-12
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
@@ -9,7 +9,7 @@ Description: Simulation module for managed populations
 VignetteBuilder: knitr
 Depends:
     R (>= 4.4),
-	  utils (>= 4.5),
+    utils (>= 4.5),
     methods (>= 4.3),
     RTMB (>= 1.8)
 Repos:

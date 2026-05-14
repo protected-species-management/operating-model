@@ -1,5 +1,5 @@
 #' @importFrom RTMB AD
-.pdyn <- function(h, shape, survivorship, epsilon, maturity, selectivity, lambda, env) {
+.pdyn <- function(h, shape, survivorship, multiplier, epsilon, maturity, selectivity, lambda, env) {
     
 	NAGES <- get("NAGES", envir = env)
 	NTIME <- get("NTIME", envir = env)
@@ -14,10 +14,10 @@
 			
     n <- AD(array(dim = c(NAGES, NTIME)))
     p <- AD(numeric(NAGES))
-    S <- c(rep(survivorship[1]^2, age_mat), rep(survivorship[1], NAGES - age_mat))
+    S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
 	
 	s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
-	s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
+	s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
 	
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]))^shape))
@@ -81,7 +81,7 @@
     return(n)
 }
 
-.pdyn2 <- function(h, shape, survivorship, epsilon, maturity, selectivity, lambda, env) {
+.pdyn2 <- function(h, shape, survivorship, multiplier, epsilon, maturity, selectivity, lambda, env) {
     
 	NAGES <- get("NAGES", envir = env)
 	NTIME <- get("NTIME", envir = env)
@@ -96,10 +96,10 @@
 			
     n <- AD(array(dim = c(NAGES, NTIME)))
     p <- AD(numeric(NAGES))
-	S <- c(rep(survivorship[1]^2, age_mat), rep(survivorship[1], NAGES - age_mat))
+	S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
 	
 	s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
-	s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
+	s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
 	
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]))^shape))
@@ -163,7 +163,7 @@
     return(n)
 }
 
-.ff <- function(h, shape, survivorship, epsilon, maturity, selectivity, lambda, env) {
+.ff <- function(h, shape, survivorship, multiplier, epsilon, maturity, selectivity, lambda, env) {
     
 	# dimensions
 	NAGES <- get("NAGES", envir = env)
@@ -174,7 +174,7 @@
     sel <- c(rep(0, selectivity),  rep(1, NAGES - selectivity)) 
 	
     # run dynamics
-    N <- do.call(".pdyn", list(h = h, shape = shape, survivorship = survivorship, epsilon = epsilon, maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
+    N <- do.call(".pdyn", list(h = h, shape = shape, survivorship = survivorship, multiplier = multiplier, epsilon = epsilon, maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
     
     # equilibrium female captures
     captures <- sum(N[, NTIME] * sel * h)
@@ -192,7 +192,7 @@
     return(list(captures = captures, depletion = depletion, production = production, lambda = lambda))
 }
 
-.ff2 <- function(h, shape, survivorship, epsilon, maturity, selectivity, lambda, env) {
+.ff2 <- function(h, shape, survivorship, multiplier, epsilon, maturity, selectivity, lambda, env) {
 
     # dimensions
 	NAGES <- get("NAGES", envir = env)
@@ -208,7 +208,7 @@
     
     # run dynamics
     for (i in 1:SITER) {
-        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = survivorship[i,], epsilon = epsilon[i,], maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
+        N[i,,] <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = survivorship[i,], multiplier = multiplier, epsilon = epsilon[i,], maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
     }
     
     # recent time

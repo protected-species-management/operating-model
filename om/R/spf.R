@@ -56,9 +56,10 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
         pars_sample <- lapply(object@pars, sample, n = 1)
         
         # assign pars
-		a <- pars_sample$a
+		m <- pars_sample$m
 		r <- pars_sample$r
-		M <- pars_sample$M
+		S <- pars_sample$s
+		l <- pars_sample$l
 		v <- pars_sample$v
         
         dvalue <- numeric(length(harvest_rate))
@@ -67,12 +68,12 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
         
         if (STOCHASTIC) {
             
-            s <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
+            s <- .survivorship(S, object@settings$cv$survivorship, env = ENV)
 			e <- .epsilon(object@settings$cv$birth, env = ENV)
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -84,12 +85,12 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
             
         } else {
             
-            s <- .survivorship(M, env = ENV)
+            s <- .survivorship(S, env = ENV)
 			e <- .epsilon(env = ENV)
             
             for (k in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[k], shape = object@shape[i], survivorship = s, epsilon = e, maturity = a, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff(harvest_rate[k], shape = object@shape[i], survivorship = s, multiplier = l, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[k] <- tmp$captures
                 dvalue[k] <- tmp$depletion

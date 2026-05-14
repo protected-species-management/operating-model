@@ -219,17 +219,18 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             cli_progress_update()
             
             # assign pars
-			a <- pars_sample$a
+			m <- pars_sample$m
 			r <- pars_sample$r
-			M <- pars_sample$M
+			S <- pars_sample$s
+			l <- pars_sample$l
 			v <- pars_sample$v
 			o <- pars_sample$o
             K <- pars_sample$K
             
             # transcribe
-			S <- c(rep((exp(-M)^2), a), rep(exp(-M), NAGES - a))
+			S <- c(rep(S * l, m), rep(S, NAGES - m))
 			
-			age_mat <- as.integer(a)
+			age_mat <- as.integer(m)
 			age_pat <- age_mat + 1L
 			age_sel <- as.integer(v)
 			age_obs <- as.integer(o)
@@ -291,10 +292,10 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			# construct survivorship
 			# array
             if (STOCHASTIC) {
-				survivorship <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
+				survivorship <- .survivorship(pars_sample$s, object@settings$cv$survivorship, env = ENV)
 				epsilon      <- .epsilon(object@settings$cv$birth, env = ENV)
 			} else {
-				survivorship <- .survivorship(M, env = ENV)
+				survivorship <- .survivorship(pars_sample$s, env = ENV)
 				survivorship <- matrix(survivorship, nrow = SITER, ncol = NTIME, byrow = TRUE)
 				epsilon      <- .epsilon(env = ENV)
 				epsilon      <- matrix(epsilon, nrow = SITER, ncol = NTIME, byrow = TRUE)
@@ -309,7 +310,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 
 				# survivorship matrix
 				s <- matrix(survivorship[j,], ncol = NTIME, nrow = NAGES, byrow = TRUE)
-				s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
+				s <- (sweep(s, 1, 1 - mat, "*") * pars_sample$l) + sweep(s, 1, mat, "*")
 				
 				# birth rate deviation
 				e <- epsilon[j,]
@@ -374,13 +375,13 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # record values
             object@values$r[i] <- pars_sample$r
-            object@values$M[i] <- pars_sample$M
-			object@values$s[i] <- exp(-pars_sample$M)
+			object@values$s[i] <- pars_sample$s
+			object@values$l[i] <- pars_sample$l
             object@values$b[i] <- b_max
 			object@values$A[i] <- (b_max - b_eq) / b_eq
-            object@values$m[i] <- pars_sample$a
+            object@values$m[i] <- pars_sample$m
             object@values$o[i] <- pars_sample$o
-            object@values$u[i] <- pars_sample$v
+            object@values$v[i] <- pars_sample$v
             object@values$K[i] <- pars_sample$K
         }
     }

@@ -35,7 +35,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     if(missing(samples)) {
         stop("'samples' is a required input")
     } else {
-        .Object@samples <- samples
+        .Object@samples <- as.integer(samples)
     }
     
     if(missing(time)) {
@@ -85,7 +85,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # (adult female survivorship)
     .Object@pars$s <- NA_real_
     # (age-zero survivorship multiplier)
-    .Object@pars$c <- NA_real_
+    .Object@pars$l <- NA_real_
     # (annual births per adult female)
     .Object@pars$b <- NA_real_
     # (age at female maturity)
@@ -93,7 +93,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # (age at observation)
     .Object@pars$o <- NA_real_
     # (age at selectivity)
-    .Object@pars$u <- NA_real_
+    .Object@pars$v <- NA_real_
     # (carrying capacity)
     .Object@pars$K <- NA_real_
     
@@ -101,12 +101,12 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # store pars iterations
     .Object@values$r <- rep(NA_real_, samples)
     .Object@values$s <- rep(NA_real_, samples)
-	.Object@values$c <- rep(NA_real_, samples)
+	.Object@values$l <- rep(NA_real_, samples)
     .Object@values$b <- rep(NA_real_, samples)
     .Object@values$m <- rep(NA_real_, samples)
     .Object@values$A <- rep(NA_real_, samples)
     .Object@values$o <- rep(NA_real_, samples)
-    .Object@values$u <- rep(NA_real_, samples)
+    .Object@values$v <- rep(NA_real_, samples)
     .Object@values$K <- rep(NA_real_, samples)
     
     # setup management

@@ -1,6 +1,6 @@
 
 .el <- function(lambda, m, b, s, s0) {
-    lambda^(m + 1) - lambda^m * s - (b / 2) * s0 * s^m
+    lambda^(m + 1) - lambda^m * s - (b / 2) * s0^m * s
 }
 
 .solve_lambda <- function(m, s, s0, b, ...) {

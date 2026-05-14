@@ -1,9 +1,7 @@
 
-.survivorship <- function(M, cv = 0, env) {
+.survivorship <- function(S, cv = 0, env) {
 		
 	NTIME <- get("NTIME", envir = env)
-	
-	S <- exp(-M)
 	
 	if (cv > 0) {
 		

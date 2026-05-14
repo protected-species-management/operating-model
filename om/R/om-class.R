@@ -82,27 +82,29 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # setup pars
     # (intrinsic growth)
     .Object@pars$r <- NA_real_ 
-    # (adult female natural mortality)
-    .Object@pars$M <- NA_real_
+    # (adult female survivorship)
+    .Object@pars$s <- NA_real_
+    # (age-zero survivorship multiplier)
+    .Object@pars$c <- NA_real_
     # (annual births per adult female)
-    .Object@pars$f <- NA_real_
+    .Object@pars$b <- NA_real_
     # (age at female maturity)
-    .Object@pars$a <- NA_real_
+    .Object@pars$m <- NA_real_
     # (age at observation)
     .Object@pars$o <- NA_real_
-    # (selectivity)
-    .Object@pars$v <- NA_real_
+    # (age at selectivity)
+    .Object@pars$u <- NA_real_
     # (carrying capacity)
     .Object@pars$K <- NA_real_
     
     # setup values to 
     # store pars iterations
     .Object@values$r <- rep(NA_real_, samples)
-    .Object@values$M <- rep(NA_real_, samples)
     .Object@values$s <- rep(NA_real_, samples)
+	.Object@values$c <- rep(NA_real_, samples)
     .Object@values$b <- rep(NA_real_, samples)
-    .Object@values$A <- rep(NA_real_, samples)
     .Object@values$m <- rep(NA_real_, samples)
+    .Object@values$A <- rep(NA_real_, samples)
     .Object@values$o <- rep(NA_real_, samples)
     .Object@values$u <- rep(NA_real_, samples)
     .Object@values$K <- rep(NA_real_, samples)
@@ -125,8 +127,10 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@objectives$harvest_rate <- NA_real_
 
     # record rng seeds
-    seeds <- floor(runif(samples, 1, 1e6))
-    while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(samples, 1, 1e6))
+    seeds <- floor((runif(samples)) * 1e7)
+    if (any(duplicated(seeds))) warning(sum(duplicated(seeds)), "/", samples, " (approx. ", round(100 * sum(duplicated(seeds)) / samples), "%) of seeds are duplicated")
+    if (any(is.na(as.integer(seeds)))) warning(sum(is.na(as.integer(seeds))), "/", samples, " seeds are 'NA' values")
+    #while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(samples, 1, 1e6))
     .Object@seeds <- as.integer(seeds)
     
     # return

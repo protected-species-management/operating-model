@@ -8,48 +8,35 @@
 setGeneric("load_pars", function(object, value, ...) standardGeneric("load_pars"))
 setMethod("load_pars", signature = c("om", "list"), function(object, value, ...) {
     
-    # assign
-    object <- update_pars(object, value)
-    
-    # return
-    return(object)
-})
-#}}}
-#' @export
-#' @rdname load_pars
-#{{{
-setGeneric("update_pars", function(object, value, ...) standardGeneric("update_pars"))
-setMethod("update_pars", signature = c("om", "list"), function(object, value, ...) {
-    
     # check names
     lapply(names(value), function(a) stopifnot(a %in% names(object@pars)))
     
     # assign
     for (i in 1:length(value)) {
-		if (is(value[[i]], 'distribution')) {
-			if (names(value)[i] %in% names(object@pars)) {
-			    object@pars[[which(names(object@pars) %in% names(value)[i])]] <- value[[i]]
-			} else {
-			    stop(paste0("'", names(value)[i], "' not assigned"))
-			}
-		} else {
-			stop("value must be of class 'distribution'")
-		}
+        if (is(value[[i]], 'distribution')) {
+            if (names(value)[i] %in% names(object@pars)) {
+                object@pars[[which(names(object@pars) %in% names(value)[i])]] <- value[[i]]
+            } else {
+                stop(paste0("'", names(value)[i], "' not assigned"))
+            }
+        } else {
+            stop("value must be of class 'distribution'")
+        }
     }
     
     # calculate r
-    if (is(object@pars[["m"]], "distribution") & is(object@pars[["s"]], "distribution") & is(object@pars[["b"]], "distribution") & is(object@pars[["c"]], "distribution")) {
+    if (is(object@pars[["m"]], "distribution") & is(object@pars[["s"]], "distribution") & is(object@pars[["b"]], "distribution") & is(object@pars[["l"]], "distribution")) {
         
-        lambda_values <- numeric(1e5)
+        lambda_values <- numeric(1e4)
         
         for (i in 1:length(lambda_values)) {
             
             m_sample <- sample(object@pars[["m"]])
             s_sample <- sample(object@pars[["s"]])
             b_sample <- sample(object@pars[["b"]])
-            c_sample <- sample(object@pars[["c"]])
+            l_sample <- sample(object@pars[["l"]])
             
-            lambda_values[i] <- .solve_lambda(m = m_sample, s = s_sample, s0 = s_sample * c_sample, b = b_sample)
+            lambda_values[i] <- .solve_lambda(m = m_sample, s = s_sample, s0 = s_sample * l_sample, b = b_sample)
         }
         
         r_values <- log(lambda_values[lambda_values > 1])
@@ -61,8 +48,46 @@ setMethod("update_pars", signature = c("om", "list"), function(object, value, ..
             object@pars[["r"]] <- distribution(pars = c(mean(log(r_values)), sd(log(r_values))), density = "lognormal", name = "intrinsic growth rate")
             
         } else {
-          
+            
             warning("intrinsic growth not log-normal (lambda <= 1)")  
+        }
+    }
+    
+    # return
+    return(object)
+})
+
+
+
+#}}}
+#' @export
+#' @rdname load_pars
+#{{{
+setGeneric("update_pars", function(object, value, ...) standardGeneric("update_pars"))
+setMethod("update_pars", signature = c("om", "list"), function(object, value, ...) {
+    
+    # check names
+    lapply(names(value), function(a) stopifnot(a %in% names(object@pars)))
+    
+    # assign
+    if (any(c("m", "s", "l", "b") %in% names(value))) {
+        
+        object <- load_pars(object, value)
+    
+        message("re-calculated 'r'")
+        
+    } else {
+        
+        for (i in 1:length(value)) {
+            if (is(value[[i]], 'distribution')) {
+                if (names(value)[i] %in% names(object@pars)) {
+                    object@pars[[which(names(object@pars) %in% names(value)[i])]] <- value[[i]]
+                } else {
+                    stop(paste0("'", names(value)[i], "' not assigned"))
+                }
+            } else {
+                stop("value must be of class 'distribution'")
+            }
         }
     }
     

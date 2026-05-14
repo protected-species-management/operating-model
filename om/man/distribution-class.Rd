@@ -15,7 +15,7 @@ distribution(...)
 This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution.
 }
 \details{
-The \code{object} input contains a list of values that determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then paramters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated.
+The \code{object} input contains a list of values that determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then parameters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated.
 }
 \section{Slots}{
 

@@ -2,11 +2,12 @@
 #' @description 
 #' This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution. 
 #' @details
-#' The \code{object} input contains a list of values that determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then paramters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated. 
+#' The \code{object} input contains a list of values that determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then parameters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated. 
 #' 
 #' @slot .Data numeric vector of derived values
 #' @slot iter integer value
 #' @slot pars  distribution parameter values
+#' @import logitnorm
 #' @importFrom crayon blue
 #' @export
 setClass("distribution", contains = "numeric", slots = list(iter = "integer", name = "character", pars = "numeric", density = "character"))
@@ -28,7 +29,7 @@ setMethod("initialize", "distribution", function(.Object, ...) {
         
         # assignments
         .Object@.Data        <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^value?", y) & is.numeric(x[[y]])))))]], .Object@.Data)
-        .Object@iter         <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^iter*", y)  & is.numeric(x[[y]])))))]], .Object@iter)
+        .Object@iter         <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^iter*", y)  & is.numeric(x[[y]])))))]], .Object@iter) |> as.integer()
         .Object@density      <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^dens*", y)  & is.character(x[[y]])))))]], .Object@density)
         .Object@pars         <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^par?", y)   & is.numeric(x[[y]]) & length(x[[y]]) == 2))))]], .Object@pars)
         .Object@name         <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^name?", y)  & is.character(x[[y]])))))]], .Object@name)
@@ -67,6 +68,10 @@ setMethod("initialize", "distribution", function(.Object, ...) {
         if (grepl("^gamma", .Object@density)) {
             .Object@pars <- .calc_gamma_pars(.Object@.Data)    
         }
+        
+        if (grepl("^logit?normal", .Object@density)) {
+            .Object@pars <- .calc_logitnormal_pars(.Object@.Data)    
+        }
     }
     
     # if distribution and pars then simulate values
@@ -87,6 +92,10 @@ setMethod("initialize", "distribution", function(.Object, ...) {
         
         if (grepl("^gamma", .Object@density)) {
             .Object@.Data <- rgamma(.Object@iter, shape = .Object@pars[1], scale = .Object@pars[2])    
+        }
+        
+        if (grepl("^logit?normal", .Object@density)) {
+            .Object@.Data <- rlogitnorm(.Object@iter, mu = .Object@pars[1], sigma = .Object@pars[2])    
         }
     }
     
@@ -109,19 +118,19 @@ setMethod("show", "distribution",
 #' @exportS3Method base::summary
 summary.distribution <- function(object) {
     
-    if (grepl("^unspecified", object@density)) return(.show_unspecified_moments(object@.Data))
-    if (grepl("^uniform", object@density)) return(.show_uniform_moments(object@pars))
-    if (grepl("^normal", object@density)) return(.show_normal_moments(object@pars))
-    if (grepl("^log?normal", object@density)) return(.show_lognormal_moments(object@pars))
-    if (grepl("^gamma", object@density)) return(.show_gamma_moments(object@pars))
+    if (grepl("^unspecified", object@density))  return(.show_unspecified_moments(object@.Data))
+    if (grepl("^uniform", object@density))      return(.show_uniform_moments(object@pars))
+    if (grepl("^normal", object@density))       return(.show_normal_moments(object@pars))
+    if (grepl("^log?normal", object@density))   return(.show_lognormal_moments(object@pars))
+    if (grepl("^gamma", object@density))        return(.show_gamma_moments(object@pars))
+    if (grepl("^logit?normal", object@density)) return(.show_logitnormal_moments(object@pars))
 }
 
 # distribution-specific functions
 # {{{
 .calc_uniform_pars <- function(x) {
     
-    # estimate parameters of
-    # normal distribution
+    # 
     a <- min(x)
     b <- max(x)
     
@@ -214,4 +223,33 @@ summary.distribution <- function(object) {
     # return
     c('E[x]' = round(mean(x), 3), 'MIN[x]' = round(min(x), 3), 'MAX[x]' = round(max(x), 3))
 }
+
+.calc_logitnormal_pars <- function(x) {
+    
+    # transform form 
+    # to (0, 1) to (-Inf,Inf)
+    y <- logit(x)
+    
+    # estimate parameters of
+    # normal distribution logit(x)
+    mu     <- mean(y)
+    sigma  <- sd(y)
+    
+    # return
+    return(c(mu, sigma))
+}
+
+.show_logitnormal_moments <- function(x) {
+    
+    mu     <- x[1]
+    sigma  <- x[2]
+    
+    theta <- as.numeric(momentsLogitnorm(mu, sigma)[1])
+    nu    <- as.numeric(momentsLogitnorm(mu, sigma)[2])
+    cv    <- sqrt(nu) / theta
+    
+    # return
+    c('E[logit(x)]' = round(mu, 3), 'SD[logit(x)]' = round(sigma, 3), 'E[x]' = round(theta, 3), 'VAR[x]' = round(nu, 3), 'CV[x]' = round(cv, 3))
+}
+
 # }}}

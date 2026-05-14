@@ -1,4 +1,5 @@
 #' @title Sample from distribution class object
+#' @import logitnorm
 #' @export
 sample <- function(x, n, ...) UseMethod("sample")
 #' @rdname sample
@@ -41,6 +42,10 @@ sample.distribution <- function(x, n = 1, ...) {
             
             if (grepl("^gamma", x@density)) {
                 y <- rgamma(n, shape = x@pars[1], scale = x@pars[2])    
+            }
+            
+            if (grepl("^logit?normal", x@density)) {
+                y <- rlogitnorm(n, mu = x@pars[1], sigma = x@pars[2])    
             }
             
             return(y)

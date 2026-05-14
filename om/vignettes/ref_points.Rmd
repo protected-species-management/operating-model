@@ -33,24 +33,27 @@ om_object <- om(ages = 0:8, samples = 3L, time = 201)
 
 # assign rmax
 # (used to estimate the PST)
-om_object <- om_object %>% load_rmax(distribution(value = 0.04, name = "intrinsic growth"))
+om_object <- om_object %>% load_rmax(distribution(value = 0.14, name = "max. intrinsic growth"))
 
 # setup list of pars
 # (list with parameter distributions required
 # by population dynamics function)
 om_object <- om_object %>% load_pars(list(
-    'r' = distribution(iter = 0L, density = "lognormal", pars = c(log(0.04) - (0.05^2)/2, 0.05), name = "intrinsic growth"),
-    'M' = distribution(value = 0.05, name = "natural mortality"),
-    'f' = distribution(value = 0.00, name = "female fecundity"),
-  	'o' = distribution(value = 0,    name = "age at observation"),
-    'a' = distribution(value = 0,    name = "age at maturity"),
-    'v' = distribution(value = 1,    name = "age at selectivity"),
-    'K' = distribution(value = 1,    name = "carrying capacity")
+    's' = distribution(pars = c(1.924, 0.250), density = "logitnormal", name = "adult survivorship"),
+    'b' = distribution(pars = c(0.317, 0.063), density = "lognormal", name = "female fecundity"),
+    'm' = distribution(values = 1, name = "age at maturity"),
+    'l' = distribution(values = 0.7, name = "age-zero survivorship multiplier")
+))
+
+om_object <- om_object %>% update_pars(list(
+    'o' = distribution(value = 1, name = "age at observation"),
+    'v' = distribution(value = 2, name = "age at selectivity"),
+    'K' = distribution(value = 1, name = "carrying capacity")
 ))
 
 # load uncertainty
 om_object <- om_object %>% load_cvs(list(
-    'survivorship' = 0.20,
+    'survivorship' = 0.05,
     'birth'        = 0.01,
     'observation'  = 0.00,
     'mortality'    = 0.00)
@@ -63,8 +66,8 @@ shape(om_object) <- 1
 om_object0 <- rp(om_object, stochastic = FALSE, time = 200L)
 targets(om_object0)
 
-dfr0 <- spf(om_object0, harvest_rate = seq(0.00, 0.05, length = 101))
-dfr1 <-  data.frame(sample = as.character(1:3), harvest_rate = om_object0@targets$harvest_rate, captures = om_object0@targets$captures, depletion = om_object0@targets$depletion)
+dfr0 <- spf(om_object0, harvest_rate = seq(0.00, 0.4, length = 1001))
+dfr1 <-  data.frame(sample = as.character(1:om_object@samples), harvest_rate = om_object0@targets$harvest_rate, captures = om_object0@targets$captures, depletion = om_object0@targets$depletion)
 ggplot() + 
   geom_line(data = dfr0, aes(x = harvest_rate, y = captures, col = sample)) +
   geom_vline(data = dfr1, aes(xintercept = harvest_rate, col = sample), linetype = "dashed") +
@@ -91,8 +94,8 @@ shape(om_object1)
 om_object1 <- rp(om_object1)
 targets(om_object1)
 
-dfr0 <- spf(om_object1, harvest_rate = seq(0.00, 0.05, length = 101))
-dfr1 <-  data.frame(sample = as.character(1:3), harvest_rate = om_object1@targets$harvest_rate, captures = om_object1@targets$captures, depletion = om_object1@targets$depletion)
+dfr0 <- spf(om_object1, harvest_rate = seq(0.00, 0.4, length = 1001))
+dfr1 <-  data.frame(sample = as.character(1:om_object@samples), harvest_rate = om_object1@targets$harvest_rate, captures = om_object1@targets$captures, depletion = om_object1@targets$depletion)
 ggplot() + 
   geom_line(data = dfr0, aes(x = harvest_rate, y = captures, col = sample)) +
   geom_vline(data = dfr1, aes(xintercept = harvest_rate, col = sample), linetype = "dashed") +

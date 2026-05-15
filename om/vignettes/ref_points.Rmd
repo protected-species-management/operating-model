@@ -42,7 +42,7 @@ om_object <- om_object %>% load_pars(list(
     's' = distribution(pars = c(1.924, 0.250), density = "logitnormal", name = "adult survivorship"),
     'b' = distribution(pars = c(0.317, 0.063), density = "lognormal", name = "female fecundity"),
     'm' = distribution(values = 1, name = "age at maturity"),
-    'l' = distribution(values = 0.7, name = "age-zero survivorship multiplier")
+    'l' = distribution(values = 0.7, name = "immature survivorship multiplier")
 ))
 
 om_object <- om_object %>% update_pars(list(
@@ -81,8 +81,8 @@ ggplot() +
 om_object0 <- pdyn(om_object0, stochastic = FALSE, initial_depletion = 0.1)
 dynplot(om_object0)
 
-diagnostics(om_object0)
-objectives(om_object0)
+#diagnostics(om_object0)
+#objectives(om_object0)
 ```
 
 ```{r}
@@ -108,6 +108,6 @@ ggplot() +
 om_object1 <- pdyn(om_object1, stochastic = TRUE, initial_depletion = 0.3, iterations = 200)
 dynplot(om_object1)
 
-diagnostics(om_object1)
-objectives(om_object1)
+#diagnostics(om_object1)
+#objectives(om_object1)
 ```

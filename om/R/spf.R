@@ -32,6 +32,13 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
     # get seeds
     get_seeds(object, env = ENV)
     
+    # check pars
+    for (a in c("m", "s", "l", "b", "v")) {
+        if (isTRUE(is.na(object@pars[[a]]))) {
+            stop("'", a, "' is missing from 'object@pars'")
+        }
+    }
+    
     # output
     out <- list()
     
@@ -61,6 +68,8 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
 		S <- pars_sample$s
 		l <- pars_sample$l
 		v <- pars_sample$v
+		
+		print(.solve_lambda(m = m, s = S, s0 = S * l, b = pars_sample$b))
         
         dvalue <- numeric(length(harvest_rate))
         cvalue <- numeric(length(harvest_rate))

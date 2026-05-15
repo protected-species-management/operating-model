@@ -3,11 +3,14 @@
 \name{sample}
 \alias{sample}
 \alias{sample.distribution}
+\alias{sample.numeric}
 \title{Sample from distribution class object}
 \usage{
 sample(x, n, ...)
 
 \method{sample}{distribution}(x, n = 1, ...)
+
+\method{sample}{numeric}(x, n = 1, ...)
 }
 \description{
 Sample from distribution class object

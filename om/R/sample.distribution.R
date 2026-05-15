@@ -52,5 +52,12 @@ sample.distribution <- function(x, n = 1, ...) {
         }
     }
 }
+#' @rdname sample
+#' @export
+sample.numeric <- function(x, n = 1, ...) {
+    
+    return(x)
+}
+
 
 

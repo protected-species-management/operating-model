@@ -15,7 +15,7 @@
 #{{{ rp()
 # wrapper for execution of function
 setGeneric("rp", function(object, ...) standardGeneric("rp"))
-setMethod("rp", signature = "om", function(object, stochastic, time, iterations, verbose = TRUE, ...) {
+setMethod("rp", signature = "om", function(object, stochastic, time, iterations, verbose = FALSE, ...) {
     
     # current environment
     ENV <- environment()
@@ -33,7 +33,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
     get_seeds(object, env = ENV)
     
     # check pars
-    for (a in names(object@pars)) {
+    for (a in c("m", "s", "l", "b", "v")) {
         if (isTRUE(is.na(object@pars[[a]]))) {
             stop("'", a, "' is missing from 'object@pars'")
         }

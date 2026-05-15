@@ -16,7 +16,7 @@
 # wrapper for execution of population
 # dynamics function
 setGeneric("shape", function(object, depletion, ...) standardGeneric("shape"))
-setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = TRUE, ...) {
+setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = FALSE, ...) {
     
     # current environment
     ENV <- environment()
@@ -34,7 +34,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     get_seeds(object, env = ENV)
     
     # check pars
-    for (a in names(object@pars)) {
+    for (a in c("m", "s", "l", "b", "v")) {
         if (isTRUE(is.na(object@pars[[a]]))) {
             stop("'", a, "' is missing from 'object@pars'")
         }

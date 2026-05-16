@@ -95,7 +95,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # (age at selectivity)
     .Object@pars$v <- NA_real_
     # (carrying capacity)
-    .Object@pars$K <- NA_real_
+    .Object@pars$K <- distribution(value = 1, name = "K")
     
     # setup values to 
     # store pars iterations

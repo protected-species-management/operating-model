@@ -9,13 +9,19 @@
 distribution(...)
 }
 \arguments{
-\item{object}{either an integer specifiying the length of an empty vector or a vector of derived values}
+\item{values}{vector of values}
+
+\item{name}{label for parameter}
+
+\item{pars}{parameters for distriution (of length 2)}
+
+\item{density}{density distribution (i.e., beta, uniform, normal, lognormal, logitnormal or gamma)}
 }
 \description{
 This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution.
 }
 \details{
-The \code{object} input contains a list of values that determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then parameters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated.
+The inputs determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then parameters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated.
 }
 \section{Slots}{
 
@@ -59,4 +65,7 @@ hist(om::sample(y, n = 1e5))
 y <- distribution(values = 0:10, density = "unspecified")
 om::sample(y)
  
+}
+\seealso{
+\code{\link{sample}}
 }

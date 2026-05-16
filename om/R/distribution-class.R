@@ -2,8 +2,8 @@
 #' @description 
 #' This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution. 
 #' @details
-#' The \code{object} input contains a list of values that determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then parameters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated. 
-#' 
+#' The inputs determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then parameters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated. 
+#' @seealso \code{\link{sample}}
 #' @slot .Data numeric vector of derived values
 #' @slot iter integer value
 #' @slot pars  distribution parameter values

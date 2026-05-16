@@ -81,6 +81,94 @@
     return(n)
 }
 
+.pdyn_proj <- function(h, shape, survivorship, multiplier, epsilon, maturity, selectivity, lambda, env) {
+    
+    NAGES <- get("NAGES", envir = env)
+    NTIME <- get("NTIME", envir = env)
+    
+    age_mat <- as.integer(maturity)
+    age_pat <- age_mat + 1L
+    age_sel <- as.integer(selectivity)
+    
+    mat    <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+    pat    <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+    sel    <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+    
+    n <- array(dim = c(NAGES, NTIME))
+    p <- numeric(NAGES)
+    S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    
+    s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
+    s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
+    
+    birth <- function(y) {
+        0.5 * min(1, sum(pat[-1] * n[-1,y])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n[-1,y] * pat[-1])))^shape))
+    }
+    
+    # set up unexploited 
+    # equilibrium female
+    # population
+    p[1] <- 0.5
+    for(a in 2:NAGES) {
+        p[a] <- p[a - 1] * S[a - 1]
+    }
+    p[a] <- p[a] / (1 - S[a])
+    
+    # replacement birth rate
+    # per female
+    # (equal to: 2 * (1 - S) / (S0^m * S))
+    b_eq <- 1 / sum(pat * p)
+    
+    # maximum fecundity
+    b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / prod(S[1:(age_mat + 1)])
+    
+    # population
+    # at equilibrium
+    k_prime <- b_eq * p
+    
+    # initial conditions
+    # (sum(k * pat) = 1)
+    k <- k_prime
+    
+    # use iteration to calculate
+    # initial age structure
+    # and depletion
+    n_init <- matrix(k, nrow = NAGES, ncol = 2)
+    for (l in 2:1e3) {
+        
+        n_init[, 1] <- n_init[, 2]
+        for(a in 2:NAGES) {
+            n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
+        }
+        n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
+        n_init[1, 2] <- 0.5 * min(1, sum(pat[-1] * n_init[-1, 2])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2] * pat[-1])))^shape))
+    }
+    
+    # initialise
+    n[, 1] <- n_init[, 2]
+    
+    # project
+    for (y in 2:NTIME) {
+        
+        for (a in 2:NAGES) {
+            n[a, y] <- n[a - 1, y - 1] * s[a - 1, y - 1] * (1 - sel[a - 1] * h) 
+        }
+        
+        # plus group
+        n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * h)
+        
+        #
+        if (sum(n[-1, y] * pat[-1]) > 1) {
+            n[-1, y] <- n[-1, y] / sum(n[-1, y] * pat[-1])    
+        }
+        
+        # birth
+        n[1, y] <- birth(y) * epsilon[y]
+    }
+    
+    return(n)
+}
+
 .pdyn2 <- function(h, shape, survivorship, multiplier, epsilon, maturity, selectivity, lambda, env) {
     
 	NAGES <- get("NAGES", envir = env)
@@ -174,22 +262,28 @@
     sel <- c(rep(0, selectivity),  rep(1, NAGES - selectivity)) 
 	
     # run dynamics
-    N <- do.call(".pdyn", list(h = h, shape = shape, survivorship = survivorship, multiplier = multiplier, epsilon = epsilon, maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
+    N <- do.call(".pdyn_proj", list(h = h, shape = shape, survivorship = survivorship, multiplier = multiplier, epsilon = epsilon, maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
+    
+    # recent time
+    recent_time <- ceiling((2 / 3) * NTIME):NTIME
     
     # equilibrium female captures
-    captures <- sum(N[, NTIME] * sel * h)
+    captures <- mean(apply(sweep(N[, recent_time], 1, sel, "*") * h, 2, sum))
     
     # equilibrium depletion
-    depletion <- sum(N[-1, NTIME] * pat[-1])
+    depletion <- mean(apply(sweep(N[-1, recent_time], 1, pat[-1], "*"), 2, sum))
     
     # equilibrium per-capita birth
-    production <- N[1, NTIME] / sum(N[-1, NTIME] * pat[-1])
+    production <- mean(N[1, recent_time] / apply(sweep(N[-1, recent_time], 1, pat[-1], "*"), 2, sum))
     
-    # terminal growth rate
-    lambda <- sum(N[, NTIME]) / sum(N[, NTIME - 1])
+    # equilibrium growth rate
+    lambda <- mean(apply(N[, recent_time], 2, sum) / apply(N[, recent_time - 1], 2, sum)) 
+    
+    # numbers
+    numbers <- apply(N[, recent_time], 1, mean)
     
     # return dynamics
-    return(list(captures = captures, depletion = depletion, production = production, lambda = lambda))
+    return(list(captures = captures, depletion = depletion, production = production, lambda = lambda, numbers = numbers))
 }
 
 .ff2 <- function(h, shape, survivorship, multiplier, epsilon, maturity, selectivity, lambda, env) {
@@ -212,7 +306,7 @@
     }
     
     # recent time
-    recent_time <- ceiling((2 / 3) * NTIME):NTIME
+    recent_time <- ceiling((1 / 3) * NTIME):NTIME
     
     # equilibrium female captures
     captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))

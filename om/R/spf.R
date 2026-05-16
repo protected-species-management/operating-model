@@ -69,7 +69,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
 		l <- pars_sample$l
 		v <- pars_sample$v
 		
-		print(.solve_lambda(m = m, s = S, s0 = S * l, b = pars_sample$b))
+		#print(.solve_lambda(m = m, s = S, s0 = S * l, b = pars_sample$b))
         
         dvalue <- numeric(length(harvest_rate))
         cvalue <- numeric(length(harvest_rate))
@@ -97,13 +97,13 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
             s <- .survivorship(S, env = ENV)
 			e <- .epsilon(env = ENV)
             
-            for (k in 1:length(harvest_rate)) {
+            for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[k], shape = object@shape[i], survivorship = s, multiplier = l, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
                 
-                cvalue[k] <- tmp$captures
-                dvalue[k] <- tmp$depletion
-                pvalue[k] <- tmp$production
+                cvalue[j] <- tmp$captures
+                dvalue[j] <- tmp$depletion
+                pvalue[j] <- tmp$production
 				
 				# spin spinner
                 cli_progress_update(.envir = ENV)

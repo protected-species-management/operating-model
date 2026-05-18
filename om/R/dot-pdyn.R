@@ -61,6 +61,16 @@
         n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]))^shape))
     }
     
+    # check depletion
+    if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
+        warning("depletion > 1 (estimation)")    
+    }
+    
+    # check for negative values
+    if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
+        warning("numbers < 1 (estimation)")    
+    }
+    
     # initialise
     n[, 1] <- n_init[, 2]
     
@@ -80,7 +90,8 @@
     
     return(n)
 }
-
+# projection function with advector types
+# removed and constraints on depletion
 .pdyn_proj <- function(h, shape, survivorship, multiplier, epsilon, maturity, selectivity, lambda, env) {
     
     NAGES <- get("NAGES", envir = env)
@@ -142,6 +153,16 @@
         }
         n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
         n_init[1, 2] <- 0.5 * min(1, sum(pat[-1] * n_init[-1, 2])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2] * pat[-1])))^shape))
+    }
+    
+    # check depletion
+    if(sum(n_init[-1, 2] * pat[-1]) > 1) {
+        warning("depletion > 1 (projection)")    
+    }
+    
+    # check for negative values
+    if(any(n_init[-1, 2] < 0)) {
+        warning("numbers < 1 (projection)")    
     }
     
     # initialise
@@ -229,6 +250,16 @@
         }
         n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
         n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]))^shape))
+    }
+    
+    # check depletion
+    if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
+        warning("depletion > 1 (estimation)")    
+    }
+    
+    # check for negative values
+    if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
+        warning("numbers < 1 (estimation)")    
     }
     
     # initialise
@@ -320,8 +351,11 @@
     # equilibrium growth rate
     lambda <- mean(apply(N[,, recent_time], 3, sum) / apply(N[,, recent_time - 1], 3, sum)) 
     
+    # numbers
+    numbers <- apply(N[,, recent_time], 2, mean)
+    
     # return dynamics
-    return(list(captures = captures, depletion = depletion, production = production, lambda = lambda))
+    return(list(captures = captures, depletion = depletion, production = production, lambda = lambda, numbers = numbers))
 }
 
 

@@ -282,6 +282,14 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
                     object@targets$captures[i]  <- .ff(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, birth = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
                     object@targets$depletion[i] <- .ff(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, birth = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion    
                 }
+				
+				# check and reject
+				if (round(object@targets$depletion[i], 1) != round(object@targets$depletion[1], 1)) {
+				    warning("failed to converge on target depletion for 'sample = ", i, "'")    
+				    object@targets$captures[i]     <- NA_real_
+				    object@targets$harvest_rate[i] <- NA_real_
+				    object@targets$depletion[i]    <- NA_real_
+				}
             }
         }
     # }}}

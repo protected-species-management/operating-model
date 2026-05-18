@@ -44,6 +44,10 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
         
         if (length(r_values) > 1) {
             
+            if (length(r_values) < 1e4) {
+                cli_alert_warning(100 * (1 - length(r_values) / 1e4), "% of samples yield a lambda < 1")    
+            }
+            
             # calculate log-normal pars
             # from log(r) ~ N(mu, sigma)
             object@pars[["r"]] <- distribution(pars = c(mean(log(r_values)), sd(log(r_values))), density = "lognormal", name = "intrinsic growth rate")

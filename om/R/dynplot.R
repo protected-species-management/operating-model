@@ -29,7 +29,7 @@ dynplot.om <- function(object, pars = 'depletion') {
     
     lst <- list()
     
-    dm <- dimnames(object@.Data)[c(1,2,4)]
+    dm <- list(sample = 1:NITER, iteration = 1:SITER, time = time)
     
     for (par in pars) {
         

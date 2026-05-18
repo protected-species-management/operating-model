@@ -288,6 +288,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
                 n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]))^shape[i]))
             }
+            
+            # check and reject
+            if (round(sum(n_init[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]), 2) != initial_depletion) {
+                warning("failed to estimate initial depletion for 'sample = ", i, "'")    
+                next
+            }
 			
 			# construct survivorship
 			# array
@@ -405,11 +411,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         object@objectives$harvest_rate[i,] <- apply(sweep(matrix(object@diagnostics$harvest_rate[i,,], nrow = SITER), 1, object@targets$harvest_rate[i], p_lower), 2, mean, na.rm = TRUE)
     }
     
-    # dimnames (after calculations)
-	# [life-history samples, process error iterations, ages, time]
-    dimnames(N) <- list(sample = 1:NITER, iteration = 1:SITER, age = ages, time = time)
-    
-    # assign data
+    # assign numbers
+    # [life-history samples, process error iterations, ages, time]
     object@.Data <- N
     
     # return

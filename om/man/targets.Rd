@@ -11,6 +11,7 @@
 \alias{objectives,om-method}
 \alias{pars,om-method}
 \alias{settings,om-method}
+\alias{numbers,om-method}
 \title{Access outputs from \code{\link{om-class}} object.}
 \usage{
 targets(object, ...)
@@ -26,6 +27,8 @@ targets(object, ...)
 \S4method{pars}{om}(object)
 
 \S4method{settings}{om}(object)
+
+\S4method{numbers}{om}(object)
 }
 \arguments{
 \item{object}{\code{\link{om-class}} object.}

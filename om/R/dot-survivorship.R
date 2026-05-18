@@ -2,10 +2,9 @@
 .survivorship <- function(S, cv = 0, env) {
 		
 	NTIME <- get("NTIME", envir = env)
+	SITER <- get("SITER", envir = env)
 	
 	if (cv > 0) {
-		
-		SITER <- get("SITER", envir = env)
 		
 		# process error term
 		sigma <- cv * S
@@ -24,7 +23,7 @@
 		
 	} else {
 	
-		s   <- array(dim = c(NTIME))
+		s   <- array(dim = c(SITER, NTIME))
 		s[] <- S
 	}
 	

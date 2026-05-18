@@ -226,6 +226,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			v <- pars_sample$v
 			o <- pars_sample$o
             K <- pars_sample$K
+            b <- pars_sample$b
+            
+            lambda_i <- .solve_lambda(m = m, s = S, s0 = S * l, b = b)
+                
+            
             
             # transcribe
 			S <- c(rep(S * l, m), rep(S, NAGES - m))
@@ -383,7 +388,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             object@values$r[i] <- pars_sample$r
 			object@values$s[i] <- pars_sample$s
 			object@values$l[i] <- pars_sample$l
-            object@values$b[i] <- b_max
+            object@values$b[i] <- pars_sample$b
 			object@values$A[i] <- (b_max - b_eq) / b_eq
             object@values$m[i] <- pars_sample$m
             object@values$o[i] <- pars_sample$o

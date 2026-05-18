@@ -58,6 +58,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	get_l <- function() get("l", envir = ENV)
 	get_e <- function() get("e", envir = ENV)
 	get_v <- function() get("v", envir = ENV)
+	get_b <- function() get("b", envir = ENV)
     
 	# set up objective
 	# function
@@ -77,13 +78,14 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		l <- DataEval(get_l)
 		e <- DataEval(get_e)
 		v <- DataEval(get_v)
+		b <- DataEval(get_b)
 		
 		# get values
 		m <- as.integer(getValues(m))
 		v <- as.integer(getValues(v))
 		
 		# deterministic dynamics
-        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, multiplier = l, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV))
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, birth = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * log(sum(n[(v + 1):dim(n)[1], dim(n)[2]] * h))
@@ -110,13 +112,14 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		l <- DataEval(get_l)
 		e <- DataEval(get_e)
 		v <- DataEval(get_v)
+		b <- DataEval(get_b)
 		
 		# get values
 		m <- as.integer(getValues(m))
 		v <- as.integer(getValues(v))
 			
 		# deterministic dynamics
-        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s, multiplier = l, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV))
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, birth = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * dnorm(sum(n[(m + 2):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
@@ -147,6 +150,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			l <- DataEval(get_l)
 			e <- DataEval(get_e)
 			v <- DataEval(get_v)
+			b <- DataEval(get_b)
 		
 			# get values
 			m <- as.integer(getValues(m))
@@ -160,7 +164,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], multiplier = l, epsilon = e[i,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], multiplier = l, birth = b, epsilon = e[i,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -191,6 +195,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			l <- DataEval(get_l)
 			e <- DataEval(get_e)
 			v <- DataEval(get_v)
+			b <- DataEval(get_b)
 		
 			# get values
 			m <- as.integer(getValues(m))
@@ -204,7 +209,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], multiplier = l, epsilon = e[i,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], multiplier = l, birth = b, epsilon = e[i,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -242,6 +247,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     s <- .survivorship(S, env = ENV)
 	e <- .epsilon(env = ENV)
 	v <- pars_sample$v
+	b <- pars_sample$b
     
     # function to estimate h_mnpl
     # given shape
@@ -308,6 +314,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			S <- pars_sample$s
 			l <- pars_sample$l
 			v <- pars_sample$v
+			b <- pars_sample$b
 			
 			s <- .survivorship(S, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 			e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)
@@ -322,7 +329,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     }
     
     # average across
-    # samples ??
+    # samples
     object@shape <- shape_values
     
     # record harvest rates

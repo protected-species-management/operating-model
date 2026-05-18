@@ -68,6 +68,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
 		S <- pars_sample$s
 		l <- pars_sample$l
 		v <- pars_sample$v
+		b <- pars_sample$b
 		
 		#print(.solve_lambda(m = m, s = S, s0 = S * l, b = pars_sample$b))
         
@@ -82,7 +83,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, birth = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -99,7 +100,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, birth = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion

@@ -23,7 +23,7 @@ get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env 
     if (ref_points) {
         
         NTIME <- object@settings$ref_points$time
-        SITER <- object@settings$ref_points$iterations
+        SITER <- ifelse(is.na(object@settings$ref_points$iterations), 1L, object@settings$ref_points$iterations)
         
         STOCHASTIC <- object@settings$ref_points$stochastic
     }

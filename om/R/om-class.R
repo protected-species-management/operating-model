@@ -149,14 +149,14 @@ setMethod("show", "om",
               message("niter: ", object@samples, " (samples)")
               message("siter: ", object@settings$ref_points$iterations, " (ref. points)")
 			  message("siter: ", object@settings$projection$iterations, " (projections)")
-              message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
-              message("shape: ", if (length(object@shape) > 0) round(object@shape, 2) else red("EMPTY"))
+              #message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
+              message("shape: ", if (length(object@shape) > 0) { if (length(object@shape) > 14) { paste0(c(object@shape[1:12], "...", object@shape[length(object@shape)]), collapse = ", ") } else { paste0(object@shape, collapse = ", ") }} else red("EMPTY"))
               message("\nharvest rate function:")
               message(writeLines(deparse(object@harvest_rate)))
               message("rmax:")
               show(object@pst$rmax)
-              message("pars:")
-              invisible(lapply(object@pars, show))
+              #message("pars:")
+              #invisible(lapply(object@pars, show))
           })
 # }}}
 

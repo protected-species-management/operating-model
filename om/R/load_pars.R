@@ -3,6 +3,7 @@
 #' @description Load or update parameters in \code{\link{om-class}} object. Each parameter should be provided as a \code{\link{distribution-class}}.
 #' @param value named list object containing parameter distributions. 
 #' @include om-class.R distribution-class.R
+#' @importFrom cli cli_alert_info
 #' @export
 #{{{
 setGeneric("load_pars", function(object, value, ...) standardGeneric("load_pars"))
@@ -74,7 +75,7 @@ setMethod("update_pars", signature = c("om", "list"), function(object, value, ..
         
         object <- load_pars(object, value)
     
-        message("re-calculated 'r'")
+        cli_alert_info("re-calculated 'r'")
         
     } else {
         

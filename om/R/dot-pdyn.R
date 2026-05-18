@@ -63,12 +63,12 @@
     
     # check depletion
     if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
-        warning("depletion > 1 (estimation)")    
+        warning("depletion > 1")    
     }
     
     # check for negative values
     if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
-        warning("numbers < 1 (estimation)")    
+        warning("numbers < 1")    
     }
     
     # initialise
@@ -157,12 +157,12 @@
     
     # check depletion
     if(sum(n_init[-1, 2] * pat[-1]) > 1) {
-        warning("depletion > 1 (projection)")    
+        warning("depletion > 1")    
     }
     
     # check for negative values
     if(any(n_init[-1, 2] < 0)) {
-        warning("numbers < 1 (projection)")    
+        warning("numbers < 1")    
     }
     
     # initialise
@@ -254,12 +254,12 @@
     
     # check depletion
     if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
-        warning("depletion > 1 (estimation)")    
+        warning("depletion > 1")    
     }
     
     # check for negative values
     if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
-        warning("numbers < 1 (estimation)")    
+        warning("numbers < 1")    
     }
     
     # initialise
@@ -345,13 +345,13 @@
     }
     
     # check depletion
-    if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
-        warning("depletion > 1 (estimation)")    
+    if(sum(n_init[-1, 2] * pat[-1]) > 1) {
+        warning("depletion > 1")    
     }
     
     # check for negative values
-    if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
-        warning("numbers < 1 (estimation)")    
+    if(any(n_init[-1, 2] < 0)) {
+        warning("numbers < 1")    
     }
     
     # initialise

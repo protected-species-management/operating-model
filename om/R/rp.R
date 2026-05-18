@@ -110,8 +110,6 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
             # return
             return(objective)
         }
-		
-		
         
         if (STOCHASTIC) {
             

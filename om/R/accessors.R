@@ -70,5 +70,14 @@ setMethod("settings", signature = c("om"), function(object) {
     lapply(lapply(object@settings, bind_rows), data.frame)
 })
 #}}}
-
+#{{{
+#' @export
+setGeneric("numbers", function(object, ...) standardGeneric("numbers"))
+# accessor function
+#' @rdname targets
+setMethod("numbers", signature = c("om"), function(object) {
+    get_dim(object, env = environment())
+    array2dfr(object@.Data, dim.names = list(sample = 1:NITER, iteration = 1:SITER, age = object@ages, time = object@time))
+})
+#}}}
 

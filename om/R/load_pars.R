@@ -28,6 +28,8 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
     # calculate r
     if (is(object@pars[["m"]], "distribution") & is(object@pars[["s"]], "distribution") & is(object@pars[["b"]], "distribution") & is(object@pars[["l"]], "distribution")) {
         
+		object@pars[["r"]] <- NA_real_
+		
         lambda_values <- numeric(1e4)
         
         for (i in 1:length(lambda_values)) {
@@ -45,7 +47,7 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
         if (length(r_values) > 1) {
             
             if (length(r_values) < 1e4) {
-                cli_alert_warning(100 * (1 - length(r_values) / 1e4), "% of samples yield a lambda < 1")    
+                cli_alert_warning(paste0(100 * (1 - length(r_values) / 1e4), "% of samples yield a lambda < 1"))
             }
             
             # calculate log-normal pars

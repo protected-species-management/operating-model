@@ -36,6 +36,7 @@ Collate:
     'dot-pdyn.R'
     'dot-survivorship.R'
     'dynplot.R'
+    'lambda.R'
     'load_bias.R'
     'load_cvs.R'
     'load_pars.R'

@@ -61,7 +61,11 @@ setMethod("initialize", "distribution", function(.Object, ...) {
             .Object@pars <- .calc_normal_pars(.Object@.Data)    
         }
         
-        if (grepl("^log?normal", .Object@density)) {
+        if (grepl("^zt?.normal", .Object@density)) {
+            .Object@pars <- .calc_ztnormal_pars(.Object@.Data)    
+        }
+        
+        if (grepl("^log?.normal", .Object@density)) {
             .Object@pars <- .calc_lognormal_pars(.Object@.Data)    
         }
         
@@ -69,7 +73,7 @@ setMethod("initialize", "distribution", function(.Object, ...) {
             .Object@pars <- .calc_gamma_pars(.Object@.Data)    
         }
         
-        if (grepl("^logit?normal", .Object@density)) {
+        if (grepl("^logit?.normal", .Object@density)) {
             .Object@pars <- .calc_logitnormal_pars(.Object@.Data)    
         }
     }
@@ -86,7 +90,11 @@ setMethod("initialize", "distribution", function(.Object, ...) {
             .Object@.Data <- rnorm(.Object@iter, mean = .Object@pars[1], sd = .Object@pars[2])    
         }
         
-        if (grepl("^log?normal", .Object@density)) {
+        if (grepl("^zt?.normal", .Object@density)) {
+            .Object@.Data <- .Object@pars[1] + .Object@pars[2] * qnorm(runif(.Object@iter, pnorm((0 - .Object@pars[1]) / .Object@pars[2]), pnorm(Inf))) 
+        }
+        
+        if (grepl("^log?.normal", .Object@density)) {
             .Object@.Data <- rlnorm(.Object@iter, meanlog = .Object@pars[1], sdlog = .Object@pars[2])    
         }
         
@@ -94,7 +102,7 @@ setMethod("initialize", "distribution", function(.Object, ...) {
             .Object@.Data <- rgamma(.Object@iter, shape = .Object@pars[1], scale = .Object@pars[2])    
         }
         
-        if (grepl("^logit?normal", .Object@density)) {
+        if (grepl("^logit?.normal", .Object@density)) {
             .Object@.Data <- rlogitnorm(.Object@iter, mu = .Object@pars[1], sigma = .Object@pars[2])    
         }
     }
@@ -121,6 +129,7 @@ summary.distribution <- function(object) {
     if (grepl("^unspecified", object@density))  return(.show_unspecified_moments(object@.Data))
     if (grepl("^uniform", object@density))      return(.show_uniform_moments(object@pars))
     if (grepl("^normal", object@density))       return(.show_normal_moments(object@pars))
+    if (grepl("^zt?.normal", object@density))   return(.show_ztnormal_moments(object@pars))
     if (grepl("^log?normal", object@density))   return(.show_lognormal_moments(object@pars))
     if (grepl("^gamma", object@density))        return(.show_gamma_moments(object@pars))
     if (grepl("^logit?normal", object@density)) return(.show_logitnormal_moments(object@pars))
@@ -166,6 +175,18 @@ summary.distribution <- function(object) {
     
     # return
     c('E[x]' = round(mu, 3), 'VAR[x]' = round(sigma2, 3), 'CV[x]' = round(sigma / mu, 3))
+}
+
+.calc_ztnormal_pars <- function(x) {
+    
+    # return
+    return(c(NA_real_, NA_real_))
+}
+
+.show_ztnormal_moments <- function(x) {
+    
+    # return
+    c('E[x]' = round(NA_real_, 5), 'VAR[x]' = round(NA_real_, 5), 'CV[x]' = round(NA_real_, 5))
 }
 
 .calc_lognormal_pars <- function(x) {

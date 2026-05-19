@@ -36,7 +36,12 @@ sample.distribution <- function(x, n = 1, ...) {
                 y <- rnorm(n, mean = x@pars[1], sd = x@pars[2]) 
             }
             
-            if (grepl("^log?normal", x@density)) {
+            if (grepl("^zt?.normal", x@density)) {
+                t <- (0 - x@pars[1]) / x@pars[2] 
+                y <- x@pars[1] + x@pars[2] * qnorm(runif(n, pnorm(t), pnorm(Inf)))
+            }
+            
+            if (grepl("^log?.normal", x@density)) {
                 y <- rlnorm(n, meanlog = x@pars[1], sdlog = x@pars[2])    
             }
             
@@ -44,7 +49,7 @@ sample.distribution <- function(x, n = 1, ...) {
                 y <- rgamma(n, shape = x@pars[1], scale = x@pars[2])    
             }
             
-            if (grepl("^logit?normal", x@density)) {
+            if (grepl("^logit?.normal", x@density)) {
                 y <- rlogitnorm(n, mu = x@pars[1], sigma = x@pars[2])    
             }
             

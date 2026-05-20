@@ -172,7 +172,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 		
 		# assign pars
         m <- pars_sample$m
-        r <- pars_sample$r
+        r <- pars_sample$rmax
 		S <- pars_sample$s
         l <- pars_sample$l
         v <- pars_sample$v
@@ -256,7 +256,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 				
 				# assign pars
 				m <- pars_sample$m
-				r <- pars_sample$r
+				r <- pars_sample$rmax
 				S <- pars_sample$s
 				l <- pars_sample$l
 				v <- pars_sample$v

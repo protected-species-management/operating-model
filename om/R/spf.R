@@ -64,7 +64,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
         
         # assign pars
 		m <- pars_sample$m
-		r <- pars_sample$r
+		r <- pars_sample$rmax
 		S <- pars_sample$s
 		l <- pars_sample$l
 		v <- pars_sample$v

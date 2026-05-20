@@ -241,7 +241,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     
     # assign pars
 	m <- pars_sample$m
-	r <- pars_sample$r
+	r <- pars_sample$rmax
 	l <- pars_sample$l
 	S <- pars_sample$s
     s <- .survivorship(S, env = ENV)
@@ -310,7 +310,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             
             # assign pars
 			m <- pars_sample$m
-			r <- pars_sample$r
+			r <- pars_sample$rmax
 			S <- pars_sample$s
 			l <- pars_sample$l
 			v <- pars_sample$v

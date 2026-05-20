@@ -2,7 +2,7 @@
 #' @aliases update_pars 
 #' @description Load or update parameters in \code{\link{om-class}} object. Each parameter should be provided as a \code{\link{distribution-class}}.
 #' @param value named list object containing parameter distributions. 
-#' @include om-class.R distribution-class.R
+#' @include om-class.R distribution-class.R dot-el.R
 #' @importFrom cli cli_alert_info
 #' @export
 #{{{

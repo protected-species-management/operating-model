@@ -63,12 +63,12 @@
     
     # check depletion
     if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
-        warning("depletion > 1")    
+        warning("initial depletion > 1")    
     }
     
     # check for negative values
     if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
-        warning("numbers < 1")    
+        warning("initial numbers[c(", paste0(which(n_init[-1, 2] < 0), collapse = ","), ")] < 0")  
     }
     
     # initialise
@@ -157,12 +157,12 @@
     
     # check depletion
     if(sum(n_init[-1, 2] * pat[-1]) > 1) {
-        warning("depletion > 1")    
+        warning("initial depletion > 1")    
     }
     
     # check for negative values
     if(any(n_init[-1, 2] < 0)) {
-        warning("numbers < 1")    
+        warning("initial numbers[c(", paste0(which(n_init[-1, 2] < 0), collapse = ","), ")] < 0")    
     }
     
     # initialise
@@ -179,9 +179,9 @@
         n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * h)
         
         #
-        if (sum(n[-1, y] * pat[-1]) > 1) {
-            n[-1, y] <- n[-1, y] / sum(n[-1, y] * pat[-1])    
-        }
+        #if (sum(n[-1, y] * pat[-1]) > 1) {
+        #    n[-1, y] <- n[-1, y] / sum(n[-1, y] * pat[-1])    
+        #}
         
         # birth
         n[1, y] <- birth(y) * epsilon[y]
@@ -254,12 +254,12 @@
     
     # check depletion
     if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
-        warning("depletion > 1")    
+        warning("initial depletion > 1")    
     }
     
     # check for negative values
     if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
-        warning("numbers < 1")    
+        warning("initial numbers[c(", paste0(which(n_init[-1, 2] < 0), collapse = ","), ")] < 0")      
     }
     
     # initialise
@@ -346,12 +346,12 @@
     
     # check depletion
     if(sum(n_init[-1, 2] * pat[-1]) > 1) {
-        warning("depletion > 1")    
+        warning("initial depletion > 1")    
     }
     
     # check for negative values
     if(any(n_init[-1, 2] < 0)) {
-        warning("numbers < 1")    
+        warning("initial numbers[c(", paste0(which(n_init[-1, 2] < 0), collapse = ","), ")] < 0")     
     }
     
     # initialise
@@ -431,7 +431,7 @@
     }
     
     # recent time
-    recent_time <- ceiling((1 / 3) * NTIME):NTIME
+    recent_time <- ceiling((2 / 3) * NTIME):NTIME
     
     # equilibrium female captures
     captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))

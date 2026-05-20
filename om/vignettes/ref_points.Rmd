@@ -30,11 +30,13 @@ library(ggplot2)
 # for cohort-aggregated 
 # operating model
 om_object <- om(ages = 0:8, samples = 3L, time = 201)
+```
+```{r, echo = FALSE}
+om_object@seeds <- c(3773742L, 4556601L, 5793508L)
+```
 
-# assign rmax
-# (used to estimate the PST)
-om_object <- om_object %>% load_rmax(distribution(value = 0.14, name = "max. intrinsic growth"))
-
+Set-up list of parameter distributions required for population dynamics function:
+```{r}
 # setup list of pars
 # (list with parameter distributions required
 # by population dynamics function)
@@ -44,7 +46,19 @@ om_object <- om_object %>% load_pars(list(
     'm' = distribution(values = 1, name = "age at maturity"),
     'l' = distribution(values = 0.7, name = "immature survivorship multiplier")
 ))
+```
 
+The intrinsic growth rate is calculated automatically when parameters are assigned:
+```{r}
+plot(lambda(om_object))
+```
+
+The intrinsic growth can be assumed to be the maximum, or an alternative can be supplied:
+```{r}
+om_object <- om_object %>% load_rmax()
+```
+
+```{r}
 om_object <- om_object %>% update_pars(list(
     'o' = distribution(value = 1, name = "age at observation"),
     'v' = distribution(value = 2, name = "age at selectivity"),

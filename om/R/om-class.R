@@ -82,6 +82,8 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # setup pars
     # (intrinsic growth)
     .Object@pars$r <- NA_real_ 
+    # (max. intrinsic growth)
+    .Object@pars$rmax <- NA_real_ 
     # (adult female survivorship)
     .Object@pars$s <- NA_real_
     # (age-zero survivorship multiplier)

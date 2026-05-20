@@ -24,11 +24,8 @@ library(dplyr)
 library(ggplot2)
 ```
 
-
+Setup om-class object for age-based operating model
 ```{r}
-# setup om-class object
-# for cohort-aggregated 
-# operating model
 om_object <- om(ages = 0:8, samples = 3L, time = 201)
 ```
 ```{r, echo = FALSE}
@@ -37,9 +34,6 @@ om_object@seeds <- c(3773742L, 4556601L, 5793508L)
 
 Set-up list of parameter distributions required for population dynamics function:
 ```{r}
-# setup list of pars
-# (list with parameter distributions required
-# by population dynamics function)
 om_object <- om_object %>% load_pars(list(
     's' = distribution(pars = c(1.924, 0.250), density = "logitnormal", name = "adult survivorship"),
     'b' = distribution(pars = c(0.317, 0.063), density = "lognormal", name = "female fecundity"),

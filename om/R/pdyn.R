@@ -213,14 +213,14 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # sample
             pars_sample <- lapply(object@pars, sample, n = 1)
-            rmax_sample <- sample(object@pst$rmax, n = 1)
+            #rmax_sample <- sample(object@pst$rmax, n = 1)
                 
             # spin spinner
             cli_progress_update()
             
             # assign pars
 			m <- pars_sample$m
-			r <- pars_sample$r
+			r <- pars_sample$rmax
 			S <- pars_sample$s
 			l <- pars_sample$l
 			v <- pars_sample$v
@@ -228,9 +228,10 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             K <- pars_sample$K
             b <- pars_sample$b
             
-            lambda_i <- .solve_lambda(m = m, s = S, s0 = S * l, b = b)
-                
-            
+            #lambda_i <- .solve_lambda(m = m, s = S, s0 = S * l, b = b)
+            #print(paste("r:",    round(pars_sample$r, 5)))
+            #print(paste("rmax:", round(pars_sample$rmax, 5)))
+            #print(paste("rest:", round(log(.solve_lambda(m, S, S * l, b)), 5)))
             
             # transcribe
 			S <- c(rep(S * l, m), rep(S, NAGES - m))
@@ -276,7 +277,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # initial conditions
             if (initial_depletion < 1) {
-                h_init <- .ilogit(optimise(obj_fun, interval = c(-10,-1), shape = shape[i], target = initial_depletion)$minimum)
+                h_init <- .ilogit(optimise(obj_fun, interval = c(-10,0), shape = shape[i], target = initial_depletion)$minimum)
             } else {
                 h_init <- 0    
             }

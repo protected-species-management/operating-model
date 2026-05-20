@@ -2,13 +2,15 @@
 % Please edit documentation in R/lambda.R
 \name{lambda}
 \alias{lambda}
-\title{Extract lambda}
+\title{Extract growth rate}
 \usage{
 lambda(object, ...)
 }
 \arguments{
 \item{object}{\code{om} class object}
+
+\item{log}{logical value indication whether \eqn{r = \log(\lambda)} should be returned.}
 }
 \description{
-Extracts lambda from om object.
+Extracts \eqn{lambda} from an \code{om} object.
 }

@@ -179,6 +179,10 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         s <- .survivorship(S, env = ENV)
 		e <- .epsilon(env = ENV)
 		b <- pars_sample$b
+		
+		#print(paste("r:", round(pars_sample$r, 5)))
+		#print(paste("rmax:", round(pars_sample$rmax, 5)))
+		#print(paste("rest:", round(log(.solve_lambda(m, S, S * l, b)), 5)))
         
         # progress message
         if (ESTIMATE_HMNPL) {
@@ -261,6 +265,10 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 				l <- pars_sample$l
 				v <- pars_sample$v
 				b <- pars_sample$b
+				
+				#print(paste("r:", round(pars_sample$r, 5)))
+				#print(paste("rmax:", round(pars_sample$rmax, 5)))
+				#print(paste("rest:", round(log(.solve_lambda(m, S, S * l, b)), 5)))
 				            
 				s <- .survivorship(S, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 				e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)

@@ -195,7 +195,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
 		# pst observation function
 		pst_calc <- function(numbers) {
-			(1 / 2) * object@pst$phi * sample(object@pst$rmax) * .obs_error(sum(numbers * object@pst$ogive))
+			(1 / 2) * object@pst$phi * sample(object@pars$rmax) * .obs_error(sum(numbers * object@pst$ogive))
 		}
 	
         #######################

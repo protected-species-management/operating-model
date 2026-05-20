@@ -153,7 +153,7 @@ summary.distribution <- function(object) {
     b <- x[2]
     
     # return
-    c('E[x]' = round((a + b) / 2, 3), 'VAR[x]' = round(((b - a)^2) / 12, 3), 'CV[x]' = round(sqrt(((b - a)^2) / 12) / ((a + b) / 2), 3))
+    c('E[x]' = round((a + b) / 2, 5), 'VAR[x]' = round(((b - a)^2) / 12, 5), 'CV[x]' = round(sqrt(((b - a)^2) / 12) / ((a + b) / 2), 5))
 }
 
 .calc_normal_pars <- function(x) {
@@ -174,7 +174,7 @@ summary.distribution <- function(object) {
     sigma2 <- sigma^2
     
     # return
-    c('E[x]' = round(mu, 3), 'VAR[x]' = round(sigma2, 3), 'CV[x]' = round(sigma / mu, 3))
+    c('E[x]' = round(mu, 5), 'VAR[x]' = round(sigma2, 5), 'CV[x]' = round(sigma / mu, 5))
 }
 
 .calc_ztnormal_pars <- function(x) {
@@ -214,7 +214,7 @@ summary.distribution <- function(object) {
     cv    <- sqrt(exp(sigma2) - 1)
     
     # return
-    c('E[log(x)]' = round(mu, 3), 'SD[log(x)]' = round(sigma, 3), 'E[x]' = round(theta, 3), 'VAR[x]' = round(nu, 3), 'CV[x]' = round(cv, 3))
+    c('E[log(x)]' = round(mu, 5), 'SD[log(x)]' = round(sigma, 5), 'E[x]' = round(theta, 5), 'VAR[x]' = round(nu, 5), 'CV[x]' = round(cv, 5))
 }
 
 .calc_gamma_pars <- function(x) {
@@ -236,13 +236,13 @@ summary.distribution <- function(object) {
     theta  <- x[2]
     
     # return
-    c('E[x]' = round(alpha * theta, 3), 'VAR[x]' = round(alpha * theta^2, 3), 'CV[x]' = round(sqrt(alpha * theta^2) / alpha * theta, 3))
+    c('E[x]' = round(alpha * theta, 5), 'VAR[x]' = round(alpha * theta^2, 5), 'CV[x]' = round(sqrt(alpha * theta^2) / alpha * theta, 5))
 }
 
 .show_unspecified_moments <- function(x) {
     
     # return
-    c('E[x]' = round(mean(x), 3), 'MIN[x]' = round(min(x), 3), 'MAX[x]' = round(max(x), 3))
+    c('E[x]' = round(mean(x), 5), 'MIN[x]' = round(min(x), 5), 'MAX[x]' = round(max(x), 5))
 }
 
 .calc_logitnormal_pars <- function(x) {
@@ -270,7 +270,7 @@ summary.distribution <- function(object) {
     cv    <- sqrt(nu) / theta
     
     # return
-    c('E[logit(x)]' = round(mu, 3), 'SD[logit(x)]' = round(sigma, 3), 'E[x]' = round(theta, 3), 'VAR[x]' = round(nu, 3), 'CV[x]' = round(cv, 3))
+    c('E[logit(x)]' = round(mu, 5), 'SD[logit(x)]' = round(sigma, 5), 'E[x]' = round(theta, 5), 'VAR[x]' = round(nu, 5), 'CV[x]' = round(cv, 5))
 }
 
 # }}}

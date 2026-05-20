@@ -155,7 +155,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         obj_fun <- function(x, shape, target) {
             
             h <- 1 / (1 + exp(-x[1]))
-            n <- matrix(k, nrow = NAGES, ncol = 2)
+            n <- matrix(k_prime, nrow = NAGES, ncol = 2)
             
             # equilibrium age
             # structure
@@ -166,11 +166,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n[a, 2] <- n[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
                 }
                 n[a, 2] <- n[a, 2] + n[a, 1] * S[a] * (1 -  sel[a] * h)
-                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]))^shape))
+                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2] * pat[-1]))^shape))
             }
                 
             # log of the equilibrium depletion
-            objective <- -1 * dnorm(sum(n[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]), target, 0.01, log = TRUE)
+            objective <- -1 * dnorm(sum(n[-1, 2] * pat[-1]), target, 0.01, log = TRUE)
             
             # return
             return(objective)
@@ -195,7 +195,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
 		# pst observation function
 		pst_calc <- function(numbers) {
-			(1 / 2) * object@pst$phi * sample(object@pars$rmax) * .obs_error(sum(numbers * object@pst$ogive))
+			(1 / 2) * object@pst$phi * rmax_sample * .obs_error(sum(numbers * ogive))
 		}
 	
         #######################
@@ -213,7 +213,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # sample
             pars_sample <- lapply(object@pars, sample, n = 1)
-            #rmax_sample <- sample(object@pst$rmax, n = 1)
+            rmax_sample <- pars_sample$rmax
                 
             # spin spinner
             cli_progress_update()
@@ -221,7 +221,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             # assign pars
 			m <- pars_sample$m
 			r <- pars_sample$rmax
-			S <- pars_sample$s
+			s <- pars_sample$s
 			l <- pars_sample$l
 			v <- pars_sample$v
 			o <- pars_sample$o
@@ -234,7 +234,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             #print(paste("rest:", round(log(.solve_lambda(m, S, S * l, b)), 5)))
             
             # transcribe
-			S <- c(rep(S * l, m), rep(S, NAGES - m))
+			S <- c(rep(s * l, m), rep(s, NAGES - m))
 			
 			age_mat <- as.integer(m)
 			age_pat <- age_mat + 1L
@@ -248,7 +248,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			
 			lambda <- exp(r)
 			
-			object@pst$ogive <- obs
+			ogive  <- obs
             
             # set up unexploited 
             # equilibrium female
@@ -380,17 +380,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             N[i,,,] <- proj_n
             
 			# pst
+            object@pst$rmax[i]    <- rmax_sample
             object@pst$value[i,,] <- proj_pst
 			
             # spin spinner
             cli_progress_update()
             
             # record values
-            object@values$r[i] <- pars_sample$r
+            object@values$r[i] <- pars_sample$rmax
 			object@values$s[i] <- pars_sample$s
 			object@values$l[i] <- pars_sample$l
             object@values$b[i] <- pars_sample$b
-			object@values$A[i] <- (b_max - b_eq) / b_eq
             object@values$m[i] <- pars_sample$m
             object@values$o[i] <- pars_sample$o
             object@values$v[i] <- pars_sample$v

@@ -65,7 +65,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
         # assign pars
 		m <- pars_sample$m
 		r <- pars_sample$rmax
-		S <- pars_sample$s
+		s <- pars_sample$s
 		l <- pars_sample$l
 		v <- pars_sample$v
 		b <- pars_sample$b
@@ -78,12 +78,12 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
         
         if (STOCHASTIC) {
             
-            s <- .survivorship(S, object@settings$cv$survivorship, env = ENV)
+            s <- .survivorship(s, object@settings$cv$survivorship, env = ENV)
 			e <- .epsilon(object@settings$cv$birth, env = ENV)
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, birth = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff2(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion
@@ -95,12 +95,12 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
             
         } else {
             
-            s <- .survivorship(S, env = ENV)
+            s <- .survivorship(s, env = ENV)
 			e <- .epsilon(env = ENV)
             
             for (j in 1:length(harvest_rate)) {
                 
-                tmp <- .ff(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, birth = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
+                tmp <- .ff(harvest_rate[j], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)
                 
                 cvalue[j] <- tmp$captures
                 dvalue[j] <- tmp$depletion

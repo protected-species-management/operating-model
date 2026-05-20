@@ -85,7 +85,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		v <- as.integer(getValues(v))
 		
 		# deterministic dynamics
-        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, birth = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, fecundity = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * log(sum(n[(v + 1):dim(n)[1], dim(n)[2]] * h))
@@ -119,7 +119,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		v <- as.integer(getValues(v))
 			
 		# deterministic dynamics
-        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, birth = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
+        n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, fecundity = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
 		objective <- -1 * dnorm(sum(n[(m + 2):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
@@ -164,7 +164,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], multiplier = l, birth = b, epsilon = e[i,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], multiplier = l, fecundity = b, epsilon = e[i,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -209,7 +209,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 cli_progress_update(.envir = ENV)
                 
                 # stochastic dynamics
-                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], multiplier = l, birth = b, epsilon = e[i,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
+                n <- do.call(".pdyn2", list(h = h, shape = shape, survivorship = s[i,], multiplier = l, fecundity = b, epsilon = e[i,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
                 
                 # recent time
                 loc <- ceiling((2 / 3) * dim(n)[2]):dim(n)[2]
@@ -243,12 +243,13 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	m <- pars_sample$m
 	r <- pars_sample$rmax
 	l <- pars_sample$l
-	S <- pars_sample$s
-    s <- .survivorship(S, env = ENV)
-	e <- .epsilon(env = ENV)
+	s <- pars_sample$s
 	v <- pars_sample$v
 	b <- pars_sample$b
     
+	s <- .survivorship(s, env = ENV)
+	e <- .epsilon(env = ENV)
+	
     # function to estimate h_mnpl
     # given shape
     h1 <- MakeTape(obj1, c(.logit(r / 2), log(1)))
@@ -271,7 +272,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		
 	    # simulate stochastic
 		# survivorship
-	    s <- .survivorship(S, object@settings$cv$survivorship, env = ENV)
+	    s <- .survivorship(pars_sample$s, object@settings$cv$survivorship, env = ENV)
 	    
 		# stochastic birth
 		# deviation
@@ -311,12 +312,12 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             # assign pars
 			m <- pars_sample$m
 			r <- pars_sample$rmax
-			S <- pars_sample$s
+			s <- pars_sample$s
 			l <- pars_sample$l
 			v <- pars_sample$v
 			b <- pars_sample$b
 			
-			s <- .survivorship(S, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
+			s <- .survivorship(s, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
 			e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)
 			
 			h2$force.update()

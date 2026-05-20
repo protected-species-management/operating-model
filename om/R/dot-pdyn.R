@@ -1,5 +1,5 @@
 #' @importFrom RTMB AD
-.pdyn <- function(h, shape, survivorship, multiplier, birth, epsilon, maturity, selectivity, lambda, env) {
+.pdyn <- function(h, shape, survivorship, multiplier, fecundity, epsilon, maturity, selectivity, lambda, env) {
     
 	NAGES <- get("NAGES", envir = env)
 	NTIME <- get("NTIME", envir = env)
@@ -92,7 +92,7 @@
 }
 # projection function with advector types
 # removed and constraints on depletion
-.pdyn_proj <- function(h, shape, survivorship, multiplier, birth, epsilon, maturity, selectivity, lambda, env) {
+.pdyn_proj <- function(h, shape, survivorship, multiplier, fecundity, epsilon, maturity, selectivity, lambda, env) {
     
     NAGES <- get("NAGES", envir = env)
     NTIME <- get("NTIME", envir = env)
@@ -190,7 +190,7 @@
     return(n)
 }
 
-.pdyn2 <- function(h, shape, survivorship, multiplier, birth, epsilon, maturity, selectivity, lambda, env) {
+.pdyn2 <- function(h, shape, survivorship, multiplier, fecundity, epsilon, maturity, selectivity, lambda, env) {
     
 	NAGES <- get("NAGES", envir = env)
 	NTIME <- get("NTIME", envir = env)
@@ -282,7 +282,7 @@
     return(n)
 }
 
-.pdyn2_proj <- function(h, shape, survivorship, multiplier, birth, epsilon, maturity, selectivity, lambda, env) {
+.pdyn2_proj <- function(h, shape, survivorship, multiplier, fecundity, epsilon, maturity, selectivity, lambda, env) {
     
     NAGES <- get("NAGES", envir = env)
     NTIME <- get("NTIME", envir = env)
@@ -375,7 +375,7 @@
 }
 
 # fast-forward (deterministic)
-.ff <- function(h, shape, survivorship, multiplier, birth, epsilon, maturity, selectivity, lambda, env) {
+.ff <- function(h, shape, survivorship, multiplier, fecundity, epsilon, maturity, selectivity, lambda, env) {
     
 	# dimensions
 	NAGES <- get("NAGES", envir = env)
@@ -386,7 +386,7 @@
     sel <- c(rep(0, selectivity),  rep(1, NAGES - selectivity)) 
 	
     # run dynamics
-    N <- do.call(".pdyn_proj", list(h = h, shape = shape, survivorship = survivorship[1,], multiplier = multiplier, birth = birth, epsilon = epsilon[1,], maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
+    N <- do.call(".pdyn_proj", list(h = h, shape = shape, survivorship = survivorship[1,], multiplier = multiplier, fecundity = fecundity, epsilon = epsilon[1,], maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
     
     # recent time
     recent_time <- ceiling((2 / 3) * NTIME):NTIME
@@ -411,7 +411,7 @@
 }
 
 # fast-forward (stochastic)
-.ff2 <- function(h, shape, survivorship, multiplier, birth, epsilon, maturity, selectivity, lambda, env) {
+.ff2 <- function(h, shape, survivorship, multiplier, fecundity, epsilon, maturity, selectivity, lambda, env) {
 
     # dimensions
 	NAGES <- get("NAGES", envir = env)
@@ -427,7 +427,7 @@
     
     # run dynamics
     for (i in 1:SITER) {
-        N[i,,] <- do.call(".pdyn2_proj", list(h = h, shape = shape, survivorship = survivorship[i,], multiplier = multiplier, birth = birth, epsilon = epsilon[i,], maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
+        N[i,,] <- do.call(".pdyn2_proj", list(h = h, shape = shape, survivorship = survivorship[i,], multiplier = multiplier, fecundity = fecundity, epsilon = epsilon[i,], maturity = maturity, selectivity = selectivity, lambda = lambda, env = env))
     }
     
     # recent time

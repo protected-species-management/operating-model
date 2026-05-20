@@ -75,8 +75,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # setup PST limit
     # reference point
     .Object@pst$phi      <- phi
-    .Object@pst$rmax     <- NA_real_
-    .Object@pst$ogive    <- NA_real_
+    .Object@pst$rmax     <- rep(NA_real_, samples)
     .Object@pst$value    <- NA_real_
     
     # setup pars
@@ -106,7 +105,6 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
 	.Object@values$l <- rep(NA_real_, samples)
     .Object@values$b <- rep(NA_real_, samples)
     .Object@values$m <- rep(NA_real_, samples)
-    .Object@values$A <- rep(NA_real_, samples)
     .Object@values$o <- rep(NA_real_, samples)
     .Object@values$v <- rep(NA_real_, samples)
     .Object@values$K <- rep(NA_real_, samples)

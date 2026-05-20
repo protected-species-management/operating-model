@@ -42,22 +42,16 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
             lambda_values[i] <- .solve_lambda(m = m_sample, s = s_sample, s0 = s_sample * l_sample, b = b_sample)
         }
         
-        r_values <- log(lambda_values[lambda_values > 1])
-        
-        if (length(r_values) > 1) {
+        r_values <- log(lambda_values)
             
-            if (length(r_values) < 1e4) {
-                cli_alert_warning(paste0(100 * (1 - length(r_values) / 1e4), "% of samples yield a lambda < 1"))
-            }
-            
-            # calculate log-normal pars
-            # from log(r) ~ N(mu, sigma)
-            object@pars[["r"]] <- distribution(pars = c(mean(log(r_values)), sd(log(r_values))), density = "lognormal", name = "intrinsic growth rate")
-            
-        } else {
-            
-            warning("intrinsic growth not log-normal (lambda <= 1)")  
+        if (sum(lambda_values >= 1) < 1e4) {
+            cli_alert_warning(paste0(round(100 * (1 - sum(lambda_values >= 1) / 1e4), 2), "% of samples yield a lambda < 1"))
         }
+        
+        # calculate normal pars
+        # from r ~ N(mu, sigma)
+        r_dist <- distribution(values = r_values, density = "normal")
+        object@pars[["r"]] <- distribution(pars = r_dist@pars, density = "normal", name = "intrinsic growth rate")
     }
     
     # return

@@ -8,12 +8,7 @@
 setGeneric("load_rmax", function(object, value, ...) standardGeneric("load_rmax"))
 #{{ distribution object
 setMethod("load_rmax", signature = c("om", "distribution"), function(object, value, ...) {
-    
-    # use 'r' by default
-    if (missing(value)) {
-        value <- object@pars$r    
-    }
-        
+
     # checks
     if (value@density != "normal") {
         cli_alert_danger("input distribution is not 'normal'")
@@ -28,4 +23,11 @@ setMethod("load_rmax", signature = c("om", "distribution"), function(object, val
     # return    
     return(object)
 })
+setMethod("load_rmax", signature = c("om", "missing"), function(object, value, ...) {
+    
+    # use 'r' by default
+    value <- object@pars$r 
 
+    # return    
+    return(load_rmax(object, value))
+})

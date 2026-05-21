@@ -35,7 +35,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     if(missing(samples)) {
         stop("'samples' is a required input")
     } else {
-        .Object@samples <- samples
+        .Object@samples <- as.integer(samples)
     }
     
     if(missing(time)) {
@@ -75,36 +75,38 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # setup PST limit
     # reference point
     .Object@pst$phi      <- phi
-    .Object@pst$rmax     <- NA_real_
-    .Object@pst$ogive    <- NA_real_
+    .Object@pst$rmax     <- rep(NA_real_, samples)
     .Object@pst$value    <- NA_real_
     
     # setup pars
     # (intrinsic growth)
     .Object@pars$r <- NA_real_ 
-    # (adult female natural mortality)
-    .Object@pars$M <- NA_real_
+    # (max. intrinsic growth)
+    .Object@pars$rmax <- NA_real_ 
+    # (adult female survivorship)
+    .Object@pars$s <- NA_real_
+    # (age-zero survivorship multiplier)
+    .Object@pars$l <- NA_real_
     # (annual births per adult female)
-    .Object@pars$f <- NA_real_
+    .Object@pars$b <- NA_real_
     # (age at female maturity)
-    .Object@pars$a <- NA_real_
+    .Object@pars$m <- NA_real_
     # (age at observation)
     .Object@pars$o <- NA_real_
-    # (selectivity)
+    # (age at selectivity)
     .Object@pars$v <- NA_real_
     # (carrying capacity)
-    .Object@pars$K <- NA_real_
+    .Object@pars$K <- distribution(value = 1, name = "K")
     
     # setup values to 
     # store pars iterations
     .Object@values$r <- rep(NA_real_, samples)
-    .Object@values$M <- rep(NA_real_, samples)
     .Object@values$s <- rep(NA_real_, samples)
+	.Object@values$l <- rep(NA_real_, samples)
     .Object@values$b <- rep(NA_real_, samples)
-    .Object@values$A <- rep(NA_real_, samples)
     .Object@values$m <- rep(NA_real_, samples)
     .Object@values$o <- rep(NA_real_, samples)
-    .Object@values$u <- rep(NA_real_, samples)
+    .Object@values$v <- rep(NA_real_, samples)
     .Object@values$K <- rep(NA_real_, samples)
     
     # setup management
@@ -125,8 +127,10 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     .Object@objectives$harvest_rate <- NA_real_
 
     # record rng seeds
-    seeds <- floor(runif(samples, 1, 1e6))
-    while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(samples, 1, 1e6))
+    seeds <- floor((runif(samples)) * 1e7)
+    if (any(duplicated(seeds))) warning(sum(duplicated(seeds)), "/", samples, " (approx. ", round(100 * sum(duplicated(seeds)) / samples), "%) of seeds are duplicated")
+    if (any(is.na(as.integer(seeds)))) warning(sum(is.na(as.integer(seeds))), "/", samples, " seeds are 'NA' values")
+    #while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(samples, 1, 1e6))
     .Object@seeds <- as.integer(seeds)
     
     # return
@@ -145,14 +149,14 @@ setMethod("show", "om",
               message("niter: ", object@samples, " (samples)")
               message("siter: ", object@settings$ref_points$iterations, " (ref. points)")
 			  message("siter: ", object@settings$projection$iterations, " (projections)")
-              message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
-              message("shape: ", if (length(object@shape) > 0) round(object@shape, 2) else red("EMPTY"))
+              #message("pars: ", if (length(object@pars) > 0) paste0(names(object@pars), collapse = ", ") else red("EMPTY"))
+              message("shape: ", if (length(object@shape) > 0) { if (length(object@shape) > 14) { paste0(c(round(object@shape[1:12], 2), "...", round(object@shape[length(object@shape)], 2)), collapse = ", ") } else { paste0(round(object@shape, 2), collapse = ", ") }} else red("EMPTY"))
               message("\nharvest rate function:")
               message(writeLines(deparse(object@harvest_rate)))
               message("rmax:")
               show(object@pst$rmax)
-              message("pars:")
-              invisible(lapply(object@pars, show))
+              message("r:")
+              show(object@pars$r)
           })
 # }}}
 

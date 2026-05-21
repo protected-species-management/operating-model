@@ -7,5 +7,8 @@
 load_rmax(object, value, ...)
 }
 \description{
-Load rmax into the \code{pst} slot of an \code{om-class} object.
+Load \eqn{r_{max}} into the \code{pars} slot of an \code{om-class} object.
+}
+\details{
+The intrinsic growth rate is assumed to have normal distribution. It is converted to a zero-truncated normal on assignment because the maximum growth rate is always assumed to be greater than zero (i.e., \eqn{\lambda > 1}).
 }

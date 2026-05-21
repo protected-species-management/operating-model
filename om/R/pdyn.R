@@ -155,7 +155,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         obj_fun <- function(x, shape, target) {
             
             h <- 1 / (1 + exp(-x[1]))
-            n <- matrix(k, nrow = NAGES, ncol = 2)
+            n <- matrix(k_prime, nrow = NAGES, ncol = 2)
             
             # equilibrium age
             # structure
@@ -166,11 +166,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n[a, 2] <- n[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
                 }
                 n[a, 2] <- n[a, 2] + n[a, 1] * S[a] * (1 -  sel[a] * h)
-                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]))^shape))
+                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2] * pat[-1]))^shape))
             }
                 
             # log of the equilibrium depletion
-            objective <- -1 * dnorm(sum(n[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]), target, 0.01, log = TRUE)
+            objective <- -1 * dnorm(sum(n[-1, 2] * pat[-1]), target, 0.01, log = TRUE)
             
             # return
             return(objective)
@@ -190,12 +190,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
         # set-up birth function
         birth <- function(y) {
-            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]) / sum(k[-1] * pat[-1]))^shape[i])) 
+            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + max(0, (b_max - b_eq)) * (1 - min(1, (sum(n[-1,y] * pat[-1]) / sum(k[-1] * pat[-1])))^shape[i])) 
         }
         
 		# pst observation function
 		pst_calc <- function(numbers) {
-			(1 / 2) * object@pst$phi * sample(object@pst$rmax) * .obs_error(sum(numbers * object@pst$ogive))
+			(1 / 2) * object@pst$phi * rmax_sample * .obs_error(sum(numbers * ogive))
 		}
 	
         #######################
@@ -213,23 +213,31 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # sample
             pars_sample <- lapply(object@pars, sample, n = 1)
-            rmax_sample <- sample(object@pst$rmax, n = 1)
+            rmax_sample <- pars_sample$rmax
                 
             # spin spinner
             cli_progress_update()
             
             # assign pars
-			a <- pars_sample$a
-			r <- pars_sample$r
-			M <- pars_sample$M
+			m <- pars_sample$m
+			r <- pars_sample$rmax
+			s <- pars_sample$s
+			l <- pars_sample$l
 			v <- pars_sample$v
 			o <- pars_sample$o
             K <- pars_sample$K
+            b <- pars_sample$b
+            
+            #lambda_i <- .solve_lambda(m = m, s = S, s0 = S * l, b = b)
+            #print(paste("r:",    round(pars_sample$r, 5)))
+            #print(paste("rmax:", round(pars_sample$rmax, 5)))
+            #print(paste("rest:", round(log(.solve_lambda(m, s, s * l, b)), 5)))
             
             # transcribe
-			S <- c(rep((exp(-M)^2), a), rep(exp(-M), NAGES - a))
+			#S <- c(rep(s * l, m), rep(s, NAGES - m))
+			S <- c(s * l, rep(s, NAGES - 1))
 			
-			age_mat <- as.integer(a)
+			age_mat <- as.integer(m)
 			age_pat <- age_mat + 1L
 			age_sel <- as.integer(v)
 			age_obs <- as.integer(o)
@@ -241,7 +249,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			
 			lambda <- exp(r)
 			
-			object@pst$ogive <- obs
+			ogive  <- obs
             
             # set up unexploited 
             # equilibrium female
@@ -265,13 +273,22 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             k_prime <- b_eq * p
             
             # initial conditions
-            # (breeding+ depletion = K)
-            k <- K * k_prime / sum(k_prime[-1] * pat[-1])
+            # (sum(k * pat) = K)
+            k <- K * k_prime
             
             # initial conditions
             if (initial_depletion < 1) {
-                h_init <- .ilogit(optimise(obj_fun, interval = c(-10,-1), shape = shape[i], target = initial_depletion)$minimum)
+                
+                # get initial value
+                x <- seq(-10, 0, length = 101)
+                y <- unlist(lapply(x, obj_fun, shape = shape[i], target = initial_depletion))
+                z <- x[which.min(y)]
+                
+                # minimise
+                h_init <- .ilogit(optimise(obj_fun, interval = c(z - 1, z + 1), shape = shape[i], target = initial_depletion)$minimum)
+                
             } else {
+                
                 h_init <- 0    
             }
             
@@ -287,17 +304,21 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
                 n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]))^shape[i]))
             }
+            
+            # check and reject
+            if (round(sum(n_init[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]), 2) != initial_depletion) {
+                warning("failed to estimate initial depletion for 'sample = ", i, "'")    
+                next
+            }
 			
 			# construct survivorship
 			# array
             if (STOCHASTIC) {
-				survivorship <- .survivorship(M, object@settings$cv$survivorship, env = ENV)
+				survivorship <- .survivorship(pars_sample$s, object@settings$cv$survivorship, env = ENV)
 				epsilon      <- .epsilon(object@settings$cv$birth, env = ENV)
 			} else {
-				survivorship <- .survivorship(M, env = ENV)
-				survivorship <- matrix(survivorship, nrow = SITER, ncol = NTIME, byrow = TRUE)
+				survivorship <- .survivorship(pars_sample$s, env = ENV)
 				epsilon      <- .epsilon(env = ENV)
-				epsilon      <- matrix(epsilon, nrow = SITER, ncol = NTIME, byrow = TRUE)
 			}
 			
             # loop over stochastic
@@ -309,7 +330,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 
 				# survivorship matrix
 				s <- matrix(survivorship[j,], ncol = NTIME, nrow = NAGES, byrow = TRUE)
-				s <- (sweep(s, 1, 1 - mat, "*")^2) + sweep(s, 1, mat, "*")
+				#s <- (sweep(s, 1, 1 - mat, "*") * pars_sample$l) + sweep(s, 1, mat, "*")
+				s[1,] <- s[1,] * pars_sample$l
 				
 				# birth rate deviation
 				e <- epsilon[j,]
@@ -367,20 +389,20 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             N[i,,,] <- proj_n
             
 			# pst
+            object@pst$rmax[i]    <- rmax_sample
             object@pst$value[i,,] <- proj_pst
 			
             # spin spinner
             cli_progress_update()
             
             # record values
-            object@values$r[i] <- pars_sample$r
-            object@values$M[i] <- pars_sample$M
-			object@values$s[i] <- exp(-pars_sample$M)
-            object@values$b[i] <- b_max
-			object@values$A[i] <- (b_max - b_eq) / b_eq
-            object@values$m[i] <- pars_sample$a
+            object@values$r[i] <- pars_sample$rmax
+			object@values$s[i] <- pars_sample$s
+			object@values$l[i] <- pars_sample$l
+            object@values$b[i] <- pars_sample$b
+            object@values$m[i] <- pars_sample$m
             object@values$o[i] <- pars_sample$o
-            object@values$u[i] <- pars_sample$v
+            object@values$v[i] <- pars_sample$v
             object@values$K[i] <- pars_sample$K
         }
     }
@@ -404,11 +426,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         object@objectives$harvest_rate[i,] <- apply(sweep(matrix(object@diagnostics$harvest_rate[i,,], nrow = SITER), 1, object@targets$harvest_rate[i], p_lower), 2, mean, na.rm = TRUE)
     }
     
-    # dimnames (after calculations)
-	# [life-history samples, process error iterations, ages, time]
-    dimnames(N) <- list(sample = 1:NITER, iteration = 1:SITER, age = ages, time = time)
-    
-    # assign data
+    # assign numbers
+    # [life-history samples, process error iterations, ages, time]
     object@.Data <- N
     
     # return

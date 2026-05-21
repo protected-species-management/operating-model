@@ -7,5 +7,5 @@
 values(object, ...)
 }
 \description{
-Extracts values generated internally for projection by \code{pdyn()}.
+Extracts values generated internally for projection by \code{\link{pdyn}}.
 }

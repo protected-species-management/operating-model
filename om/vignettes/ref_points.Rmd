@@ -24,38 +24,57 @@ library(dplyr)
 library(ggplot2)
 ```
 
+Setup om-class object for age-based operating model
+```{r}
+om_object <- om(ages = 0:12, samples = 3L, time = 201)
+```
+```{r, echo = FALSE}
+#print(om_object@seeds)
+om_object@seeds <- c(2032574L, 4149433L, 9193660L)
+```
+
+Set-up list of parameter distributions required for population dynamics function:
+```{r}
+om_object <- om_object %>% load_pars(list(
+    's' = distribution(pars = c(2.2, 0.2), density = "logitnormal", name = "adult survivorship"),
+    'b' = distribution(pars = c(0.0, 0.2), density = "lognormal", name = "female fecundity"),
+    'm' = distribution(value = 4, name = "age at maturity"),
+    'l' = distribution(value = 0.7, name = "immature survivorship multiplier")
+))
+```
+
+The intrinsic growth rate is calculated automatically when parameters are assigned:
+```{r}
+plot(lambda(om_object))
+```
+
+The intrinsic growth can be assumed to be the maximum, or an alternative can be supplied:
+```{r}
+om_object <- om_object %>% load_rmax()
+```
+
+Assumed to be a zero-truncated normal:
+```{r}
+plot(om_object@pars$rmax)
+```
 
 ```{r}
-# setup om-class object
-# for cohort-aggregated 
-# operating model
-om_object <- om(ages = 0:8, samples = 3L, time = 201)
-
-# assign rmax
-# (used to estimate the PST)
-om_object <- om_object %>% load_rmax(distribution(value = 0.04, name = "intrinsic growth"))
-
-# setup list of pars
-# (list with parameter distributions required
-# by population dynamics function)
-om_object <- om_object %>% load_pars(list(
-    'r' = distribution(iter = 0L, density = "lognormal", pars = c(log(0.04) - (0.05^2)/2, 0.05), name = "intrinsic growth"),
-    'M' = distribution(value = 0.05, name = "natural mortality"),
-    'f' = distribution(value = 0.00, name = "female fecundity"),
-  	'o' = distribution(value = 0,    name = "age at observation"),
-    'a' = distribution(value = 0,    name = "age at maturity"),
-    'v' = distribution(value = 1,    name = "age at selectivity"),
-    'K' = distribution(value = 1,    name = "carrying capacity")
+om_object <- om_object %>% update_pars(list(
+    'o' = distribution(value = 1, name = "age at observation"),
+    'v' = distribution(value = 4, name = "age at selectivity"),
+    'K' = distribution(value = 1, name = "carrying capacity")
 ))
 
 # load uncertainty
 om_object <- om_object %>% load_cvs(list(
-    'survivorship' = 0.20,
+    'survivorship' = 0.05,
     'birth'        = 0.01,
     'observation'  = 0.00,
     'mortality'    = 0.00)
 )
+```
 
+```{r}
 # assume shape
 shape(om_object) <- 1
 
@@ -63,8 +82,8 @@ shape(om_object) <- 1
 om_object0 <- rp(om_object, stochastic = FALSE, time = 200L)
 targets(om_object0)
 
-dfr0 <- spf(om_object0, harvest_rate = seq(0.00, 0.05, length = 101))
-dfr1 <-  data.frame(sample = as.character(1:3), harvest_rate = om_object0@targets$harvest_rate, captures = om_object0@targets$captures, depletion = om_object0@targets$depletion)
+dfr0 <- spf(om_object0, harvest_rate = seq(0.00, max(targets(om_object0)$harvest_rate$value) * 2, length = 101))
+dfr1 <-  data.frame(sample = as.character(1:om_object@samples), harvest_rate = om_object0@targets$harvest_rate, captures = om_object0@targets$captures, depletion = om_object0@targets$depletion)
 ggplot() + 
   geom_line(data = dfr0, aes(x = harvest_rate, y = captures, col = sample)) +
   geom_vline(data = dfr1, aes(xintercept = harvest_rate, col = sample), linetype = "dashed") +
@@ -73,13 +92,15 @@ ggplot() +
   geom_line(data = dfr0, aes(x = depletion, y = captures, col = sample)) +
   geom_vline(data = dfr1, aes(xintercept = depletion, col = sample), linetype = "dashed") +
   geom_point(data = dfr1, aes(x = depletion, y = captures, col = sample))
+```
 
+```{r}
 # population dynamics
 om_object0 <- pdyn(om_object0, stochastic = FALSE, initial_depletion = 0.1)
 dynplot(om_object0)
 
-diagnostics(om_object0)
-objectives(om_object0)
+#diagnostics(om_object0)
+#objectives(om_object0)
 ```
 
 ```{r}
@@ -91,8 +112,8 @@ shape(om_object1)
 om_object1 <- rp(om_object1)
 targets(om_object1)
 
-dfr0 <- spf(om_object1, harvest_rate = seq(0.00, 0.05, length = 101))
-dfr1 <-  data.frame(sample = as.character(1:3), harvest_rate = om_object1@targets$harvest_rate, captures = om_object1@targets$captures, depletion = om_object1@targets$depletion)
+dfr0 <- spf(om_object1, harvest_rate = seq(0.00, max(targets(om_object1)$harvest_rate$value) * 2, length = 101))
+dfr1 <-  data.frame(sample = as.character(1:om_object@samples), harvest_rate = om_object1@targets$harvest_rate, captures = om_object1@targets$captures, depletion = om_object1@targets$depletion)
 ggplot() + 
   geom_line(data = dfr0, aes(x = harvest_rate, y = captures, col = sample)) +
   geom_vline(data = dfr1, aes(xintercept = harvest_rate, col = sample), linetype = "dashed") +
@@ -102,9 +123,9 @@ ggplot() +
   geom_vline(data = dfr1, aes(xintercept = depletion, col = sample), linetype = "dashed") +
   geom_point(data = dfr1, aes(x = depletion, y = captures, col = sample))
 
-om_object1 <- pdyn(om_object1, stochastic = TRUE, initial_depletion = 0.3, iterations = 200)
+om_object1 <- pdyn(om_object1, stochastic = FALSE, initial_depletion = 0.3)
 dynplot(om_object1)
 
-diagnostics(om_object1)
-objectives(om_object1)
+#diagnostics(om_object1)
+#objectives(om_object1)
 ```

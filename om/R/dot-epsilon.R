@@ -2,10 +2,9 @@
 .epsilon <- function(cv = 0, env) {
 
 	NTIME <- get("NTIME", envir = env)
+	SITER <- get("SITER", envir = env)
 	
 	if (cv > 0) {
-		
-		SITER <- get("SITER", envir = env)
 		
 		e <- array(dim = c(SITER, NTIME))
 		
@@ -13,7 +12,7 @@
 		
 	} else {
 	
-		e   <- array(dim = c(NTIME))
+		e   <- array(dim = c(SITER, NTIME))
 		e[] <- 1
 	}
 	

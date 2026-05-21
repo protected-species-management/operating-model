@@ -1,7 +1,10 @@
 #' 
 #' @rdname distribution-class
 #' 
-#' @param object either an integer specifiying the length of an empty vector or a vector of derived values
+#' @param values vector of values
+#' @param name label for parameter
+#' @param pars parameters for distriution (of length 2)
+#' @param density density distribution (i.e., beta, uniform, normal, lognormal, logitnormal or gamma)
 #' 
 #' @examples
 #' # create object containing

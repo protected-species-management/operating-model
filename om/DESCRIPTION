@@ -1,17 +1,19 @@
 Package: om
 Type: Package
 Title: Operating model
-Version: 0.1.5
-Date: 2026-05-12
+Version: 0.1.8
+Date: 2026-05-21
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
-Description: Simulation module for managed populations
+Description: Simulation model for the evaluation of protected species reference points
 VignetteBuilder: knitr
 Depends:
     R (>= 4.4),
-	  utils (>= 4.5),
+    utils (>= 4.5),
     methods (>= 4.3),
-    RTMB (>= 1.8)
+    RTMB (>= 1.8),
+    logitnorm (>= 0.8),
+	cli (>= 3.6)
 Repos:
     kaskr/RTMB
 Suggests:
@@ -29,11 +31,13 @@ Collate:
     'sample.distribution.R'
     'distribution.R'
     'dot-check.R'
+    'dot-el.R'
     'dot-epsilon.R'
     'dot-logit.R'
     'dot-pdyn.R'
     'dot-survivorship.R'
     'dynplot.R'
+    'lambda.R'
     'load_bias.R'
     'load_cvs.R'
     'load_pars.R'
@@ -47,6 +51,7 @@ Collate:
     'rp.R'
     'shape.R'
     'spf.R'
+    'utils.R'
     'values.R'
     'zzz.R'
 Encoding: UTF-8

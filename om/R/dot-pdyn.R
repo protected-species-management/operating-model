@@ -14,10 +14,12 @@
 			
     n <- AD(array(dim = c(NAGES, NTIME)))
     p <- AD(numeric(NAGES))
-    S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    #S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    S <- c(survivorship[1] * multiplier, rep(survivorship[1], NAGES - 1))
 	
 	s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
-	s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
+	#s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
+	s[1,] <- s[1,] * multiplier
 	
     birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]))^shape))
@@ -107,10 +109,12 @@
     
     n <- array(dim = c(NAGES, NTIME))
     p <- numeric(NAGES)
-    S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    #S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    S <- c(survivorship[1] * multiplier, rep(survivorship[1], NAGES - 1))
     
     s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
-    s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
+    #s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
+    s[1,] <- s[1,] * multiplier
     
     birth <- function(y) {
         0.5 * min(1, sum(pat[-1] * n[-1,y])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n[-1,y] * pat[-1])))^shape))
@@ -205,12 +209,14 @@
 			
     n <- AD(array(dim = c(NAGES, NTIME)))
     p <- AD(numeric(NAGES))
-	S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    #S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    S <- c(survivorship[1] * multiplier, rep(survivorship[1], NAGES - 1))
 	
 	s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
-	s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
-	
-    birth <- function(y) {
+	#s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
+	s[1,] <- s[1,] * multiplier
+    
+	birth <- function(y) {
         0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]))^shape))
     }
     
@@ -297,10 +303,12 @@
     
     n <- array(dim = c(NAGES, NTIME))
     p <- numeric(NAGES)
-    S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    #S <- c(rep(survivorship[1] * multiplier, age_mat), rep(survivorship[1], NAGES - age_mat))
+    S <- c(survivorship[1] * multiplier, rep(survivorship[1], NAGES - 1))
     
     s <- matrix(survivorship, ncol = NTIME, nrow = NAGES, byrow = TRUE)
-    s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
+    #s <- (sweep(s, 1, 1 - mat, "*") * multiplier) + sweep(s, 1, mat, "*")
+    s[1,] <- s[1,] * multiplier
     
     birth <- function(y) {
         0.5 * min(1, sum(pat[-1] * n[-1,y])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n[-1,y] * pat[-1])))^shape))

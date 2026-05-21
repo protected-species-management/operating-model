@@ -190,7 +190,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
         # set-up birth function
         birth <- function(y) {
-            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]) / sum(k[-1] * pat[-1]))^shape[i])) 
+            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + max(0, (b_max - b_eq)) * (1 - min(1, (sum(n[-1,y] * pat[-1]) / sum(k[-1] * pat[-1])))^shape[i])) 
         }
         
 		# pst observation function
@@ -231,10 +231,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             #lambda_i <- .solve_lambda(m = m, s = S, s0 = S * l, b = b)
             #print(paste("r:",    round(pars_sample$r, 5)))
             #print(paste("rmax:", round(pars_sample$rmax, 5)))
-            #print(paste("rest:", round(log(.solve_lambda(m, S, S * l, b)), 5)))
+            #print(paste("rest:", round(log(.solve_lambda(m, s, s * l, b)), 5)))
             
             # transcribe
-			S <- c(rep(s * l, m), rep(s, NAGES - m))
+			#S <- c(rep(s * l, m), rep(s, NAGES - m))
+			S <- c(s * l, rep(s, NAGES - 1))
 			
 			age_mat <- as.integer(m)
 			age_pat <- age_mat + 1L
@@ -277,8 +278,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # initial conditions
             if (initial_depletion < 1) {
-                h_init <- .ilogit(optimise(obj_fun, interval = c(-10,0), shape = shape[i], target = initial_depletion)$minimum)
+                
+                # get initial value
+                x <- seq(-10, 0, length = 101)
+                y <- unlist(lapply(x, obj_fun, shape = shape[i], target = initial_depletion))
+                z <- x[which.min(y)]
+                
+                # minimise
+                h_init <- .ilogit(optimise(obj_fun, interval = c(z - 1, z + 1), shape = shape[i], target = initial_depletion)$minimum)
+                
             } else {
+                
                 h_init <- 0    
             }
             
@@ -308,9 +318,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 				epsilon      <- .epsilon(object@settings$cv$birth, env = ENV)
 			} else {
 				survivorship <- .survivorship(pars_sample$s, env = ENV)
-				survivorship <- matrix(survivorship, nrow = SITER, ncol = NTIME, byrow = TRUE)
 				epsilon      <- .epsilon(env = ENV)
-				epsilon      <- matrix(epsilon, nrow = SITER, ncol = NTIME, byrow = TRUE)
 			}
 			
             # loop over stochastic
@@ -322,7 +330,8 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 
 				# survivorship matrix
 				s <- matrix(survivorship[j,], ncol = NTIME, nrow = NAGES, byrow = TRUE)
-				s <- (sweep(s, 1, 1 - mat, "*") * pars_sample$l) + sweep(s, 1, mat, "*")
+				#s <- (sweep(s, 1, 1 - mat, "*") * pars_sample$l) + sweep(s, 1, mat, "*")
+				s[1,] <- s[1,] * pars_sample$l
 				
 				# birth rate deviation
 				e <- epsilon[j,]

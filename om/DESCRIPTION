@@ -1,7 +1,7 @@
 Package: om
 Type: Package
 Title: Operating model
-Version: 0.1.7
+Version: 0.1.8
 Date: 2026-05-21
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
@@ -12,7 +12,8 @@ Depends:
     utils (>= 4.5),
     methods (>= 4.3),
     RTMB (>= 1.8),
-    logitnorm (>= 0.8)
+    logitnorm (>= 0.8),
+	cli (>= 3.6)
 Repos:
     kaskr/RTMB
 Suggests:

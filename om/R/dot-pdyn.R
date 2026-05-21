@@ -131,7 +131,7 @@
     
     # replacement birth rate
     # per female
-    # (equal to: 2 * (1 - S) / (S0^m * S))
+    # (equal to: 2 * (1 - S[age_mat + 1]) / prod(S[1:(age_mat + 1)])
     b_eq <- 1 / sum(pat * p)
     
     # maximum fecundity

@@ -122,7 +122,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, fecundity = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
-		objective <- -1 * dnorm(sum(n[(m + 2):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
+		#objective <- -1 * dnorm(sum(n[(m + 2):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
+        objective <- -1 * dnorm(sum(n[2:dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
 		
 		# return objective
 		return(objective)
@@ -216,7 +217,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 
                 # log of the equilibrium catch
                 # per iteration
-                objective <- objective - dnorm(mean(apply(n[(m + 2):dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
+                #objective <- objective - dnorm(mean(apply(n[(m + 2):dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
+                objective <- objective - dnorm(mean(apply(n[2:dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
             }
             
             # return objective
@@ -249,7 +251,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     
 	s <- .survivorship(s, env = ENV)
 	e <- .epsilon(env = ENV)
-	
+	#browser()
     # function to estimate h_mnpl
     # given shape
     h1 <- MakeTape(obj1, c(.logit(r / 2), log(1)))

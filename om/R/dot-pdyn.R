@@ -22,7 +22,7 @@
 	s[1,] <- s[1,] * multiplier
 	
     birth <- function(y) {
-        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]))^shape))
+        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]))^shape))
     }
     
     # set up unexploited 
@@ -46,8 +46,8 @@
     k_prime <- b_eq * p
     
     # initial conditions
-    # (sum(k * pat) = 1)
-    k <- k_prime
+    # (sum(k1+) = 1)
+    k <- k_prime / sum(k_prime[-1])
     
     # use iteration to calculate
     # initial age structure
@@ -60,11 +60,11 @@
             n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
         }
         n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
-        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]))^shape))
+        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]))^shape))
     }
     
     # check depletion
-    if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
+    if(.Call("_RTMB_getValues", sum(n_init[-1, 2]), PACKAGE = "RTMB") > 1) {
         warning("initial depletion > 1")    
     }
     
@@ -117,7 +117,7 @@
     s[1,] <- s[1,] * multiplier
     
     birth <- function(y) {
-        0.5 * min(1, sum(pat[-1] * n[-1,y])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n[-1,y] * pat[-1])))^shape))
+        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n[-1,y])))^shape))
     }
     
     # set up unexploited 
@@ -142,8 +142,8 @@
     k_prime <- b_eq * p
     
     # initial conditions
-    # (sum(k * pat) = 1)
-    k <- k_prime
+    # (sum(k1+) = 1)
+    k <- k_prime / sum(k_prime[-1])
     
     # use iteration to calculate
     # initial age structure
@@ -156,11 +156,11 @@
             n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
         }
         n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
-        n_init[1, 2] <- 0.5 * min(1, sum(pat[-1] * n_init[-1, 2])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2] * pat[-1])))^shape))
+        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2])))^shape))
     }
     
     # check depletion
-    if(sum(n_init[-1, 2] * pat[-1]) > 1) {
+    if(sum(n_init[-1, 2]) > 1) {
         warning("initial depletion > 1")    
     }
     
@@ -181,11 +181,6 @@
         
         # plus group
         n[a, y] <- n[a, y] + n[a, y - 1] * s[a, y - 1] * (1 - sel[a] * h)
-        
-        #
-        #if (sum(n[-1, y] * pat[-1]) > 1) {
-        #    n[-1, y] <- n[-1, y] / sum(n[-1, y] * pat[-1])    
-        #}
         
         # birth
         n[1, y] <- birth(y) * epsilon[y]
@@ -217,7 +212,7 @@
 	s[1,] <- s[1,] * multiplier
     
 	birth <- function(y) {
-        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y] * pat[-1]))^shape))
+        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]))^shape))
     }
     
     # set up unexploited 
@@ -241,8 +236,8 @@
     k_prime <- b_eq * p
     
     # initial conditions
-    # (sum(k * pat) = 1)
-    k <- k_prime
+    # (sum(k1+) = 1)
+    k <- k_prime / sum(k_prime[-1])
     
     # use iteration to calculate
     # initial age structure
@@ -255,11 +250,11 @@
             n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
         }
         n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
-        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]))^shape))
+        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]))^shape))
     }
     
     # check depletion
-    if(.Call("_RTMB_getValues", sum(n_init[-1, 2] * pat[-1]), PACKAGE = "RTMB") > 1) {
+    if(.Call("_RTMB_getValues", sum(n_init[-1, 2]), PACKAGE = "RTMB") > 1) {
         warning("initial depletion > 1")    
     }
     
@@ -311,7 +306,7 @@
     s[1,] <- s[1,] * multiplier
     
     birth <- function(y) {
-        0.5 * min(1, sum(pat[-1] * n[-1,y])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n[-1,y] * pat[-1])))^shape))
+        0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n[-1,y])))^shape))
     }
     
     # set up unexploited 
@@ -335,8 +330,8 @@
     k_prime <- b_eq * p
     
     # initial conditions
-    # (sum(k * pat) = 1)
-    k <- k_prime
+    # (sum(k1+) = 1)
+    k <- k_prime / sum(k_prime[-1])
     
     # use iteration to calculate
     # initial age structure
@@ -349,11 +344,11 @@
             n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
         }
         n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h)
-        n_init[1, 2] <- 0.5 * min(1, sum(pat[-1] * n_init[-1, 2])) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2] * pat[-1])))^shape))
+        n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2])))^shape))
     }
     
     # check depletion
-    if(sum(n_init[-1, 2] * pat[-1]) > 1) {
+    if(sum(n_init[-1, 2]) > 1) {
         warning("initial depletion > 1")    
     }
     
@@ -403,7 +398,7 @@
     captures <- mean(apply(sweep(N[, recent_time], 1, sel, "*") * h, 2, sum))
     
     # equilibrium depletion
-    depletion <- mean(apply(sweep(N[-1, recent_time], 1, pat[-1], "*"), 2, sum))
+    depletion <- mean(apply(N[-1, recent_time], 2, sum))
     
     # equilibrium per-capita birth
     production <- mean(N[1, recent_time] / apply(sweep(N[-1, recent_time], 1, pat[-1], "*"), 2, sum))
@@ -445,7 +440,7 @@
     captures <- mean(apply(sweep(N[,, recent_time], 2, sel, "*") * h, 1, sum) / length(recent_time))
     
     # equilibrium depletion
-	depletion <- mean(apply(sweep(N[, -1, recent_time], 2, pat[-1], "*"), 1, sum) / length(recent_time))
+	depletion <- mean(apply(N[, -1, recent_time], 1, sum) / length(recent_time))
     
     # equilibrium per-capita birth
     production <- mean(apply(N[,1,recent_time], 1, sum) / apply(sweep(N[,-1, recent_time], 2, pat[-1], "*"), 1, sum))

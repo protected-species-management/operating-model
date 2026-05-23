@@ -155,7 +155,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         obj_fun <- function(x, shape, target) {
             
             h <- 1 / (1 + exp(-x[1]))
-            n <- matrix(k_prime, nrow = NAGES, ncol = 2)
+            n <- matrix(k, nrow = NAGES, ncol = 2)
             
             # equilibrium age
             # structure
@@ -166,11 +166,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n[a, 2] <- n[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h)
                 }
                 n[a, 2] <- n[a, 2] + n[a, 1] * S[a] * (1 -  sel[a] * h)
-                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2] * pat[-1]))^shape))
+                n[1, 2] <- 0.5 * sum(pat[-1] * n[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1, 2]))^shape))
             }
                 
             # log of the equilibrium depletion
-            objective <- -1 * dnorm(sum(n[-1, 2] * pat[-1]), target, 0.01, log = TRUE)
+            objective <- -1 * dnorm(sum(n[-1, 2]), target, 0.01, log = TRUE)
             
             # return
             return(objective)
@@ -190,7 +190,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
         # set-up birth function
         birth <- function(y) {
-            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + max(0, (b_max - b_eq)) * (1 - min(1, (sum(n[-1,y] * pat[-1]) / sum(k[-1] * pat[-1])))^shape[i])) 
+            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - min(1, (sum(n[-1,y]) / sum(k[-1])))^shape[i])) 
         }
         
 		# pst observation function
@@ -220,7 +220,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # assign pars
 			m <- pars_sample$m
-			r <- pars_sample$rmax
+			#r <- pars_sample$rmax
 			s <- pars_sample$s
 			l <- pars_sample$l
 			v <- pars_sample$v
@@ -247,7 +247,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			sel <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
 			obs <- c(rep(0, age_obs), rep(1, NAGES - age_obs))
 			
-			lambda <- exp(r)
+			#lambda <- exp(r)
 			
 			ogive  <- obs
             
@@ -266,15 +266,21 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # maximum birth rate
             # per female
-            b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / prod(S[1:(age_mat + 1)])
+            b_max <- b#2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / prod(S[1:(age_mat + 1)])
+            
+            # check and reject
+            if (b_max < b_eq) {
+                warning("'b_max < b_eq' for 'sample = ", i, "'")    
+                next
+            }
             
             # initialise population
             # at equilibrium
             k_prime <- b_eq * p
             
             # initial conditions
-            # (sum(k * pat) = K)
-            k <- K * k_prime
+            # (sum(k1+) = 1)
+            k <- k_prime / sum(k_prime[-1])
             
             # initial conditions
             if (initial_depletion < 1) {
@@ -302,11 +308,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h_init)
                 }
                 n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
-                n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]))^shape[i]))
+                n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]))^shape[i]))
             }
             
             # check and reject
-            if (round(sum(n_init[-1, 2] * pat[-1]) / sum(k[-1] * pat[-1]), 2) != initial_depletion) {
+            if (round(sum(n_init[-1, 2]), 2) != initial_depletion) {
                 warning("failed to estimate initial depletion for 'sample = ", i, "'")    
                 next
             }
@@ -321,12 +327,15 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 				epsilon      <- .epsilon(env = ENV)
 			}
 			
+			# (sum(k1+) = K)
+			k <- k * K
+			
             # loop over stochastic
             # process error
             for (j in 1:SITER) {
                 
                 # initialise
-                n[, 1] <- n_init[,2]
+                n[, 1] <- n_init[,2] * K
                 
 				# survivorship matrix
 				s <- matrix(survivorship[j,], ncol = NTIME, nrow = NAGES, byrow = TRUE)
@@ -369,7 +378,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 # values per-year
 				proj_h[j,]         <- h
                 proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-NTIME] * h
-                proj_depletion[j,] <- apply(sweep(n[-1,], 1, pat[-1], "*"), 2, sum) / sum(k[-1] * pat[-1])
+                proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
                 proj_n[j,,]        <- n
 				proj_pst[j,]       <- pst
                 
@@ -396,7 +405,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             cli_progress_update()
             
             # record values
-            object@values$r[i] <- pars_sample$rmax
+            object@values$r[i] <- pars_sample$r
 			object@values$s[i] <- pars_sample$s
 			object@values$l[i] <- pars_sample$l
             object@values$b[i] <- pars_sample$b

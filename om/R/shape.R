@@ -7,6 +7,7 @@
 #' @param time equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})
 #' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
+#' @param safe logical value indicating whether RTMB model should be recompiled with each sample (resulting in a more stable estimation)
 #' @seealso [rp()]
 #' @export
 #' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
@@ -16,7 +17,7 @@
 # wrapper for execution of population
 # dynamics function
 setGeneric("shape", function(object, depletion, ...) standardGeneric("shape"))
-setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = FALSE, ...) {
+setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = FALSE, safe = TRUE, ...) {
     
     # current environment
     ENV <- environment()
@@ -251,7 +252,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     
 	s <- .survivorship(s, env = ENV)
 	e <- .epsilon(env = ENV)
-	#browser()
+	
     # function to estimate h_mnpl
     # given shape
     h1 <- MakeTape(obj1, c(.logit(r / 2), log(1)))
@@ -319,15 +320,67 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			v <- pars_sample$v
 			b <- pars_sample$b
 			
-			s <- .survivorship(s, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
-			e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)
+			#h2$force.update()
+			#i2$force.update()
 			
-			h2$force.update()
-			i2$force.update()
-            
-            # record estimate
-            shape_values[i] <- exp(i2(depletion))
-            h_values[i]     <- .ilogit(h2(log(shape_values[i])))
+			if (TRUE) {
+			    
+			    s <- .survivorship(s, env = ENV)
+			    e <- .epsilon(env = ENV)
+			    
+    			# function to estimate h_mnpl
+    			# given shape
+    			h1 <- MakeTape(obj1, c(.logit(r / 2), log(1)))
+    			h2 <- h1$newton(1)
+    			
+    			# function to estimate
+    			# shape given depletion target
+    			i1 <- MakeTape(obj2, c(log(1), 0.5))
+    			i2 <- i1$newton(1)
+    			
+    			# record initial 
+    			# deterministic estimates
+    			shape_log_init <- i2(depletion)
+    			h_logit_init   <- h2(shape_log_init)
+    			
+    			if (STOCHASTIC) {
+    			    
+    			    # simulate stochastic
+    			    # survivorship
+    			    s <- .survivorship(pars_sample$s, object@settings$cv$survivorship, env = ENV)
+    			    
+    			    # stochastic birth
+    			    # deviation
+    			    e <- .epsilon(object@settings$cv$birth, env = ENV)
+    			    
+    			    # recompile with 
+    			    # initial values
+    			    h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
+    			    h2 <- h1$newton(1)
+    			    i1 <- MakeTape(obj4, c(shape_log_init, depletion))
+    			    i2 <- i1$newton(1)
+    			    
+    			    # record estimate
+    			    shape_values[i] <- exp(i2(depletion))
+    			    h_values[i]     <- .ilogit(h2(log(shape_values[i])))
+    			    
+    			} else {
+    			    
+    			    shape_values[i] <- exp(shape_log_init)
+    			    h_values[i]     <- .ilogit(h2(log(shape_values[i])))
+    			}
+			} else {
+			    
+			    s <- .survivorship(s, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
+			    e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)
+			    
+			    h2$force.update()
+			    i2$force.update()
+			    
+			    # record estimate
+			    shape_values[i] <- exp(i2(depletion))
+			    h_values[i]     <- .ilogit(h2(log(shape_values[i])))
+			}
         }
     }
     

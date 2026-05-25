@@ -32,6 +32,10 @@ sample.distribution <- function(x, n = 1, ...) {
                 y <- runif(n, min = x@pars[1], max = x@pars[2])    
             }
             
+            if (grepl("^beta", x@density)) {
+                y <- rbeta(n, shape1 = x@pars[1], shape2 = x@pars[2])    
+            }
+            
             if (grepl("^normal", x@density)) {
                 y <- rnorm(n, mean = x@pars[1], sd = x@pars[2]) 
             }

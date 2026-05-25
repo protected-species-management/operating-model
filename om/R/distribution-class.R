@@ -57,6 +57,10 @@ setMethod("initialize", "distribution", function(.Object, ...) {
             .Object@pars <- .calc_uniform_pars(.Object@.Data)    
         }
         
+        if (grepl("^beta", .Object@density)) {
+            .Object@pars <- .calc_beta_pars(.Object@.Data)    
+        }
+        
         if (grepl("^normal", .Object@density)) {
             .Object@pars <- .calc_normal_pars(.Object@.Data)    
         }
@@ -84,6 +88,10 @@ setMethod("initialize", "distribution", function(.Object, ...) {
         
         if (grepl("^uniform", .Object@density)) {
             .Object@.Data <- runif(.Object@iter, min = .Object@pars[1], max = .Object@pars[2])    
+        }
+        
+        if (grepl("^beta", .Object@density)) {
+            .Object@.Data <- rbeta(.Object@iter, shape1 = .Object@pars[1], shape2 = .Object@pars[2])    
         }
         
         if (grepl("^normal", .Object@density)) {
@@ -128,6 +136,7 @@ summary.distribution <- function(object) {
     
     if (grepl("^unspecified", object@density))  return(.show_unspecified_moments(object@.Data))
     if (grepl("^uniform", object@density))      return(.show_uniform_moments(object@pars))
+    if (grepl("^beta", object@density))         return(.show_beta_moments(object@pars))
     if (grepl("^normal", object@density))       return(.show_normal_moments(object@pars))
     if (grepl("^zt?.normal", object@density))   return(.show_ztnormal_moments(object@pars))
     if (grepl("^log?normal", object@density))   return(.show_lognormal_moments(object@pars))
@@ -154,6 +163,33 @@ summary.distribution <- function(object) {
     
     # return
     c('E[x]' = round((a + b) / 2, 5), 'VAR[x]' = round(((b - a)^2) / 12, 5), 'CV[x]' = round(sqrt(((b - a)^2) / 12) / ((a + b) / 2), 5))
+}
+
+.calc_beta_pars <- function(x) {
+    
+    # 
+    xbar <- mean(x)
+    xvar <- var(x)
+    
+    a <- xbar * (xbar * (1 - xbar) / xvar - 1) 
+    b <- (1 - xbar) * (xbar * (1 - xbar) / xvar - 1)
+    
+    # 
+    if (xvar > xbar * (1 - xbar)) {
+        stop("variance of input values is too high for estimation of beta distribution parameters using the method-of-moments")    
+    }
+    
+    # return
+    return(c(a, b))
+}
+
+.show_beta_moments <- function(x) {
+    
+    a <- x[1]
+    b <- x[2]
+    
+    # return
+    c('E[x]' = round(a / (a + b), 5), 'VAR[x]' = round(a * b / ((a + b)^2 * (a + b + 1)), 5), 'CV[x]' = round(sqrt(a * b / ((a + b)^2 * (a + b + 1))) / (a / (a + b)), 5))
 }
 
 .calc_normal_pars <- function(x) {
@@ -185,8 +221,11 @@ summary.distribution <- function(object) {
 
 .show_ztnormal_moments <- function(x) {
     
+    mu     <- x[1]
+    sigma  <- x[2]
+    
     # return
-    c('E[x]' = round(NA_real_, 5), 'VAR[x]' = round(NA_real_, 5), 'CV[x]' = round(NA_real_, 5))
+    c('E[x]' = round(mu / (1 - pnorm(0, mu, sigma)), 5), 'VAR[x]' = round(NA_real_, 5), 'CV[x]' = round(NA_real_, 5))
 }
 
 .calc_lognormal_pars <- function(x) {

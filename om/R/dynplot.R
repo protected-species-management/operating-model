@@ -9,9 +9,9 @@
 #' 
 #' @return Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles. 
 #' @include array2dfr.R
-#' @import ggplot2
+#' @importFrom ggplot2 ggplot stat_summary facet_grid
 #' @importFrom rlang .data
-#' @importFrom dplyr bind_rows
+#' @importFrom dplyr bind_rows left_join
 #' @importFrom stats na.omit
 #' 
 #' @export

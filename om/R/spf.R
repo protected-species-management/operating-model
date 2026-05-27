@@ -9,8 +9,8 @@
 #' @return A data frame containing depletion, sustainable captures and the harvest rate, for each of the input harvest rate values. If life-history inputs are uncertain, iterations are sampled. These iterations do not represent any process error, only uncertainty in the operating model conditioning. 
 #' @include dot-pdyn.R dot-survivorship.R
 #' @importFrom dplyr bind_rows
-#' @import cli
-#' @import glue
+#' @importFrom cli cli_progress_step cli_progress_update
+#' @importFrom glue glue
 #' @export
 setGeneric("spf", function(object, harvest_rate, ...) standardGeneric("spf"))
 #' @rdname spf

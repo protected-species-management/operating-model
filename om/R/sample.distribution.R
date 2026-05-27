@@ -1,5 +1,5 @@
 #' @title Sample from distribution class object
-#' @import logitnorm
+#' @importFrom logitnorm rlogitnorm
 #' @export
 sample <- function(x, n, ...) UseMethod("sample")
 #' @rdname sample

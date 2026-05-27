@@ -4,7 +4,7 @@
 #' @param log logical value indication whether \eqn{r = \log(\lambda)} should be returned.
 #' @export
 #' @include om-class.R distribution-class.R sample.distribution.R
-#' @import cli
+#' @importFrom cli cli_alert_danger
 #{{{ shape()
 # wrapper for execution of population
 # dynamics function

@@ -1,4 +1,4 @@
-#' @importFrom RTMB AD
+#' @import RTMB
 .pdyn <- function(h, shape, survivorship, multiplier, fecundity, epsilon, maturity, selectivity, lambda, env) {
     
 	NAGES <- get("NAGES", envir = env)

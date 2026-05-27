@@ -12,7 +12,7 @@
 #' @export
 #' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
-#' @import cli
+#' @importFrom cli cli_progress_step cli_progress_update
 #{{{ shape()
 # wrapper for execution of population
 # dynamics function
@@ -31,6 +31,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # into function environment
     get_dim(object, ref_points = TRUE, env = ENV)
     
+	#
+	SAFE <- ifelse(safe, TRUE, FALSE)
+	
     # get seeds
     get_seeds(object, env = ENV)
     
@@ -320,10 +323,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			v <- pars_sample$v
 			b <- pars_sample$b
 			
-			#h2$force.update()
-			#i2$force.update()
-			
-			if (TRUE) {
+			if (SAFE) {
 			    
 			    s <- .survivorship(s, env = ENV)
 			    e <- .epsilon(env = ENV)

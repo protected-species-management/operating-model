@@ -5,8 +5,8 @@
 #' @export
 #' @include om-class.R get_dim.R dot-survivorship.R
 #' @import RTMB
-#' @import cli
-#' @import glue
+#' @importFrom cli cli_progress_step cli_progress_update
+#' @importFrom glue glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
 setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, ...) {
@@ -220,7 +220,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # assign pars
 			m <- pars_sample$m
-			#r <- pars_sample$rmax
+			r <- pars_sample$r
 			s <- pars_sample$s
 			l <- pars_sample$l
 			v <- pars_sample$v
@@ -247,7 +247,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
 			sel <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
 			obs <- c(rep(0, age_obs), rep(1, NAGES - age_obs))
 			
-			#lambda <- exp(r)
+			lambda <- exp(r)
 			
 			ogive  <- obs
             
@@ -266,7 +266,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # maximum birth rate
             # per female
-            b_max <- b#2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / prod(S[1:(age_mat + 1)])
+            b_max <- 2 * (lambda^(age_mat + 1) - S[age_mat + 1] * lambda^(age_mat)) / prod(S[1:(age_mat + 1)])
             
             # check and reject
             if (b_max < b_eq) {

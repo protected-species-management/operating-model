@@ -7,7 +7,7 @@
 #' @slot .Data numeric vector of derived values
 #' @slot iter integer value
 #' @slot pars  distribution parameter values
-#' @import logitnorm
+#' @importFrom logitnorm rlogitnorm momentsLogitnorm logit
 #' @importFrom crayon blue
 #' @export
 setClass("distribution", contains = "numeric", slots = list(iter = "integer", name = "character", pars = "numeric", density = "character"))

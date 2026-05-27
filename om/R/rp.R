@@ -11,7 +11,7 @@
 #' @export
 #' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
-#' @import cli
+#' @importFrom cli cli_progress_step cli_progress_update
 #{{{ rp()
 # wrapper for execution of function
 setGeneric("rp", function(object, ...) standardGeneric("rp"))

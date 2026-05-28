@@ -220,7 +220,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # assign pars
 			m <- pars_sample$m
-			r <- pars_sample$r
+			r <- pars_sample$rmax
 			s <- pars_sample$s
 			l <- pars_sample$l
 			v <- pars_sample$v

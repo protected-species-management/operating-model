@@ -154,9 +154,7 @@ setMethod("show", "om",
               message("\nharvest rate function:")
               message(writeLines(deparse(object@harvest_rate)))
               message("rmax:")
-              show(object@pst$rmax)
-              message("r:")
-              show(object@pars$r)
+              show(object@pars$rmax)
           })
 # }}}
 

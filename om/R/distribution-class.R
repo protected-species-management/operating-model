@@ -210,7 +210,7 @@ summary.distribution <- function(object) {
     sigma2 <- sigma^2
     
     # return
-    c('E[x]' = round(mu, 5), 'VAR[x]' = round(sigma2, 5), 'CV[x]' = round(sigma / mu, 5))
+    c('E[x]' = round(mu, 5), 'SD[x]' = round(sigma, 5), 'VAR[x]' = round(sigma2, 5), 'CV[x]' = round(sigma / mu, 5))
 }
 
 .calc_ztnormal_pars <- function(x) {

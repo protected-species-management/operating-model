@@ -31,7 +31,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # into function environment
     get_dim(object, ref_points = TRUE, env = ENV)
     
-	#
+	# recompile model for each sample?
 	SAFE <- ifelse(safe, TRUE, FALSE)
 	
     # get seeds
@@ -88,6 +88,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		m <- as.integer(getValues(m))
 		v <- as.integer(getValues(v))
 		
+		# spin spinner
+        cli_progress_update(.envir = ENV)
+		
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, fecundity = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
 		
@@ -121,6 +124,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		# get values
 		m <- as.integer(getValues(m))
 		v <- as.integer(getValues(v))
+		
+		# spin spinner
+        cli_progress_update(.envir = ENV)
 			
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, fecundity = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
@@ -232,7 +238,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     } else {
         
         # progress message
-        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = FALSE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
     }
     
     ###################
@@ -274,7 +280,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	if (STOCHASTIC) {
 	
 		# tidy up
-		rm(obj1, obj2, h1, h2, i1, i2)
+		rm(h1, h2, i1, i2)
 		
 	    # simulate stochastic
 		# survivorship
@@ -384,8 +390,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
         }
     }
     
-    # average across
-    # samples
+    # shape per sample
     object@shape <- shape_values
     
     # record harvest rates

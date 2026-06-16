@@ -44,6 +44,11 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
         }
     }
     
+    # re-set targets
+    object@targets$captures     <- rep(NA_real_, NITER)
+    object@targets$harvest_rate <- rep(NA_real_, NITER)
+    object@targets$depletion    <- rep(NA_real_, NITER)
+    
     # create container(s)
     shape_values <- numeric(NITER)
     h_values     <- numeric(NITER)
@@ -142,7 +147,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     if (STOCHASTIC) {
         
         # progress message
-        cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values, na.rm = TRUE), 2)}")
         
         # set up objective
         # function and tape
@@ -238,7 +243,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     } else {
         
         # progress message
-        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values, na.rm = TRUE), 2)}")
     }
     
     ###################

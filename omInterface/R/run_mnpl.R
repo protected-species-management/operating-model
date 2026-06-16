@@ -37,6 +37,16 @@
         label = "Stochastic",
         value = FALSE
       ),
+      conditionalPanel(
+          condition = "input.stochastic",
+          sliderInput(
+              inputId = "iterations",
+              label = "Stochastic iterations:",
+              min = 1,
+              max = 1000,
+              value = 200
+          )
+      ),
       actionButton("run", "Compute"),
       
       # Button

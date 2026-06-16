@@ -1,5 +1,5 @@
 #' @export
-#' @import logitnorm
+#' @importFrom logitnorm twCoefLogitnormMLEFlat momentsLogitnorm momentsLogitnorm dlogitnorm
 solveLogitNormal <- function(expected_value, sigma, plot = FALSE) {
     
     z <- list()

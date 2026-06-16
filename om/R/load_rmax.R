@@ -3,6 +3,7 @@
 #' @description Load \eqn{r_{max}} into the \code{pars} slot of an \code{om-class} object.
 #' @details The intrinsic growth rate is assumed to have normal distribution. It is converted to a zero-truncated normal on assignment because the maximum growth rate is always assumed to be greater than zero (i.e., \eqn{\lambda > 1}). 
 #' @include om-class.R distribution-class.R sample.distribution.R
+#' @importFrom cli cli_alert_danger
 #' @export
 #{{{ load rmax into om object
 setGeneric("load_rmax", function(object, value, ...) standardGeneric("load_rmax"))

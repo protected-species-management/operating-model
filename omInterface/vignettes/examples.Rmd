@@ -28,35 +28,27 @@ library(dplyr)
 # setup om-class object
 # for cohort-aggregated 
 # operating model
-om_object <- om(ages = 0:8, samples = 1L, time = 0:200)
+om_object <- om(ages = 0:12, samples = 1L, time = 0:200)
 
-# assign rmax
-# (used to estimate the PST)
-rmax <- distribution(list(iter = 0L, density = "lognormal", pars = c(log(0.04) - (0.05^2)/2, 0.05), name = "max. intrinsic growth"))
-om_object <- om_object %>% load_rmax(rmax)
+# get pars
+s_pars   <- c(2.962, 0.20)
+b_pars   <- c(9.61, 13.86)
+m_values <- 6:8
+l_values <- 0.9
 
-# setup list of pars
-# (list with user-specified elements that
-# should contain all pars required
-# by population dynamics function)
+# loading pars with calculate r
 om_object <- om_object %>% load_pars(list(
-    'r' = distribution(list(value = 0.04, name = "intrinsic growth")),
-    'M' = distribution(list(value = 0.05, name = "natural mortality")),
-    'f' = distribution(list(value = 0.00, name = "female fecundity")),
-    'a' = distribution(list(value = 0,    name = "age at maturity"))
+    # parametric sampling
+    's' = distribution(pars = s_pars, density = "logitnormal", name = "adult survivorship"),
+    'b' = distribution(pars = b_pars, density = "beta",        name = "female fecundity"),
+    # non-parametric sampling
+    'm' = distribution(values = m_values, name = "age at maturity"),
+    'v' = distribution(values = m_values, name = "age at selectivity"),
+    'l' = distribution(values = l_values, name = "age zero survivorship multiplier")
 ))
 
-# load cv inputs
-om_object <- om_object %>% load_cvs(list(
-    'survivorship'   = 0.20,
-  	'birth'          = 0.01)
-)
+om_object <- om_object %>% load_rmax()
 
-# load fixed inputs
-om_object <- om_object %>% load_fixed(list(
-    'selectivity'       = 1,
-    'K'                 = 1)
-)
 ```
 
 ```{r, eval = FALSE}

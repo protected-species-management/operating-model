@@ -18,8 +18,10 @@ editor_options:
 knitr::opts_chunk$set(fig.path = 'fig/om-examples-', fig.width = 6, tidy = TRUE, tidy.opts = list(blank = TRUE, width.cutoff = 95), message = FALSE, warning = FALSE, collapse = TRUE, comment = "#>")
 ```
 
-```{r}
+```{r, message = TRUE}
 library(om)
+```
+```{r}
 library(dplyr)
 library(ggplot2)
 ```

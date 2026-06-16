@@ -7,16 +7,17 @@
 #' @param time equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})
 #' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
+#' @param safe logical value indicating whether RTMB model should be recompiled with each sample (resulting in a more stable estimation)
 #' @seealso [rp()]
 #' @export
 #' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
-#' @import cli
+#' @importFrom cli cli_progress_step cli_progress_update
 #{{{ shape()
 # wrapper for execution of population
 # dynamics function
 setGeneric("shape", function(object, depletion, ...) standardGeneric("shape"))
-setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = FALSE, ...) {
+setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = FALSE, safe = TRUE, ...) {
     
     # current environment
     ENV <- environment()
@@ -30,6 +31,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # into function environment
     get_dim(object, ref_points = TRUE, env = ENV)
     
+	# recompile model for each sample?
+	SAFE <- ifelse(safe, TRUE, FALSE)
+	
     # get seeds
     get_seeds(object, env = ENV)
     
@@ -39,6 +43,11 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             stop("'", a, "' is missing from 'object@pars'")
         }
     }
+    
+    # re-set targets
+    object@targets$captures     <- rep(NA_real_, NITER)
+    object@targets$harvest_rate <- rep(NA_real_, NITER)
+    object@targets$depletion    <- rep(NA_real_, NITER)
     
     # create container(s)
     shape_values <- numeric(NITER)
@@ -84,6 +93,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		m <- as.integer(getValues(m))
 		v <- as.integer(getValues(v))
 		
+		# spin spinner
+        cli_progress_update(.envir = ENV)
+		
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, fecundity = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
 		
@@ -117,12 +129,16 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		# get values
 		m <- as.integer(getValues(m))
 		v <- as.integer(getValues(v))
+		
+		# spin spinner
+        cli_progress_update(.envir = ENV)
 			
 		# deterministic dynamics
         n <- do.call(".pdyn", list(h = h, shape = shape, survivorship = s[1,], multiplier = l, fecundity = b, epsilon = e[1,], maturity = m, selectivity = v, lambda = exp(r), env = ENV))
 		
 		# objective function
-		objective <- -1 * dnorm(sum(n[(m + 2):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
+		#objective <- -1 * dnorm(sum(n[(m + 2):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
+        objective <- -1 * dnorm(sum(n[2:dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
 		
 		# return objective
 		return(objective)
@@ -131,7 +147,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     if (STOCHASTIC) {
         
         # progress message
-        cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the stochastic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values, na.rm = TRUE), 2)}")
         
         # set up objective
         # function and tape
@@ -216,7 +232,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 
                 # log of the equilibrium catch
                 # per iteration
-                objective <- objective - dnorm(mean(apply(n[(m + 2):dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
+                #objective <- objective - dnorm(mean(apply(n[(m + 2):dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
+                objective <- objective - dnorm(mean(apply(n[2:dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
             }
             
             # return objective
@@ -226,7 +243,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     } else {
         
         # progress message
-        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = FALSE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values), 2)}")
+        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values, na.rm = TRUE), 2)}")
     }
     
     ###################
@@ -268,7 +285,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	if (STOCHASTIC) {
 	
 		# tidy up
-		rm(obj1, obj2, h1, h2, i1, i2)
+		rm(h1, h2, i1, i2)
 		
 	    # simulate stochastic
 		# survivorship
@@ -317,20 +334,68 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			v <- pars_sample$v
 			b <- pars_sample$b
 			
-			s <- .survivorship(s, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
-			e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)
-			
-			h2$force.update()
-			i2$force.update()
-            
-            # record estimate
-            shape_values[i] <- exp(i2(depletion))
-            h_values[i]     <- .ilogit(h2(log(shape_values[i])))
+			if (SAFE) {
+			    
+			    s <- .survivorship(s, env = ENV)
+			    e <- .epsilon(env = ENV)
+			    
+    			# function to estimate h_mnpl
+    			# given shape
+    			h1 <- MakeTape(obj1, c(.logit(r / 2), log(1)))
+    			h2 <- h1$newton(1)
+    			
+    			# function to estimate
+    			# shape given depletion target
+    			i1 <- MakeTape(obj2, c(log(1), 0.5))
+    			i2 <- i1$newton(1)
+    			
+    			# record initial 
+    			# deterministic estimates
+    			shape_log_init <- i2(depletion)
+    			h_logit_init   <- h2(shape_log_init)
+    			
+    			if (STOCHASTIC) {
+    			    
+    			    # simulate stochastic
+    			    # survivorship
+    			    s <- .survivorship(pars_sample$s, object@settings$cv$survivorship, env = ENV)
+    			    
+    			    # stochastic birth
+    			    # deviation
+    			    e <- .epsilon(object@settings$cv$birth, env = ENV)
+    			    
+    			    # recompile with 
+    			    # initial values
+    			    h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
+    			    h2 <- h1$newton(1)
+    			    i1 <- MakeTape(obj4, c(shape_log_init, depletion))
+    			    i2 <- i1$newton(1)
+    			    
+    			    # record estimate
+    			    shape_values[i] <- exp(i2(depletion))
+    			    h_values[i]     <- .ilogit(h2(log(shape_values[i])))
+    			    
+    			} else {
+    			    
+    			    shape_values[i] <- exp(shape_log_init)
+    			    h_values[i]     <- .ilogit(h2(log(shape_values[i])))
+    			}
+			} else {
+			    
+			    s <- .survivorship(s, ifelse(STOCHASTIC, object@settings$cv$survivorship, 0), env = ENV)
+			    e <- .epsilon(ifelse(STOCHASTIC, object@settings$cv$birth, 0), env = ENV)
+			    
+			    h2$force.update()
+			    i2$force.update()
+			    
+			    # record estimate
+			    shape_values[i] <- exp(i2(depletion))
+			    h_values[i]     <- .ilogit(h2(log(shape_values[i])))
+			}
         }
     }
     
-    # average across
-    # samples
+    # shape per sample
     object@shape <- shape_values
     
     # record harvest rates

@@ -27,6 +27,8 @@ shape(object, ...) <- value
 \item{iterations}{numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})}
 
 \item{verbose}{logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed}
+
+\item{safe}{logical value indicating whether RTMB model should be recompiled with each sample (resulting in a more stable estimation)}
 }
 \description{
 Calculates shape parameter given assumed depletion at MNPL.

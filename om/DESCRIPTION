@@ -2,7 +2,7 @@ Package: om
 Type: Package
 Title: Operating model
 Version: 0.1.8
-Date: 2026-05-21
+Date: 2026-06-16
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation model for the evaluation of protected species reference points
@@ -11,16 +11,16 @@ Depends:
     R (>= 4.4),
     utils (>= 4.5),
     methods (>= 4.3),
-    RTMB (>= 1.8),
-    logitnorm (>= 0.8),
-	cli (>= 3.6)
+    RTMB (>= 1.8)
 Repos:
     kaskr/RTMB
 Suggests:
     rmarkdown (>= 2.6),
     knitr (>= 1.31),
     testthat (>= 3.0),
-    kableExtra (>= 1.3)
+    kableExtra (>= 1.3),
+	ggplot2 (>= 4.0),
+	dplyr (>= 1.2)
 Collate: 
     'array2dfr.R'
     'om-class.R'
@@ -49,6 +49,7 @@ Collate:
     'phi.R'
     'plot.distribution.R'
     'rp.R'
+    'samples.R'
     'shape.R'
     'spf.R'
     'utils.R'

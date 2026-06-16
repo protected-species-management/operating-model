@@ -92,7 +92,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # (age at female maturity)
     .Object@pars$m <- NA_real_
     # (age at observation)
-    .Object@pars$o <- NA_real_
+    .Object@pars$o <- distribution(value = 1, name = "Age at observation")
     # (age at selectivity)
     .Object@pars$v <- NA_real_
     # (carrying capacity)
@@ -154,9 +154,7 @@ setMethod("show", "om",
               message("\nharvest rate function:")
               message(writeLines(deparse(object@harvest_rate)))
               message("rmax:")
-              show(object@pst$rmax)
-              message("r:")
-              show(object@pars$r)
+              show(object@pars$rmax)
           })
 # }}}
 

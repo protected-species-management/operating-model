@@ -1,5 +1,5 @@
 #' @title Sample from distribution class object
-#' @import logitnorm
+#' @importFrom logitnorm rlogitnorm
 #' @export
 sample <- function(x, n, ...) UseMethod("sample")
 #' @rdname sample
@@ -30,6 +30,10 @@ sample.distribution <- function(x, n = 1, ...) {
             # distribution
             if (grepl("^uniform", x@density)) {
                 y <- runif(n, min = x@pars[1], max = x@pars[2])    
+            }
+            
+            if (grepl("^beta", x@density)) {
+                y <- rbeta(n, shape1 = x@pars[1], shape2 = x@pars[2])    
             }
             
             if (grepl("^normal", x@density)) {

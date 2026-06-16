@@ -1,4 +1,4 @@
-
+#' @importFrom cli cli_alert_info
 .check_rp <- function(object, stochastic, time, iterations, verbose) {
  
 	object_settings <- object@settings$ref_points
@@ -58,7 +58,7 @@
         if (iterations %% 1 == 0) {
             iterations <- as.integer(iterations)
             if (!is.na(object_settings$iterations) & !object_settings$stochastic) {
-                stop("'iterations' argument specified but model is not stochastic")
+                warning("'iterations' argument specified but model is not stochastic")
             }
             if (!is.na(object_settings$iterations) & object_settings$iterations != iterations) {
 				if (verbose) {

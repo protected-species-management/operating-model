@@ -49,6 +49,7 @@ Collate:
     'phi.R'
     'plot.distribution.R'
     'rp.R'
+    'samples.R'
     'shape.R'
     'spf.R'
     'utils.R'

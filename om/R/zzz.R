@@ -1,5 +1,5 @@
 .onAttach <- function(libname, pkgname) {
-    packageStartupMessage("om version 0.1.8 (02-Jun-2026)")
+    packageStartupMessage("om version 0.1.8 (16-Jun-2026)")
 }
  
 .onLoad <- function(libname, pkgname) {

@@ -26,10 +26,14 @@ setMethod("samples<-",
                       GRTR_THAN <- value > object@samples
                       
                       if (LESS_THAN) {
-                        object@targets <- lapply(object@targets, function(x) x[sample.int(object@samples, size = value, replace = FALSE)])
+                        i              <- sample.int(object@samples, size = value, replace = FALSE)
+                        object@targets <- lapply(object@targets, function(x) x[i])
+                        object@shape   <- object@shape[i]
                       }
                       if (GRTR_THAN) {
-                          object@targets <- lapply(object@targets, function(x) x[sample.int(object@samples, size = value, replace = TRUE)])
+                          i              <- sample.int(object@samples, size = value, replace = TRUE)
+                          object@targets <- lapply(object@targets, function(x) x[i])
+                          object@shape   <- object@shape[i]
                       }
                   }
                   

@@ -295,6 +295,16 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		# deviation
 		e <- .epsilon(object@settings$cv$birth, env = ENV)
 		
+		# re-set initial values if
+		# deterministic estimation
+		# failed
+		#if (is.na(h_logit_init)) {
+		#    h_logit_init <- .logit(r / 2)
+		#}
+		#if (is.na(shape_log_init)) {
+		#    shape_log_init <- log(1)
+		#}
+		    
 		# recompile with 
 		# initial values
 		h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
@@ -363,6 +373,16 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     			    # stochastic birth
     			    # deviation
     			    e <- .epsilon(object@settings$cv$birth, env = ENV)
+    			    
+    			    # re-set initial values if
+    			    # deterministic estimation
+    			    # failed
+    			    #if (is.na(h_logit_init)) {
+    			    #    h_logit_init <- .logit(r / 2)
+    			    #}
+    			    #if (is.na(shape_log_init)) {
+    			    #    shape_log_init <- log(1)
+    			    #}
     			    
     			    # recompile with 
     			    # initial values

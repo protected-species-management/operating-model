@@ -64,14 +64,14 @@
     }
     
     # check depletion
-    if(.Call("_RTMB_getValues", sum(n_init[-1, 2]), PACKAGE = "RTMB") > 1) {
-        warning("initial depletion > 1")    
-    }
+    #if(.Call("_RTMB_getValues", sum(n_init[-1, 2]), PACKAGE = "RTMB") > 1) {
+    #    warning("initial depletion > 1")    
+    #}
     
     # check for negative values
-    if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
-        warning("initial numbers[c(", paste0(which(n_init[-1, 2] < 0), collapse = ","), ")] < 0")  
-    }
+    #if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
+    #    warning("initial numbers[c(", paste0(which(n_init[-1, 2] < 0), collapse = ","), ")] < 0")  
+    #}
     
     # initialise
     n[, 1] <- n_init[, 2]
@@ -254,14 +254,14 @@
     }
     
     # check depletion
-    if(.Call("_RTMB_getValues", sum(n_init[-1, 2]), PACKAGE = "RTMB") > 1) {
-        warning("initial depletion > 1")    
-    }
+    #if(.Call("_RTMB_getValues", sum(n_init[-1, 2]), PACKAGE = "RTMB") > 1) {
+    #    warning("initial depletion > 1")    
+    #}
     
     # check for negative values
-    if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
-        warning("initial numbers[c(", paste0(which(n_init[-1, 2] < 0), collapse = ","), ")] < 0")      
-    }
+    #if(any(.Call("_RTMB_getValues", n_init[-1, 2], PACKAGE = "RTMB") < 0)) {
+    #    warning("initial numbers[c(", paste0(which(n_init[-1, 2] < 0), collapse = ","), ")] < 0")      
+    #}
     
     # initialise
     n[, 1] <- n_init[, 2]

@@ -435,9 +435,9 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         object@objectives$harvest_rate[i,] <- apply(sweep(matrix(object@diagnostics$harvest_rate[i,,], nrow = SITER), 1, object@targets$harvest_rate[i], p_lower), 2, mean, na.rm = TRUE)
     }
     
-    # assign numbers
-    # [life-history samples, process error iterations, ages, time]
-    object@.Data <- N
+    # assign numbers (sum of 1+ age classes)
+    # [life-history samples, process error iterations, time]
+    object@.Data <- apply(N[,,-1,, drop = FALSE], c(1,2,4), sum)
     
     # return
     return(object)

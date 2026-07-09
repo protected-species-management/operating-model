@@ -8,17 +8,21 @@ sample.distribution <- function(x, n = 1, ...) {
     
     # if only a single value then
     # return this value
-    if (x@iter == 1 & n == 1) {
+    if (x@iter == 1) {
         
-        return(x@.Data) 
+        return(rep(x@.Data, times = n)) 
         
     } else {
         
         # if a vector of values is stored then sample
         # from this vector (non-parametric)
-        if (x@iter > 1 & n >= 1 & n <= length(x@.Data)) {
+        if (x@iter > 1 & n >= 1) {
             
-            return(x@.Data[sample.int(length(x@.Data), size = n, replace = FALSE)])
+            if (n <= length(x@.Data)) {
+                return(x@.Data[sample.int(length(x@.Data), size = n, replace = FALSE)])
+            } else {
+                return(x@.Data[sample.int(length(x@.Data), size = n, replace = TRUE)])
+            }
             
         } else {
             

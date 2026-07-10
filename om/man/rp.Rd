@@ -24,5 +24,5 @@ Calculate the Maximum Net Productivity reference points.
 This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function.
 }
 \seealso{
-[targets()]
+\code{\link{shape}} \code{\link{targets}}
 }

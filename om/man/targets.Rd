@@ -5,6 +5,9 @@
 \alias{diagnostics}
 \alias{pst}
 \alias{objectives}
+\alias{pars}
+\alias{numbers}
+\alias{settings}
 \alias{targets,om-method}
 \alias{diagnostics,om-method}
 \alias{pst,om-method}
@@ -12,7 +15,7 @@
 \alias{pars,om-method}
 \alias{settings,om-method}
 \alias{numbers,om-method}
-\title{Access outputs from \code{\link{om-class}} object.}
+\title{Access outputs from operating model object.}
 \usage{
 targets(object, ...)
 
@@ -34,5 +37,5 @@ targets(object, ...)
 \item{object}{\code{\link{om-class}} object.}
 }
 \description{
-Access outputs stored in \code{\link{om-class}} object following call to [pdyn()].
+Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.
 }

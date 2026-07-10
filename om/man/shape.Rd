@@ -34,5 +34,5 @@ shape(object, ...) <- value
 Calculates shape parameter given assumed depletion at MNPL.
 }
 \seealso{
-[rp()]
+\code{\link{rp}}
 }

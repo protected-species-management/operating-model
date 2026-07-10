@@ -3,17 +3,15 @@
 #' @description 
 #' Operating model class definition.
 #' @slot ages integer vector of ages assumed by operating model. Set to \code{NA} when a cohort aggregated model is assumed.
-#' @slot time integer vector of times used for operating model projection or single value given the number of time steps.
-#' @slot iter integer value indicating number of stochastic iterations.
-#' @slot stochastic logical indicating whether stochastic dynamics are being assumed. 
-#' @slot pars list of estimated values used by the operating model. See \code{\link{load_pars}}.
-#' @slot fixed list of fixed input values used by the operating model. See \code{\link{load_data}}.
+#' @slot time integer vector of times used for operating model projection or single value giving the number of time steps.
+#' @slot samples integer value indicating number of samples from the input value distributions specified in \code{pars}.
+#' @slot settings list of settings used to for reference point evaluation with \code{\link{shape}} and \code{\link{rp}}. 
+#' @slot pars list of input parameter distributions used by the operating model. See \code{\link{load_pars}}.
+#' @slot shape numeric vector of shape values estimated or specified using \code{\link{shape}}.
 #' @slot harvest_rate function containing the harvest rate function.
-#' @slot pst list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.
-#' @slot targets list containing \code{catch}, \code{depletion} and \code{harvest_rate} target reference points. These should be set at the appropriate level for the operating model being assumed. See \code{load_targets}.
-#' @slot objectives list containing probability values indicating whether management target has been reached (i.e., the realised objective values) for comparison with the probabilistic management objective. 
-#' 
-#' @details Each list entry in \code{life_history}, \code{fishery_inputs} and \code{pars} slots should be an array with \code{dim(x)[length(dim(x))] == iter} (i.e., length of the last dimension should be equal to the number of iterations).
+#' @slot pst list containing \code{phi}, \code{rmax} and \code{value} elements related to the PST threshold reference point.
+#' @slot targets list containing \code{capture}, \code{depletion} and \code{harvest_rate} target reference points estimated using \code{\link{rp}}.
+#' @slot objectives list containing probability values indicating whether management target has been reached (i.e., the realised objective values). 
 #' 
 #' @importFrom crayon blue red
 #{{{

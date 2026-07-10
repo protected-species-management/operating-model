@@ -1,7 +1,6 @@
-
-#' @title Access outputs from \code{\link{om-class}} object. 
-#' @aliases targets diagnostics pst objectives
-#' @description Access outputs stored in \code{\link{om-class}} object following call to [pdyn()].
+#' @title Access outputs from operating model object. 
+#' @aliases targets diagnostics pst objectives pars numbers settings
+#' @description Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.
 #' @param object \code{\link{om-class}} object. 
 #' @importFrom crayon blue
 #' @importFrom dplyr bind_rows

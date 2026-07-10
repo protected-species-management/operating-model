@@ -8,7 +8,7 @@
 #' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
 #' @param safe logical value indicating whether RTMB model should be recompiled with each sample (resulting in a more stable estimation)
-#' @seealso [rp()]
+#' @seealso \code{\link{rp}}
 #' @export
 #' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
@@ -112,7 +112,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	# target 
 	# (deterministic)
 	obj2 <- function(x) {
-		
+	    
 		shape  <- exp(x[1])
 		h      <- 1 / (1 + exp(-h2(x[1]))) # internal estimation of h_mnpl given shape
 		target <- x[2]
@@ -294,16 +294,6 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		# stochastic birth
 		# deviation
 		e <- .epsilon(object@settings$cv$birth, env = ENV)
-		
-		# re-set initial values if
-		# deterministic estimation
-		# failed
-		#if (is.na(h_logit_init)) {
-		#    h_logit_init <- .logit(r / 2)
-		#}
-		#if (is.na(shape_log_init)) {
-		#    shape_log_init <- log(1)
-		#}
 		    
 		# recompile with 
 		# initial values
@@ -344,6 +334,13 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 			v <- pars_sample$v
 			b <- pars_sample$b
 			
+			########################################
+			# IN SAFE MODE THE MODEL IS RECOMPILED #
+			# WITH EACH SAMPLE - THIS HELPS WHEN   #
+			# THERE IS UNCERTAINTY IN EITHER       #
+			# m OR v - OTHERWISE IT IS NOT         #
+			# NECESSARY                            #
+			########################################
 			if (SAFE) {
 			    
 			    s <- .survivorship(s, env = ENV)
@@ -356,8 +353,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     			
     			# function to estimate
     			# shape given depletion target
-    			i1 <- MakeTape(obj2, c(log(1), 0.5))
-    			i2 <- i1$newton(1)
+    			#i1 <- MakeTape(obj2, c(log(1), 0.5))
+    			#i2 <- i1$newton(1)
+    			i2$force.update()
     			
     			# record initial 
     			# deterministic estimates
@@ -374,22 +372,13 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     			    # deviation
     			    e <- .epsilon(object@settings$cv$birth, env = ENV)
     			    
-    			    # re-set initial values if
-    			    # deterministic estimation
-    			    # failed
-    			    #if (is.na(h_logit_init)) {
-    			    #    h_logit_init <- .logit(r / 2)
-    			    #}
-    			    #if (is.na(shape_log_init)) {
-    			    #    shape_log_init <- log(1)
-    			    #}
-    			    
     			    # recompile with 
     			    # initial values
     			    h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
     			    h2 <- h1$newton(1)
-    			    i1 <- MakeTape(obj4, c(shape_log_init, depletion))
-    			    i2 <- i1$newton(1)
+    			    #i1 <- MakeTape(obj4, c(shape_log_init, depletion))
+    			    #i2 <- i1$newton(1)
+    			    i2$force.update()
     			    
     			    # record estimate
     			    shape_values[i] <- exp(i2(depletion))

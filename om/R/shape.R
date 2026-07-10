@@ -243,7 +243,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     } else {
         
         # progress message
-        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values), 2)}, with max. harvest rate = {round(mean(h_values, na.rm = TRUE), 2)}")
+        cli_progress_step("Estimating the deterministic shape parameter ...", spinner = TRUE, msg_done = "Estimated shape = {round(mean(shape_values, na.rm = TRUE), 2)}, with max. harvest rate = {round(mean(h_values, na.rm = TRUE), 2)}")
     }
     
     ###################

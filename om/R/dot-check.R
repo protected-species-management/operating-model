@@ -118,8 +118,8 @@
 				cli_alert_info("'time' argument updates values in 'object@time'")
 			}
         }
-        object@time <- time
-        
+        object@time          <- time
+        object_settings$time <- length(time)
     }
     if (missing(iterations)) {
         if (is.na(object_settings$iterations) & object_settings$stochastic) {

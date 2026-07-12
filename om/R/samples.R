@@ -26,16 +26,20 @@ setMethod("samples<-",
                       GRTR_THAN <- value > object@samples
                       
                       if (LESS_THAN) {
-                        i              <- sample.int(object@samples, size = value, replace = FALSE)
-                        object@targets <- lapply(object@targets, function(x) x[i])
-                        object@shape   <- object@shape[i]
-                        object@seeds   <- object@seeds[i]
+                          
+                        i               <- sample.int(object@samples, size = value, replace = FALSE)
+                        object@targets  <- lapply(object@targets, function(x) x[i])
+                        object@shape    <- object@shape[i]
+                        object@pst$rmax <- object@pst$rmax[i]
+                        object@seeds    <- object@seeds[i]
                       }
                       if (GRTR_THAN) {
-                          i              <- sample.int(object@samples, size = value, replace = TRUE)
-                          object@targets <- lapply(object@targets, function(x) x[i])
-                          object@shape   <- object@shape[i]
-                          object@seeds   <- c(object@seeds, as.integer(floor((runif(value - object@samples)) * 1e7)))
+                          
+                          i               <- sample.int(object@samples, size = value, replace = TRUE)
+                          object@targets  <- lapply(object@targets, function(x) x[i])
+                          object@shape    <- object@shape[i]
+                          object@pst$rmax <- object@pst$rmax[i]
+                          object@seeds    <- c(object@seeds[i], as.integer(floor((runif(value - object@samples)) * 1e7)))
                           
                           # check seeds are  not duplicated
                           if (any(duplicated(object@seeds))) warning(sum(duplicated(object@seeds)), "/", object@samples, " (approx. ", round(100 * sum(duplicated(object@seeds)) / object@samples), "%) of seeds are duplicated")

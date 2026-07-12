@@ -353,9 +353,9 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     			
     			# function to estimate
     			# shape given depletion target
-    			#i1 <- MakeTape(obj2, c(log(1), 0.5))
-    			#i2 <- i1$newton(1)
-    			i2$force.update()
+    			i1 <- MakeTape(obj2, c(log(1), 0.5))
+    			i2 <- i1$newton(1)
+    			#i2$force.update()
     			
     			# record initial 
     			# deterministic estimates
@@ -376,9 +376,8 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     			    # initial values
     			    h1 <- MakeTape(obj3, c(h_logit_init, shape_log_init))
     			    h2 <- h1$newton(1)
-    			    #i1 <- MakeTape(obj4, c(shape_log_init, depletion))
-    			    #i2 <- i1$newton(1)
-    			    i2$force.update()
+    			    i1 <- MakeTape(obj4, c(shape_log_init, depletion))
+    			    i2 <- i1$newton(1)
     			    
     			    # record estimate
     			    shape_values[i] <- exp(i2(depletion))

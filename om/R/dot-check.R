@@ -83,6 +83,9 @@
         if (is.na(object_settings$stochastic)) {
             stop("'stochastic' argument unspecified")    
         } else {
+            if (object@settings$cv$survivorship == 0 & object@settings$cv$birth == 0 & isTRUE(object_settings$stochastic)) {
+                object_settings$stochastic <- FALSE
+            }
             if (verbose) {
 				cli_alert_info(paste0("'stochastic' = ", ifelse(object_settings$stochastic, "TRUE", "FALSE")))
 			}
@@ -129,6 +132,8 @@
 				if (verbose) {
 					cli_alert_info(paste0("'iterations' = ", object_settings$iterations))
 				}
+            } else {
+                object_settings$iterations <- NA_integer_
             }
         }
     } else {

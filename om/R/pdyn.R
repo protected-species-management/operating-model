@@ -157,7 +157,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         message(writeLines(deparse(object@harvest_rate)))
         message("harvest rate error function:")
         message(writeLines(deparse(.harvest_error)))
-		message("captures error function:")
+		message("capture error function:")
         message(writeLines(deparse(.capture_error)))
         message("observation error function:")
         message(writeLines(deparse(.obs_error)))

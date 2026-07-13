@@ -22,7 +22,7 @@
                 }
             }
             if (object@settings$cv$survivorship == 0 & object@settings$cv$birth == 0) {
-                if (isTRUE(stochastic)) {
+                if (stochastic) {
                     stochastic <- FALSE
                     if (verbose) {
                         cli_alert_info("'stochastic' argument updated to 'FALSE'")
@@ -97,7 +97,7 @@
         if (is.na(object_settings$stochastic)) {
             stop("'stochastic' argument unspecified")    
         } else {
-            if (object@settings$cv$survivorship == 0 & object@settings$cv$birth == 0) {
+            if (all(unlist(lapply(object@settings$cv, function(x) x == 0)))) {
                 object_settings$stochastic <- FALSE
             }
             if (verbose) {
@@ -111,7 +111,7 @@
                     cli_alert_info("'stochastic' argument updates value in 'object@settings$projection'")
                 }
             }
-            if (object@settings$cv$survivorship == 0 & object@settings$cv$birth == 0) {
+            if (all(unlist(lapply(object@settings$cv, function(x) x == 0)))) {
                 object_settings$stochastic <- FALSE
                 if (stochastic) {
                     if (verbose) {

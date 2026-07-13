@@ -5,7 +5,9 @@
 #' @export
 #' @include om-class.R get_dim.R dot-survivorship.R
 #' @import RTMB
-#' @importFrom cli cli_progress_step cli_progress_update
+#' @importFrom cli cli_progress_step cli_progress_update cli_alert_warning
+#' @importFrom logitnorm rlogitnorm
+#' @importFrom stats rlnorm rnorm
 #' @importFrom glue glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
@@ -62,7 +64,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
     # define numbers observation error function
     # using: cv, quantile (qn) and/or bias
-    if (object@settings$cv$observation > 0) {
+    if (STOCHASTIC & object@settings$cv$observation > 0) {
         if (object@settings$qn$observation[1] > 0) {
             if (is.na(object@settings$qn$observation[2])) {
                 object@settings$qn$observation[2] <- object@settings$cv$observation
@@ -101,25 +103,22 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # define harvest rate
     # error function
-    if (object@settings$cv$mortality > 0) {
-        if (object@settings$bias$mortality != 1.0) {
-            .harvest_error <- function(a, cv = object@settings$cv$mortality, bias = object@settings$bias$mortality) {
-                sigma <- cv * a
-                mu    <- uniroot(function(x) a - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-                e     <- rnorm(1, mu, sigma)
-                bias * pnorm(e)
+    if (STOCHASTIC & object@settings$cv$harvest_rate > 0) {
+		if (object@settings$cv$harvest_rate > 0.3) {
+			cli_alert_warning("Recommend reducing CV[harvest rate] to less than 0.3")
+		}
+        if (object@settings$bias$harvest_rate != 1.0) {
+            .harvest_error <- function(a, cv = object@settings$cv$harvest_rate, bias = object@settings$bias$harvest_rate) {
+                bias * rlogitnorm(1, mu = a, sigma = cv * a)
             }
         } else {
-            .harvest_error <- function(a, cv = object@settings$cv$mortality) {
-                sigma <- cv * a
-                mu    <- uniroot(function(x) a - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-                e     <- rnorm(1, mu, sigma)
-                pnorm(e)
+            .harvest_error <- function(a, cv = object@settings$cv$harvest_rate) {
+                rlogitnorm(1, mu = a, sigma = cv * a)
             }
         }
     } else {
-        if (object@settings$bias$mortality != 1.0) {
-            .harvest_error <- function(a, bias = object@settings$bias$mortality) {
+        if (object@settings$bias$harvest_rate != 1.0) {
+            .harvest_error <- function(a, bias = object@settings$bias$harvest_rate) {
                 bias * a
             }
         } else {
@@ -129,11 +128,37 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         }
     }
     
+    # define capture
+    # error function
+    if (STOCHASTIC & object@settings$cv$capture > 0) {
+        if (object@settings$bias$capture != 1.0) {
+            .capture_error <- function(a, cv = object@settings$cv$capture, bias = object@settings$bias$capture) {
+                bias * rlnorm(1, log(a + ((cv * a)^2) / 2), cv * a)
+            }
+        } else {
+            .capture_error <- function(a, cv = object@settings$cv$capture) {
+                rlnorm(1, log(a + ((cv * a)^2) / 2), cv * a)
+            }
+        }
+    } else {
+        if (object@settings$bias$capture != 1.0) {
+            .capture_error <- function(a, bias = object@settings$bias$capture) {
+                bias * a
+            }
+        } else {
+            .capture_error <- function(a) {
+                a
+            }
+        }
+    }
+    
     if (verbose) {
         message("harvest rate function:")
         message(writeLines(deparse(object@harvest_rate)))
-        message("captures error function:")
+        message("harvest rate error function:")
         message(writeLines(deparse(.harvest_error)))
+		message("captures error function:")
+        message(writeLines(deparse(.capture_error)))
         message("observation error function:")
         message(writeLines(deparse(.obs_error)))
     }
@@ -198,6 +223,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         pst_calc <- function(numbers) {
             (1 / 2) * object@pst$phi * rmax_sample * .obs_error(sum(numbers * ogive))
         }
+		
+		# harvest rate calculation
+		# from captures
+		hr_calc <- function(capture, numbers, selectivity) {
+			ifelse(sum(numbers * selectivity) > 0, min(sum(numbers * selectivity), .capture_error(capture) / sum(numbers * selectivity)), NA_real_)
+		}
     
         #######################
         # monte-carlo samples #
@@ -225,7 +256,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             s <- pars_sample$s
             l <- pars_sample$l
             v <- pars_sample$v
-            o <- pars_sample$m #pars_sample$o
+            o <- pars_sample$o
             K <- pars_sample$K
             b <- pars_sample$b
             
@@ -318,19 +349,6 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2])))^shape[i]))
                 }
             }
-            
-            # equilibrium age
-            # structure
-            #n_init <- matrix(k, nrow = NAGES, ncol = 2)
-            #for (l in 2:1e3) {
-            #    
-            #    n_init[, 1] <- n_init[, 2]
-            #    for(a in 2:NAGES) {
-            #        n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h_init)
-            #    }
-            #    n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
-            #    n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2])))^shape[i]))
-            #}
             
             # check and reject
             if (round(sum(n_init[-1, 2]), 1) != initial_depletion) {
@@ -431,7 +449,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             object@values$l[i] <- pars_sample$l
             object@values$b[i] <- pars_sample$b
             object@values$m[i] <- pars_sample$m
-            object@values$o[i] <- pars_sample$m #pars_sample$o
+            object@values$o[i] <- pars_sample$o
             object@values$v[i] <- pars_sample$v
             object@values$K[i] <- pars_sample$K
         }

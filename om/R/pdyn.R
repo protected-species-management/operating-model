@@ -62,36 +62,36 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     # pst
     object@pst$value <- array(dim = c(NITER, SITER, NTIME))
         
-    # define numbers observation error function
+    # define log-normal numbers observation error function
     # using: cv, quantile (qn) and/or bias
-    if (STOCHASTIC & object@settings$cv$observation > 0) {
-        if (object@settings$qn$observation[1] > 0) {
-            if (is.na(object@settings$qn$observation[2])) {
-                object@settings$qn$observation[2] <- object@settings$cv$observation
+    if (STOCHASTIC & object@settings$cv$numbers > 0) {
+        if (object@settings$qn$numbers[1] > 0) {
+            if (is.na(object@settings$qn$numbers[2])) {
+                object@settings$qn$numbers[2] <- object@settings$cv$numbers
             }
-            if (object@settings$bias$observation != 1.0) {
-                .obs_error <- function(a, cv = object@settings$cv$observation, qn = object@settings$qn$observation, bias = object@settings$bias$observation) {
+            if (object@settings$bias$numbers != 1.0) {
+                .obs_error <- function(a, cv = object@settings$cv$numbers, qn = object@settings$qn$numbers, bias = object@settings$bias$numbers) {
                     bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
                 }
             } else {
-                .obs_error <- function(a, cv = object@settings$cv$observation, qn = object@settings$qn$observation) {
+                .obs_error <- function(a, cv = object@settings$cv$numbers, qn = object@settings$qn$numbers) {
                     exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
                 }
             }
         } else {
-            if (object@settings$bias$observation != 1.0) {
-                .obs_error <- function(a, cv = object@settings$cv$observation, bias = object@settings$bias$observation) {
+            if (object@settings$bias$numbers != 1.0) {
+                .obs_error <- function(a, cv = object@settings$cv$numbers, bias = object@settings$bias$numbers) {
                     bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
                 }
             } else {
-                .obs_error <- function(a, cv = object@settings$cv$observation) {
+                .obs_error <- function(a, cv = object@settings$cv$numbers) {
                     exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
                 }
             }
         }
     } else {
-        if (object@settings$bias$observation != 1.0) {
-            .obs_error <- function(a, bias = object@settings$bias$observation) {
+        if (object@settings$bias$numbers != 1.0) {
+            .obs_error <- function(a, bias = object@settings$bias$numbers) {
                 bias * a
             }
         } else {
@@ -101,12 +101,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         }
     }
     
-    # define harvest rate
+    # define logit-normal harvest rate
     # error function
     if (STOCHASTIC & object@settings$cv$harvest_rate > 0) {
-		if (object@settings$cv$harvest_rate > 0.3) {
-			cli_alert_warning("Recommend reducing CV[harvest rate] to less than 0.3")
-		}
+        if (object@settings$cv$harvest_rate > 0.3) {
+            cli_alert_warning("Recommend reducing CV[harvest rate] to less than 0.3")
+        }
         if (object@settings$bias$harvest_rate != 1.0) {
             .harvest_error <- function(a, cv = object@settings$cv$harvest_rate, bias = object@settings$bias$harvest_rate) {
                 bias * rlogitnorm(1, mu = a, sigma = cv * a)
@@ -128,7 +128,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         }
     }
     
-    # define capture
+    # define log-normal capture
     # error function
     if (STOCHASTIC & object@settings$cv$capture > 0) {
         if (object@settings$bias$capture != 1.0) {
@@ -152,15 +152,41 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         }
     }
     
+    # define zt-normal rmax
+    # error function
+    if (STOCHASTIC & object@settings$cv$rmax > 0) {
+        if (object@settings$bias$rmax != 1.0) {
+            .rmax_error <- function(a, cv = object@settings$cv$rmax, bias = object@settings$bias$rmax) {
+                bias * (a + (cv * a) * qnorm(runif(1, pnorm((0 - a) / (cv * a)), pnorm(Inf))))
+            }
+        } else {
+            .rmax_error <- function(a, cv = object@settings$cv$rmax) {
+                a + (cv * a) * qnorm(runif(1, pnorm((0 - a) / (cv * a)), pnorm(Inf)))
+            }
+        }
+    } else {
+        if (object@settings$bias$rmax != 1.0) {
+            .rmax_error <- function(a, bias = object@settings$bias$rmax) {
+                bias * a
+            }
+        } else {
+            .rmax_error <- function(a) {
+                a
+            }
+        }
+    }
+    
     if (verbose) {
         message("harvest rate function:")
         message(writeLines(deparse(object@harvest_rate)))
         message("harvest rate error function:")
         message(writeLines(deparse(.harvest_error)))
-		message("capture error function:")
+        message("capture error function:")
         message(writeLines(deparse(.capture_error)))
-        message("observation error function:")
+        message("numbers observation error function:")
         message(writeLines(deparse(.obs_error)))
+        message("rmax error function:")
+        message(writeLines(deparse(.rmax_error)))
     }
     
     # progress
@@ -220,15 +246,15 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         }
         
         # pst observation function
-        pst_calc <- function(numbers) {
-            (1 / 2) * object@pst$phi * rmax_sample * .obs_error(sum(numbers * ogive))
+        pst_calc <- function(numbers, observation) {
+            (1 / 2) * object@pst$phi * .rmax_error(rmax_sample) * .obs_error(sum(numbers * observation))
         }
-		
-		# harvest rate calculation
-		# from captures
-		hr_calc <- function(capture, numbers, selectivity) {
-			ifelse(sum(numbers * selectivity) > 0, min(sum(numbers * selectivity), .capture_error(capture) / sum(numbers * selectivity)), NA_real_)
-		}
+        
+        # harvest rate calculation
+        # from captures
+        hr_calc <- function(capture, numbers, selectivity) {
+            ifelse(sum(numbers * selectivity) > 0, min(sum(numbers * selectivity), .capture_error(capture) / sum(numbers * selectivity)), NA_real_)
+        }
     
         #######################
         # monte-carlo samples #
@@ -280,8 +306,6 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             obs <- c(rep(0, age_obs), rep(1, NAGES - age_obs))
             
             lambda <- exp(r)
-            
-            ogive  <- obs
             
             # set up unexploited 
             # equilibrium female
@@ -388,7 +412,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 n[, 1] <- n[, 1] * e[1]
                 
                 # observe initial pst
-                pst[1] <- pst_calc(n[, 1])
+                pst[1] <- pst_calc(n[, 1], obs)
                     
                 # project under harvest rate
                 # function
@@ -396,7 +420,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 for (y in 2:NTIME) {
                     
                     # calculate harvest rate
-                    h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i, y)
+                    h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1])
                     
                     # apply harvest rate
                     # and mortality
@@ -411,7 +435,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     n[1, y] <- birth(y) * e[y]
                     
                     # observe pst
-                    pst[y] <- pst_calc(n[, y])
+                    pst[y] <- pst_calc(n[, y], obs)
                 }
                 
                 # values per-year

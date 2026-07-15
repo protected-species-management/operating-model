@@ -90,7 +90,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # (age at female maturity)
     .Object@pars$m <- NA_real_
     # (age at observation)
-    .Object@pars$o <- distribution(value = 1, name = "Age at observation")
+    .Object@pars$o <- NA_real_
     # (age at selectivity)
     .Object@pars$v <- NA_real_
     # (carrying capacity)
@@ -128,7 +128,6 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     seeds <- floor((runif(samples)) * 1e7)
     if (any(duplicated(seeds))) warning(sum(duplicated(seeds)), "/", samples, " (approx. ", round(100 * sum(duplicated(seeds)) / samples), "%) of seeds are duplicated")
     if (any(is.na(as.integer(seeds)))) warning(sum(is.na(as.integer(seeds))), "/", samples, " seeds are 'NA' values")
-    #while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(samples, 1, 1e6))
     .Object@seeds <- as.integer(seeds)
     
     # return

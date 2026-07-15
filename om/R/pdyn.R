@@ -420,7 +420,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 for (y in 2:NTIME) {
                     
                     # calculate harvest rate
-                    h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1])
+                    h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i)
                     
                     # apply harvest rate
                     # and mortality
@@ -468,7 +468,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             cli_progress_update()
             
             # record values
-            object@values$r[i] <- pars_sample$r
+            object@values$r[i] <- pars_sample$rmax
             object@values$s[i] <- pars_sample$s
             object@values$l[i] <- pars_sample$l
             object@values$b[i] <- pars_sample$b

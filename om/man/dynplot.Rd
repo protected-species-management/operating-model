@@ -3,14 +3,11 @@
 \name{dynplot}
 \alias{dynplot}
 \alias{dynplot.om}
-\alias{dynplot.list}
 \title{Plot dynamics from \code{om} object}
 \usage{
 dynplot(object, ...)
 
-\method{dynplot}{om}(object, pars = "depletion")
-
-\method{dynplot}{list}(object, pars = "depletion", labels = character())
+\method{dynplot}{om}(object, ..., pars = "depletion", labels)
 }
 \arguments{
 \item{object}{\code{om} class object.}
@@ -22,7 +19,7 @@ dynplot(object, ...)
 \item{labels}{character vector of labels per model run}
 }
 \value{
-Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles.
+Returns a \code{ggplot} object that can be displayed or assigned and manipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles.
 }
 \description{
 Plots the dynamics over time of the projected captures, depletion or harvest rate.

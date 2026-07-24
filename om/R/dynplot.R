@@ -60,7 +60,7 @@ dynplot.om <- function(object, ..., pars = 'depletion', labels) {
     }
     
     if (missing(labels)) {
-        names(lst2) <- LETTERS[1:length(y)]
+        names(lst2) <- as.character(unlist(as.list(match.call())[-1]))[1:length(y)] #LETTERS[1:length(y)]
     } else {
         names(lst2) <- labels
     }

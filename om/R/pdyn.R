@@ -468,14 +468,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             cli_progress_update()
             
             # record values
-            object@values$r[i] <- pars_sample$rmax
-            object@values$s[i] <- pars_sample$s
-            object@values$l[i] <- pars_sample$l
-            object@values$b[i] <- pars_sample$b
-            object@values$m[i] <- pars_sample$m
-            object@values$o[i] <- pars_sample$o
-            object@values$v[i] <- pars_sample$v
-            object@values$K[i] <- pars_sample$K
+            object@values$rmax[i]  <- pars_sample$rmax
+			object@values$r[i]     <- pars_sample$r
+            object@values$s[i]     <- pars_sample$s
+            object@values$l[i]     <- pars_sample$l
+			object@values$b[i]     <- pars_sample$b
+            object@values$beq[i]   <- b_eq
+			object@values$bstar[i] <- b_max
+            object@values$m[i]     <- pars_sample$m
+            object@values$o[i]     <- pars_sample$o
+            object@values$v[i]     <- pars_sample$v
+            object@values$K[i]     <- pars_sample$K
         }
     }
 

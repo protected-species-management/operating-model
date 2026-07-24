@@ -17,8 +17,8 @@ setMethod("load_rmax", signature = c("om", "distribution"), function(object, val
         value@density <- "zt-normal"
     }
     
-    # assign
-    object@pars$rmax <- value
+    # assign zt-density distribution
+    object@pars$rmax      <- value
     object@pars$rmax@name <- "max. intrinsic growth rate"
     
     # return    

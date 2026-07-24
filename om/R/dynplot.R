@@ -35,10 +35,15 @@ dynplot.om <- function(object, ..., pars = 'depletion', labels) {
         
         for (par in pars) {
             
-            if (par %in% c("harvest_rate", "captures")) dm$time <- dm$time[-length(dm$time)] 
+            dm2 <- dm
+            if (par %in% c("harvest_rate", "captures")) {
+                dm2$time <- dm$time[-length(dm$time)] 
+            } else {
+                dm2$time <- dm$time
+            }
         
             dfr <- slot(y[[mdl]], 'diagnostics')[[par]]
-            dimnames(dfr) <- dm
+            dimnames(dfr) <- dm2
             dfr <- array2DF(dfr, responseName = "value")
             
             dfr$time      <- as.numeric(dfr$time)

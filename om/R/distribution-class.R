@@ -144,6 +144,12 @@ summary.distribution <- function(object) {
     if (grepl("^logit?normal", object@density)) return(.show_logitnormal_moments(object@pars))
 }
 
+#' @export
+expectation <- function(...) UseMethod("expectation")
+expectation.distribution <- function(object) {
+    summary(object)['E[x]']
+}
+
 # distribution-specific functions
 # {{{
 .calc_uniform_pars <- function(x) {

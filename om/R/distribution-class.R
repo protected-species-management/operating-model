@@ -146,6 +146,7 @@ summary.distribution <- function(object) {
 
 #' @export
 expectation <- function(...) UseMethod("expectation")
+#' @exportS3Method
 expectation.distribution <- function(object) {
     summary(object)['E[x]']
 }

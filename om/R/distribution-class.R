@@ -221,8 +221,11 @@ expectation.distribution <- function(object) {
 
 .calc_ztnormal_pars <- function(x) {
     
+    mu     <- mean(x)
+    sigma  <- sd(x)
+    
     # return
-    return(c(NA_real_, NA_real_))
+    return(c(mu, sigma))
 }
 
 .show_ztnormal_moments <- function(x) {

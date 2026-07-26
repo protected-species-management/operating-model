@@ -50,8 +50,12 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
         
         # calculate normal pars
         # from r ~ N(mu, sigma)
-        r_dist <- distribution(values = r_values, density = "normal")
-        object@pars[["r"]] <- distribution(pars = r_dist@pars, density = "normal", name = "intrinsic growth rate")
+        if (length(unique(r_values)) > 3) {
+            r_dist <- distribution(values = r_values, density = "normal")
+            object@pars[["r"]] <- distribution(pars = r_dist@pars, density = "normal", name = "intrinsic growth rate")
+        } else {
+            object@pars[["r"]] <- distribution(values = unique(r_values), density = "unspecified", name = "intrinsic growth rate")
+        }
     }
     
     # return

@@ -11,10 +11,12 @@ setGeneric("load_rmax", function(object, value, ...) standardGeneric("load_rmax"
 setMethod("load_rmax", signature = c("om", "distribution"), function(object, value, ...) {
 
     # checks
-    if (value@density != "normal") {
-        cli_alert_danger("input distribution is not 'normal'")
-    } else {
-        value@density <- "zt-normal"
+    if (value@density != "unspecified") {
+        if (value@density != "normal") {
+            cli_alert_danger("input distribution is not 'normal'")
+        } else {
+            value@density <- "zt-normal"
+        }
     }
     
     # assign zt-density distribution

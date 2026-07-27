@@ -98,17 +98,18 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     
     # setup values to 
     # store pars iterations
-	.Object@values$rmax  <- rep(NA_real_, samples)
-    .Object@values$r     <- rep(NA_real_, samples)
-    .Object@values$s     <- rep(NA_real_, samples)
-	.Object@values$l     <- rep(NA_real_, samples)
-    .Object@values$b     <- rep(NA_real_, samples)
-	.Object@values$beq   <- rep(NA_real_, samples)
-	.Object@values$bstar <- rep(NA_real_, samples)
-    .Object@values$m     <- rep(NA_real_, samples)
-    .Object@values$o     <- rep(NA_real_, samples)
-    .Object@values$v     <- rep(NA_real_, samples)
-    .Object@values$K     <- rep(NA_real_, samples)
+	.Object@values$rmax  <- NA_real_
+    .Object@values$r     <- NA_real_
+	.Object@values$shape <- NA_real_
+    .Object@values$s     <- NA_real_
+	.Object@values$l     <- NA_real_
+    .Object@values$b     <- NA_real_
+	.Object@values$beq   <- NA_real_
+	.Object@values$bstar <- NA_real_
+    .Object@values$m     <- NA_real_
+    .Object@values$o     <- NA_real_
+    .Object@values$v     <- NA_real_
+    .Object@values$K     <- NA_real_
     
     # setup management
     # target reference points

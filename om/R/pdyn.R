@@ -11,7 +11,7 @@
 #' @importFrom glue glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, test = FALSE, ...) {
     
     # current environment
     ENV <- environment()
@@ -23,7 +23,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # check and update object with
     # function arguments
-    object <- .check_pdyn(object, stochastic, time, iterations, verbose)
+    object <- .check_pdyn(object, stochastic, time, iterations, verbose, test)
     
     # load time, age and
     # iteration dimensions
@@ -61,6 +61,21 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # pst
     object@pst$value <- array(dim = c(NITER, SITER, NTIME))
+	
+	# setup values to 
+    # store pars iterations
+	object@values$rmax  <- rep(NA_real_, NITER)
+    object@values$r     <- rep(NA_real_, NITER)
+	object@values$shape <- rep(NA_real_, NITER)
+    object@values$s     <- rep(NA_real_, NITER)
+	object@values$l     <- rep(NA_real_, NITER)
+    object@values$b     <- rep(NA_real_, NITER)
+	object@values$beq   <- rep(NA_real_, NITER)
+	object@values$bstar <- rep(NA_real_, NITER)
+    object@values$m     <- rep(NA_real_, NITER)
+    object@values$o     <- rep(NA_real_, NITER)
+    object@values$v     <- rep(NA_real_, NITER)
+    object@values$K     <- rep(NA_real_, NITER)
         
     # define log-normal numbers observation error function
     # using: cv, quantile (qn) and/or bias
@@ -278,7 +293,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # assign pars
             m <- pars_sample$m
-            r <- pars_sample$rmax
+            r <- ifelse(test, pars_sample$rmax, pars_sample$r)
             s <- pars_sample$s
             l <- pars_sample$l
             v <- pars_sample$v
@@ -470,6 +485,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             # record values
             object@values$rmax[i]  <- pars_sample$rmax
 			object@values$r[i]     <- pars_sample$r
+			object@values$shape[i] <- shape[i]
             object@values$s[i]     <- pars_sample$s
             object@values$l[i]     <- pars_sample$l
 			object@values$b[i]     <- pars_sample$b

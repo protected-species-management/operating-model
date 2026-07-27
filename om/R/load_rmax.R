@@ -12,8 +12,8 @@ setMethod("load_rmax", signature = c("om", "distribution"), function(object, val
 
     # checks
     if (value@density != "unspecified") {
-        if (value@density != "normal") {
-            cli_alert_danger("input distribution is not 'normal'")
+        if (value@density != "normal" & value@density != "zt-normal") {
+            cli_alert_danger("input distribution is not 'normal' or 'zt-normal'")
         } else {
             value@density <- "zt-normal"
         }

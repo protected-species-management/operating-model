@@ -11,7 +11,7 @@
 #' @importFrom glue glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, test = FALSE, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, test = TRUE, ...) {
     
     # current environment
     ENV <- environment()

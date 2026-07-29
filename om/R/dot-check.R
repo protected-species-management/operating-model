@@ -89,7 +89,7 @@
     return(object)   
 }
 
-.check_pdyn <- function(object, stochastic, time, iterations, verbose, test) {
+.check_pdyn <- function(object, stochastic, time, iterations, verbose, use_rmax) {
     
     object_settings <- object@settings$projection
     
@@ -175,8 +175,8 @@
             stop("'iterations' is not an integer")    
         }
     }
-	if (verbose & test) {
-		cli_alert_info("running in test mode with 'r = rmax'")
+	if (verbose & use_rmax) {
+		cli_alert_info("running with 'r = rmax' (this is helpful when testing reference point estimates)")
 	}
 	
 	# assign

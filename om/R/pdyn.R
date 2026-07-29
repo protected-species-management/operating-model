@@ -1,7 +1,13 @@
 #' @title Population dynamics function
-#' 
-#' @description The population dynamics function is called per-iteration.
-#' 
+#' @description Project the population dynamics foward in time.
+#' @param object an \code{om} class object
+#' @param stochastic logical value
+#' @param iterations number of stochastic iterations
+#' @param time number of time steps (can be used to override value stored in object)
+#' @param initial_depletion starting depletion (must be >0 and <= 1)
+#' @param verbose logical value
+#' @param use_rmax logical value
+#' @details Reference points are always estimated using \eqn{r_{max}}, meaning that projections that use \eqn{r_{max}} have better behavioural properties when examined relative to reference point values. This is because the \eqn{\theta} shape parameter has been estimated per sample and will therefore be correctly correlated with the samples from the distribution of \eqn{r_{max}} values. However, it is also possible to project the dynamics using \eqn{r}, which is provided as a separate and independent distribution to the dynamics equation. This is helpful for robustness testing when it may be assumed that the population is currently not in it's optimal state, meaning that \eqn{r < r_{max}}. Note however, that the PST is always calculated using \eqn{r_{max}}, and if \eqn{r} is used for the population dynamics, then the this will decouple the assumed \eqn{r_{max}} from the true \eqn{r} value.   
 #' @export
 #' @include om-class.R get_dim.R dot-survivorship.R
 #' @import RTMB
@@ -11,7 +17,7 @@
 #' @importFrom glue glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, test = TRUE, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, use_rmax = TRUE, ...) {
     
     # current environment
     ENV <- environment()
@@ -23,7 +29,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # check and update object with
     # function arguments
-    object <- .check_pdyn(object, stochastic, time, iterations, verbose, test)
+    object <- .check_pdyn(object, stochastic, time, iterations, verbose, use_rmax)
     
     # load time, age and
     # iteration dimensions
@@ -293,7 +299,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # assign pars
             m <- pars_sample$m
-            r <- ifelse(test, pars_sample$rmax, pars_sample$r)
+            r <- ifelse(use_rmax, pars_sample$rmax, pars_sample$r)
             s <- pars_sample$s
             l <- pars_sample$l
             v <- pars_sample$v

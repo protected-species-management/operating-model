@@ -7,7 +7,7 @@
 #' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
 #' @note This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function. 
-#' @seealso [targets()]
+#' @seealso \code{\link{shape}} \code{\link{targets}}
 #' @export
 #' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
@@ -45,11 +45,22 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
     # (depletion)
     object@targets$depletion <- rep(NA_real_, NITER)
     # (harvest rate)
-    if (any(is.na(object@targets$harvest_rate))) {
+    if (all(is.na(object@targets$harvest_rate))) {
+        # no previous estimation
+        # of h_mnpl
+        # -> estimate h_mnpl and
+        # ref. points for all 
+        # samples
+        ESTIMATE_HMNPL <- TRUE
         object@targets$harvest_rate <- rep(NA_real_, NITER)
-		ESTIMATE_HMNPL <- TRUE
-    } else { 
-		ESTIMATE_HMNPL <- FALSE		
+    } else {
+        # previous estimation of
+        # h_mnpl with possibility 
+        # of failure
+        # -> estimate ref. points
+        # for samples with valid
+        # h_mnpl estimate
+    	ESTIMATE_HMNPL <- FALSE		
     }
     
     # PT model
@@ -60,6 +71,9 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
     } else {
     # AGE-STRUCTURED MODEL    
     # {{{
+        
+        # specify projection function
+        fast_forward <- if (STOCHASTIC) .ff2 else .ff
         
 		# function to extract real values
 		# from advector-type
@@ -230,9 +244,6 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
                 object@targets$harvest_rate[1] <- .ilogit(h2(c(log(object@shape[1]))))
             }
             
-            object@targets$captures[1]  <- .ff2(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
-            object@targets$depletion[1] <- .ff2(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion
-                
         } else {
             
             # record deterministic estimate only
@@ -241,8 +252,11 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
                 object@targets$harvest_rate[1] <- .ilogit(h_logit_init)
             }
         
-            object@targets$captures[1]  <- .ff(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
-            object@targets$depletion[1] <- .ff(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion  
+        }
+        
+        if (!is.na(object@targets$harvest_rate[1])) {
+            object@targets$captures[1]  <- fast_forward(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
+            object@targets$depletion[1] <- fast_forward(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion    
         }
         
         #######################
@@ -277,30 +291,31 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
                 # record estimate if
                 # necessary
                 if (ESTIMATE_HMNPL) {
+                    
 					h2$force.update()
+                    
                     object@targets$harvest_rate[i] <- .ilogit(h2(log(object@shape[i])))
                 }
-                
-                if (STOCHASTIC) {
-                    
-                    object@targets$captures[i]  <- .ff2(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
-                    object@targets$depletion[i] <- .ff2(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion
-                    
-                } else {
-                    
-                    object@targets$captures[i]  <- .ff(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
-                    object@targets$depletion[i] <- .ff(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion    
-                }
 				
-				# check and reject
-				if (round(object@targets$depletion[i], 1) != round(object@targets$depletion[1], 1)) {
-				    warning("failed to converge on target depletion for 'sample = ", i, "'")    
-				    object@targets$captures[i]     <- NA_real_
-				    object@targets$harvest_rate[i] <- NA_real_
-				    object@targets$depletion[i]    <- NA_real_
+				if (!is.na(object@targets$harvest_rate[i])) {
+				    
+				    object@targets$captures[i]  <- fast_forward(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
+				    object@targets$depletion[i] <- fast_forward(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion    
 				}
             }
         }
+        
+        #for (i in 1:NITER) {
+        #    
+        #    # check and reject
+        #    if (round(object@targets$depletion[i], 1) != round(mean(object@targets$depletion, na.rm = TRUE), 1)) {
+        #        warning("failed to converge on target depletion of ", round(mean(object@targets$depletion, na.rm = TRUE), 1), " for 'sample = ", i, "'")    
+        #        object@targets$captures[i]     <- NA_real_
+        #        object@targets$harvest_rate[i] <- NA_real_
+        #        object@targets$depletion[i]    <- NA_real_
+        #    }
+        #}
+        
     # }}}
     }
     

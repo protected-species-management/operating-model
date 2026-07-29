@@ -98,7 +98,7 @@ ggplot() +
 
 ```{r}
 # population dynamics
-om_object0 <- pdyn(om_object0, stochastic = FALSE, initial_depletion = 0.1)
+om_object0 <- pdyn(om_object0, stochastic = FALSE, initial_depletion = 0.1, test = TRUE)
 dynplot(om_object0)
 
 #diagnostics(om_object0)
@@ -125,7 +125,7 @@ ggplot() +
   geom_vline(data = dfr1, aes(xintercept = depletion, col = sample), linetype = "dashed") +
   geom_point(data = dfr1, aes(x = depletion, y = captures, col = sample))
 
-om_object1 <- pdyn(om_object1, stochastic = FALSE, initial_depletion = 0.3)
+om_object1 <- pdyn(om_object1, stochastic = FALSE, initial_depletion = 0.3, use_rmax = TRUE)
 dynplot(om_object1)
 
 #diagnostics(om_object1)

@@ -7,30 +7,27 @@
 \description{
 Operating model class definition.
 }
-\details{
-Each list entry in \code{life_history}, \code{fishery_inputs} and \code{pars} slots should be an array with \code{dim(x)[length(dim(x))] == iter} (i.e., length of the last dimension should be equal to the number of iterations).
-}
 \section{Slots}{
 
 \describe{
 \item{\code{ages}}{integer vector of ages assumed by operating model. Set to \code{NA} when a cohort aggregated model is assumed.}
 
-\item{\code{time}}{integer vector of times used for operating model projection or single value given the number of time steps.}
+\item{\code{time}}{integer vector of times used for operating model projection or single value giving the number of time steps.}
 
-\item{\code{iter}}{integer value indicating number of stochastic iterations.}
+\item{\code{samples}}{integer value indicating number of samples from the input value distributions specified in \code{pars}.}
 
-\item{\code{stochastic}}{logical indicating whether stochastic dynamics are being assumed.}
+\item{\code{settings}}{list of settings used to for reference point evaluation with \code{\link{shape}} and \code{\link{rp}}.}
 
-\item{\code{pars}}{list of estimated values used by the operating model. See \code{\link{load_pars}}.}
+\item{\code{pars}}{list of input parameter distributions used by the operating model. See \code{\link{load_pars}}.}
 
-\item{\code{fixed}}{list of fixed input values used by the operating model. See \code{\link{load_data}}.}
+\item{\code{shape}}{numeric vector of shape values estimated or specified using \code{\link{shape}}.}
 
 \item{\code{harvest_rate}}{function containing the harvest rate function.}
 
-\item{\code{pst}}{list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.}
+\item{\code{pst}}{list containing \code{phi}, \code{rmax} and \code{value} elements related to the PST threshold reference point.}
 
-\item{\code{targets}}{list containing \code{catch}, \code{depletion} and \code{harvest_rate} target reference points. These should be set at the appropriate level for the operating model being assumed. See \code{load_targets}.}
+\item{\code{targets}}{list containing \code{capture}, \code{depletion} and \code{harvest_rate} target reference points estimated using \code{\link{rp}}.}
 
-\item{\code{objectives}}{list containing probability values indicating whether management target has been reached (i.e., the realised objective values) for comparison with the probabilistic management objective.}
+\item{\code{objectives}}{list containing probability values indicating whether management target has been reached (i.e., the realised objective values).}
 }}
 

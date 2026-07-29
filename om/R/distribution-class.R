@@ -144,6 +144,13 @@ summary.distribution <- function(object) {
     if (grepl("^logit?normal", object@density)) return(.show_logitnormal_moments(object@pars))
 }
 
+#' @export
+expectation <- function(...) UseMethod("expectation")
+#' @exportS3Method
+expectation.distribution <- function(object) {
+    summary(object)['E[x]']
+}
+
 # distribution-specific functions
 # {{{
 .calc_uniform_pars <- function(x) {
@@ -215,8 +222,11 @@ summary.distribution <- function(object) {
 
 .calc_ztnormal_pars <- function(x) {
     
+    mu     <- mean(x)
+    sigma  <- sd(x)
+    
     # return
-    return(c(NA_real_, NA_real_))
+    return(c(mu, sigma))
 }
 
 .show_ztnormal_moments <- function(x) {

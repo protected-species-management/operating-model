@@ -1,15 +1,23 @@
 #' @title Population dynamics function
-#' 
-#' @description The population dynamics function is called per-iteration.
-#' 
+#' @description Project the population dynamics foward in time.
+#' @param object an \code{om} class object
+#' @param stochastic logical value
+#' @param iterations number of stochastic iterations
+#' @param time number of time steps (can be used to override value stored in object)
+#' @param initial_depletion starting depletion (must be >0 and <= 1)
+#' @param verbose logical value
+#' @param use_rmax logical value
+#' @details Reference points are always estimated using \eqn{r_{max}}, meaning that projections that use \eqn{r_{max}} have better behavioural properties when examined relative to reference point values. This is because the \eqn{\theta} shape parameter has been estimated per sample and will therefore be correctly correlated with the samples from the distribution of \eqn{r_{max}} values. However, it is also possible to project the dynamics using \eqn{r}, which is provided as a separate and independent distribution to the dynamics equation. This is helpful for robustness testing when it may be assumed that the population is currently not in it's optimal state, meaning that \eqn{r < r_{max}}. Note however, that the PST is always calculated using \eqn{r_{max}}, and if \eqn{r} is used for the population dynamics, then the this will decouple the assumed \eqn{r_{max}} from the true \eqn{r} value.   
 #' @export
 #' @include om-class.R get_dim.R dot-survivorship.R
 #' @import RTMB
-#' @importFrom cli cli_progress_step cli_progress_update
+#' @importFrom cli cli_progress_step cli_progress_update cli_alert_warning
+#' @importFrom logitnorm rlogitnorm
+#' @importFrom stats rlnorm rnorm
 #' @importFrom glue glue
 #{{{ pdyn()
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
-setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, ...) {
+setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, use_rmax = TRUE, ...) {
     
     # current environment
     ENV <- environment()
@@ -21,7 +29,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # check and update object with
     # function arguments
-    object <- .check_pdyn(object, stochastic, time, iterations, verbose)
+    object <- .check_pdyn(object, stochastic, time, iterations, verbose, use_rmax)
     
     # load time, age and
     # iteration dimensions
@@ -36,11 +44,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # check pars
     for (a in names(object@pars)) {
-		if (isTRUE(is.na(object@pars[[a]]))) {
-			stop("'", a, "' is missing from 'object@pars'")
-		}
-	}
-	
+        if (isTRUE(is.na(object@pars[[a]]))) {
+            stop("'", a, "' is missing from 'object@pars'")
+        }
+    }
+    
     # setup numbers array
     # [life-history samples, process-error samples, ages, time]
     if (all(is.na(ages))) {
@@ -59,84 +67,149 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # pst
     object@pst$value <- array(dim = c(NITER, SITER, NTIME))
-        
-	# define observation error function
-	# using: cv, quantile (qn) and/or bias
-	if (object@settings$cv$observation > 0) {
-		if (object@settings$qn$observation[1] > 0) {
-		    if (is.na(object@settings$qn$observation[2])) {
-		        object@settings$qn$observation[2] <- object@settings$cv$observation
-		    }
-			if (object@settings$bias$observation != 1.0) {
-				.obs_error <- function(a, cv = object@settings$cv$observation, qn = object@settings$qn$observation, bias = object@settings$bias$observation) {
-					bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
-				}
-			} else {
-				.obs_error <- function(a, cv = object@settings$cv$observation, qn = object@settings$qn$observation) {
-					exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
-				}
-			}
-		} else {
-			if (object@settings$bias$observation != 1.0) {
-				.obs_error <- function(a, cv = object@settings$cv$observation, bias = object@settings$bias$observation) {
-					bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
-				}
-			} else {
-				.obs_error <- function(a, cv = object@settings$cv$observation) {
-					exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
-				}
-			}
-		}
-	} else {
-		if (object@settings$bias$observation != 1.0) {
-			.obs_error <- function(a, bias = object@settings$bias$observation) {
-				bias * a
-			}
-		} else {
-			.obs_error <- function(a) {
-				a
-			}
-		}
-	}
 	
-	# harvest rate error function
-	if (object@settings$cv$mortality > 0) {
-		if (object@settings$bias$mortality != 1.0) {
-			.harvest_error <- function(a, cv = object@settings$cv$mortality, bias = object@settings$bias$mortality) {
-				sigma <- cv * a
-				mu    <- uniroot(function(x) a - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-				e     <- rnorm(1, mu, sigma)
-				bias * pnorm(e)
-			}
-		} else {
-			.harvest_error <- function(a, cv = object@settings$cv$mortality) {
-				sigma <- cv * a
-				mu    <- uniroot(function(x) a - pnorm(x / sqrt(1 + sigma^2)), interval = c(-10, 10))$root
-				e     <- rnorm(1, mu, sigma)
-				pnorm(e)
-			}
-		}
-	} else {
-		if (object@settings$bias$mortality != 1.0) {
-			.harvest_error <- function(a, bias = object@settings$bias$mortality) {
-				bias * a
-			}
-		} else {
-			.harvest_error <- function(a) {
-				a
-			}
-		}
-	}
+	# setup values to 
+    # store pars iterations
+	object@values$rmax  <- rep(NA_real_, NITER)
+    object@values$r     <- rep(NA_real_, NITER)
+	object@values$shape <- rep(NA_real_, NITER)
+    object@values$s     <- rep(NA_real_, NITER)
+	object@values$l     <- rep(NA_real_, NITER)
+    object@values$b     <- rep(NA_real_, NITER)
+	object@values$beq   <- rep(NA_real_, NITER)
+	object@values$bstar <- rep(NA_real_, NITER)
+    object@values$m     <- rep(NA_real_, NITER)
+    object@values$o     <- rep(NA_real_, NITER)
+    object@values$v     <- rep(NA_real_, NITER)
+    object@values$K     <- rep(NA_real_, NITER)
+        
+    # define log-normal numbers observation error function
+    # using: cv, quantile (qn) and/or bias
+    if (STOCHASTIC & object@settings$cv$numbers > 0) {
+        if (object@settings$qn$numbers[1] > 0) {
+            if (is.na(object@settings$qn$numbers[2])) {
+                object@settings$qn$numbers[2] <- object@settings$cv$numbers
+            }
+            if (object@settings$bias$numbers != 1.0) {
+                .obs_error <- function(a, cv = object@settings$cv$numbers, qn = object@settings$qn$numbers, bias = object@settings$bias$numbers) {
+                    bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
+                }
+            } else {
+                .obs_error <- function(a, cv = object@settings$cv$numbers, qn = object@settings$qn$numbers) {
+                    exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
+                }
+            }
+        } else {
+            if (object@settings$bias$numbers != 1.0) {
+                .obs_error <- function(a, cv = object@settings$cv$numbers, bias = object@settings$bias$numbers) {
+                    bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+                }
+            } else {
+                .obs_error <- function(a, cv = object@settings$cv$numbers) {
+                    exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+                }
+            }
+        }
+    } else {
+        if (object@settings$bias$numbers != 1.0) {
+            .obs_error <- function(a, bias = object@settings$bias$numbers) {
+                bias * a
+            }
+        } else {
+            .obs_error <- function(a) {
+                a
+            }
+        }
+    }
+    
+    # define logit-normal harvest rate
+    # error function
+    if (STOCHASTIC & object@settings$cv$harvest_rate > 0) {
+        if (object@settings$cv$harvest_rate > 0.3) {
+            cli_alert_warning("Recommend reducing CV[harvest rate] to less than 0.3")
+        }
+        if (object@settings$bias$harvest_rate != 1.0) {
+            .harvest_error <- function(a, cv = object@settings$cv$harvest_rate, bias = object@settings$bias$harvest_rate) {
+                bias * rlogitnorm(1, mu = a, sigma = cv * a)
+            }
+        } else {
+            .harvest_error <- function(a, cv = object@settings$cv$harvest_rate) {
+                rlogitnorm(1, mu = a, sigma = cv * a)
+            }
+        }
+    } else {
+        if (object@settings$bias$harvest_rate != 1.0) {
+            .harvest_error <- function(a, bias = object@settings$bias$harvest_rate) {
+                bias * a
+            }
+        } else {
+            .harvest_error <- function(a) {
+                a
+            }
+        }
+    }
+    
+    # define log-normal capture
+    # error function
+    if (STOCHASTIC & object@settings$cv$capture > 0) {
+        if (object@settings$bias$capture != 1.0) {
+            .capture_error <- function(a, cv = object@settings$cv$capture, bias = object@settings$bias$capture) {
+                bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+            }
+        } else {
+            .capture_error <- function(a, cv = object@settings$cv$capture) {
+                exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+            }
+        }
+    } else {
+        if (object@settings$bias$capture != 1.0) {
+            .capture_error <- function(a, bias = object@settings$bias$capture) {
+                bias * a
+            }
+        } else {
+            .capture_error <- function(a) {
+                a
+            }
+        }
+    }
+    
+    # define zt-normal rmax
+    # error function
+    if (STOCHASTIC & object@settings$cv$rmax > 0) {
+        if (object@settings$bias$rmax != 1.0) {
+            .rmax_error <- function(a, cv = object@settings$cv$rmax, bias = object@settings$bias$rmax) {
+                bias * (a + (cv * a) * qnorm(runif(1, pnorm((0 - a) / (cv * a)), pnorm(Inf))))
+            }
+        } else {
+            .rmax_error <- function(a, cv = object@settings$cv$rmax) {
+                a + (cv * a) * qnorm(runif(1, pnorm((0 - a) / (cv * a)), pnorm(Inf)))
+            }
+        }
+    } else {
+        if (object@settings$bias$rmax != 1.0) {
+            .rmax_error <- function(a, bias = object@settings$bias$rmax) {
+                bias * a
+            }
+        } else {
+            .rmax_error <- function(a) {
+                a
+            }
+        }
+    }
     
     if (verbose) {
         message("harvest rate function:")
         message(writeLines(deparse(object@harvest_rate)))
-        message("captures error function:")
+        message("harvest rate error function:")
         message(writeLines(deparse(.harvest_error)))
-        message("observation error function:")
+        message("capture error function:")
+        message(writeLines(deparse(.capture_error)))
+        message("numbers observation error function:")
         message(writeLines(deparse(.obs_error)))
+        message("rmax error function:")
+        message(writeLines(deparse(.rmax_error)))
     }
-	
+    
     # progress
     msg <- ""
     cli_progress_step("Projecting dynamics{msg}", spinner = TRUE, msg_done = "Projected dynamics")
@@ -179,25 +252,31 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         # set-up arrays
         n   <- array(dim = c(NAGES, NTIME))
         p   <- vector("numeric", length = NAGES)
-		pst <- vector("numeric", length = NTIME)
-		h   <- vector("numeric", length = NTIME - 1)
+        pst <- vector("numeric", length = NTIME)
+        h   <- vector("numeric", length = NTIME - 1)
         
         proj_n         <- array(dim = c(SITER, NAGES, NTIME))
         proj_h         <- array(dim = c(SITER, NTIME - 1))
         proj_catch     <- array(dim = c(SITER, NTIME - 1))
         proj_depletion <- array(dim = c(SITER, NTIME))
-		proj_pst       <- array(dim = c(SITER, NTIME))
+        proj_pst       <- array(dim = c(SITER, NTIME))
         
         # set-up birth function
         birth <- function(y) {
-            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - min(1, (sum(n[-1,y]) / sum(k[-1])))^shape[i])) 
+			0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape[i]))			
         }
         
-		# pst observation function
-		pst_calc <- function(numbers) {
-			(1 / 2) * object@pst$phi * rmax_sample * .obs_error(sum(numbers * ogive))
-		}
-	
+        # pst observation function
+        pst_calc <- function(numbers, observation) {
+            (1 / 2) * object@pst$phi * .rmax_error(rmax_sample) * .obs_error(sum(numbers * observation))
+        }
+        
+        # harvest rate calculation
+        # from captures
+        hr_calc <- function(capture, numbers, selectivity) {
+            ifelse(sum(numbers * selectivity) > 0, min(sum(numbers * selectivity), .capture_error(capture) / sum(numbers * selectivity)), NA_real_)
+        }
+    
         #######################
         # monte-carlo samples #
         # from life-history   #
@@ -219,12 +298,12 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             cli_progress_update()
             
             # assign pars
-			m <- pars_sample$m
-			r <- pars_sample$rmax
-			s <- pars_sample$s
-			l <- pars_sample$l
-			v <- pars_sample$v
-			o <- pars_sample$o
+            m <- pars_sample$m
+            r <- ifelse(use_rmax, pars_sample$rmax, pars_sample$r)
+            s <- pars_sample$s
+            l <- pars_sample$l
+            v <- pars_sample$v
+            o <- pars_sample$o
             K <- pars_sample$K
             b <- pars_sample$b
             
@@ -234,22 +313,20 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             #print(paste("rest:", round(log(.solve_lambda(m, s, s * l, b)), 5)))
             
             # transcribe
-			#S <- c(rep(s * l, m), rep(s, NAGES - m))
-			S <- c(s * l, rep(s, NAGES - 1))
-			
-			age_mat <- as.integer(m)
-			age_pat <- age_mat + 1L
-			age_sel <- as.integer(v)
-			age_obs <- as.integer(o)
-		
-			mat <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
-			pat <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
-			sel <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
-			obs <- c(rep(0, age_obs), rep(1, NAGES - age_obs))
-			
-			lambda <- exp(r)
-			
-			ogive  <- obs
+            #S <- c(rep(s * l, m), rep(s, NAGES - m))
+            S <- c(s * l, rep(s, NAGES - 1))
+            
+            age_mat <- as.integer(m)
+            age_pat <- age_mat + 1L
+            age_sel <- as.integer(v)
+            age_obs <- as.integer(o)
+        
+            mat <- c(rep(0, age_mat), rep(1, NAGES - age_mat))
+            pat <- c(rep(0, age_pat), rep(1, NAGES - age_pat))
+            sel <- c(rep(0, age_sel), rep(1, NAGES - age_sel))
+            obs <- c(rep(0, age_obs), rep(1, NAGES - age_obs))
+            
+            lambda <- exp(r)
             
             # set up unexploited 
             # equilibrium female
@@ -293,43 +370,50 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 # minimise
                 h_init <- .ilogit(optimise(obj_fun, interval = c(z - 1, z + 1), shape = shape[i], target = initial_depletion)$minimum)
                 
+                n_init <- matrix(k, nrow = NAGES, ncol = 2)
+                for (l in 2:1e3) {
+                    
+                    n_init[, 1] <- n_init[, 2]
+                    for(a in 2:NAGES) {
+                        n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h_init)
+                    }
+                    n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
+                    n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]))^shape[i]))
+                }
+                
             } else {
                 
-                h_init <- 0    
-            }
-            
-            # equilibrium age
-            # structure
-            n_init <- matrix(k, nrow = NAGES, ncol = 2)
-            for (l in 2:1e3) {
-                
-                n_init[, 1] <- n_init[, 2]
-                for(a in 2:NAGES) {
-                    n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1] * (1 - sel[a - 1] * h_init)
+                n_init <- matrix(k, nrow = NAGES, ncol = 2)
+                for (l in 2:1e3) {
+                    
+                    n_init[, 1] <- n_init[, 2]
+                    for(a in 2:NAGES) {
+                        n_init[a, 2] <- n_init[a - 1, 1] * S[a - 1]
+                    }
+                    n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a]
+                    n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (min(1, sum(n_init[-1, 2])))^shape[i]))
                 }
-                n_init[a, 2] <- n_init[a, 2] + n_init[a, 1] * S[a] * (1 -  sel[a] * h_init)
-                n_init[1, 2] <- 0.5 * sum(pat[-1] * n_init[-1, 2]) * (b_eq + (b_max - b_eq) * (1 - (sum(n_init[-1, 2]))^shape[i]))
             }
             
             # check and reject
-            if (round(sum(n_init[-1, 2]), 2) != initial_depletion) {
+            if (round(sum(n_init[-1, 2]), 1) != initial_depletion) {
                 warning("failed to estimate initial depletion for 'sample = ", i, "'")    
                 next
             }
-			
-			# construct survivorship
-			# array
+            
+            # construct survivorship
+            # array
             if (STOCHASTIC) {
-				survivorship <- .survivorship(pars_sample$s, object@settings$cv$survivorship, env = ENV)
-				epsilon      <- .epsilon(object@settings$cv$birth, env = ENV)
-			} else {
-				survivorship <- .survivorship(pars_sample$s, env = ENV)
-				epsilon      <- .epsilon(env = ENV)
-			}
-			
-			# (sum(k1+) = K)
-			k <- k * K
-			
+                survivorship <- .survivorship(pars_sample$s, object@settings$cv$survivorship, env = ENV)
+                epsilon      <- .epsilon(object@settings$cv$birth, env = ENV)
+            } else {
+                survivorship <- .survivorship(pars_sample$s, env = ENV)
+                epsilon      <- .epsilon(env = ENV)
+            }
+            
+            # (sum(k1+) = K)
+            k <- k * K
+            
             # loop over stochastic
             # process error
             for (j in 1:SITER) {
@@ -337,30 +421,30 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 # initialise
                 n[, 1] <- n_init[,2] * K
                 
-				# survivorship matrix
-				s <- matrix(survivorship[j,], ncol = NTIME, nrow = NAGES, byrow = TRUE)
-				#s <- (sweep(s, 1, 1 - mat, "*") * pars_sample$l) + sweep(s, 1, mat, "*")
-				s[1,] <- s[1,] * pars_sample$l
-				
-				# birth rate deviation
-				e <- epsilon[j,]
-				
-				# apply
-				n[, 1] <- n[, 1] * e[1]
-				
-				# observe initial pst
-				pst[1] <- pst_calc(n[, 1])
-					
+                # survivorship matrix
+                s <- matrix(survivorship[j,], ncol = NTIME, nrow = NAGES, byrow = TRUE)
+                #s <- (sweep(s, 1, 1 - mat, "*") * pars_sample$l) + sweep(s, 1, mat, "*")
+                s[1,] <- s[1,] * pars_sample$l
+                
+                # birth rate deviation
+                e <- epsilon[j,]
+                
+                # apply
+                n[, 1] <- n[, 1] * e[1]
+                
+                # observe initial pst
+                pst[1] <- pst_calc(n[, 1], obs)
+                    
                 # project under harvest rate
                 # function
                 # {{{
                 for (y in 2:NTIME) {
                     
-					# calculate harvest rate
-					h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i, y)
-					
-					# apply harvest rate
-					# and mortality
+                    # calculate harvest rate
+                    h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i)
+                    
+                    # apply harvest rate
+                    # and mortality
                     for (a in 2:NAGES) {
                         n[a, y] <- n[a - 1, y - 1] * s[a - 1, y - 1] * (1 - sel[a - 1] * h[y - 1]) 
                     }
@@ -370,17 +454,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                     
                     # birth
                     n[1, y] <- birth(y) * e[y]
-					
-					# observe pst
-					pst[y] <- pst_calc(n[, y])
+                    
+                    # observe pst
+                    pst[y] <- pst_calc(n[, y], obs)
                 }
                 
                 # values per-year
-				proj_h[j,]         <- h
+                proj_h[j,]         <- h
                 proj_catch[j,]     <- apply(sweep(n, 1, sel, "*"), 2, sum)[-NTIME] * h
                 proj_depletion[j,] <- apply(n[-1,], 2, sum) / sum(k[-1])
                 proj_n[j,,]        <- n
-				proj_pst[j,]       <- pst
+                proj_pst[j,]       <- pst
                 
                 # spin spinner
                 cli_progress_update()
@@ -397,22 +481,26 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             # numbers
             N[i,,,] <- proj_n
             
-			# pst
+            # pst
             object@pst$rmax[i]    <- rmax_sample
             object@pst$value[i,,] <- proj_pst
-			
+            
             # spin spinner
             cli_progress_update()
             
             # record values
-            object@values$r[i] <- pars_sample$r
-			object@values$s[i] <- pars_sample$s
-			object@values$l[i] <- pars_sample$l
-            object@values$b[i] <- pars_sample$b
-            object@values$m[i] <- pars_sample$m
-            object@values$o[i] <- pars_sample$o
-            object@values$v[i] <- pars_sample$v
-            object@values$K[i] <- pars_sample$K
+            object@values$rmax[i]  <- pars_sample$rmax
+			object@values$r[i]     <- pars_sample$r
+			object@values$shape[i] <- shape[i]
+            object@values$s[i]     <- pars_sample$s
+            object@values$l[i]     <- pars_sample$l
+			object@values$b[i]     <- pars_sample$b
+            object@values$beq[i]   <- b_eq
+			object@values$bstar[i] <- b_max
+            object@values$m[i]     <- pars_sample$m
+            object@values$o[i]     <- pars_sample$o
+            object@values$v[i]     <- pars_sample$v
+            object@values$K[i]     <- pars_sample$K
         }
     }
 
@@ -435,9 +523,9 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         object@objectives$harvest_rate[i,] <- apply(sweep(matrix(object@diagnostics$harvest_rate[i,,], nrow = SITER), 1, object@targets$harvest_rate[i], p_lower), 2, mean, na.rm = TRUE)
     }
     
-    # assign numbers
-    # [life-history samples, process error iterations, ages, time]
-    object@.Data <- N
+    # assign numbers (sum of 1+ age classes)
+    # [life-history samples, process error iterations, time]
+    object@.Data <- apply(N[,,-1,, drop = FALSE], c(1,2,4), sum)
     
     # return
     return(object)

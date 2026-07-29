@@ -7,8 +7,7 @@
 #' @param labels character vector of labels per model run
 #' @param ... additional \code{om} class objects
 #' 
-#' @return Returns a \code{ggplot} object that can be displayed or assigned and manuipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles. 
-#' @include array2dfr.R
+#' @return Returns a \code{ggplot} object that can be displayed or assigned and manipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles. 
 #' @importFrom ggplot2 ggplot stat_summary facet_grid
 #' @importFrom rlang .data
 #' @importFrom dplyr bind_rows left_join
@@ -19,40 +18,60 @@ dynplot <- function(object, ...) UseMethod("dynplot")
 #'
 #' @rdname dynplot
 #' @export
-dynplot.om <- function(object, pars = 'depletion') {
+dynplot.om <- function(object, ..., pars = 'depletion', labels) {
     
     stopifnot(all(pars %in% c("depletion", "harvest_rate", "captures")))
     
-    get_dim(object, env = environment())
+    y <- list(object, ...)
     
-    y <- object
+    lst1 <- list()
+    lst2 <- list()
     
-    lst <- list()
-    
-    dm <- list(sample = 1:NITER, iteration = 1:SITER, time = time)
-    
-    for (par in pars) {
+    for (mdl in 1:length(y)) {
         
-        if (par %in% c("harvest_rate", "captures")) dm$time <- dm$time[-length(dm$time)] 
+        get_dim(y[[mdl]], env = environment())
         
-        #dfr <- array2dfr(slot(y, 'diagnostics')[[par]], dim.names = dm)
+        dm <- list(sample = 1:NITER, iteration = 1:SITER, time = time)
+        
+        for (par in pars) {
+            
+            dm2 <- dm
+            if (par %in% c("harvest_rate", "captures")) {
+                dm2$time <- dm$time[-length(dm$time)] 
+            } else {
+                dm2$time <- dm$time
+            }
+        
+            dfr <- slot(y[[mdl]], 'diagnostics')[[par]]
+            dimnames(dfr) <- dm2
+            dfr <- array2DF(dfr, responseName = "value")
+            
+            dfr$time      <- as.numeric(dfr$time)
+            dfr$sample    <- as.numeric(dfr$sample)
+            dfr$iteration <- as.numeric(dfr$iteration)
+            
+            lst1[[par]] <- na.omit(dfr)
+        }
     
-        dfr <- slot(y, 'diagnostics')[[par]]
-        dimnames(dfr) <- dm
-        dfr <- array2DF(dfr, responseName = "value")
+        lst2[[mdl]] <- bind_rows(lst1, .id = 'par')    
+    
+        lst2[[mdl]] <- left_join(lst2[[mdl]], data.frame(par = c("depletion", "harvest_rate", "captures"), par2 = c("Depletion", "Harvest rate", "Captures")), by = 'par')
         
-        dfr$time      <- as.numeric(dfr$time)
-        dfr$sample    <- as.numeric(dfr$sample)
-        dfr$iteration <- as.numeric(dfr$iteration)
-        
-        lst[[par]] <- na.omit(dfr)
     }
     
-    dfr <- bind_rows(lst, .id = 'par')    
+    if (missing(labels)) {
+        names(lst2) <- as.character(unlist(as.list(match.call())[-1]))[1:length(y)] #LETTERS[1:length(y)]
+    } else {
+        names(lst2) <- labels
+    }
+        
+    dfr <- bind_rows(lst2, .id = 'model')
     
-    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "captures"), par2 = c("Depletion", "Harvest rate", "Captures")), by = 'par')
-    
-    gg <- ggplot(dfr, aes(.data$time, .data$value))
+    if (length(y) > 1) {
+        gg <- ggplot(dfr, aes(x = .data$time, y = .data$value, fill = .data$model, col = .data$model))
+    } else {
+        gg <- ggplot(dfr, aes(x = .data$time, y = .data$value))
+    }
 
     gg <- gg + 
         stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = 'ribbon', alpha = 0.3) +
@@ -66,77 +85,3 @@ dynplot.om <- function(object, pars = 'depletion') {
     
     return(gg)
 }
-#'
-#' @rdname dynplot
-#' @export
-dynplot.list <- function(object, pars = 'depletion', labels = character()) {
-    
-    stop("not currently working for list input...")
-    
-    stopifnot(all(pars %in% c("depletion", "harvest_rate", "captures")))
-    
-    get_dim(object[[1]], env = environment())
-    
-    y <- object #c(object, list(...))
-    
-    dm <- dimnames(object@.Data)[c(1,2,4)]
-    
-    is.labelled <- ifelse(length(labels) > 0, TRUE, FALSE)
-    
-    if (is.labelled & length(y) != length(labels)) {
-        stop("'labels' vector length does not match number of models")  
-    }
-    
-    if (is.labelled) {
-        
-        names(y) <- labels
-        
-    } else {
-        
-        labels <- 1:length(y)
-        labels <- ifelse(labels < 10, paste0("0", labels), labels)
-        
-        names(y) <- labels   
-    }
-    
-    lst <- list()
-    
-    for (par in pars) {
-        
-        if (par == "depletion") dm <- list(iter = 1:niter, time = time) else dm <- list(iter = 1:niter, time = time[-ntime]) 
-        
-        dfr <- bind_rows(lapply(y, function(x) array2dfr(slot(x, 'diagnostics')[[par]], dim.names = dm)), .id = 'label')
-        
-        dfr$label <- factor(dfr$label, levels = labels)
-        
-        dfr$time <- as.numeric(dfr$time)
-        dfr$iter <- as.numeric(dfr$iter)
-        
-        lst[[par]] <- na.omit(dfr)
-    }
-    
-    dfr <- bind_rows(lst, .id = 'par')    
-    
-    dfr <- left_join(dfr, data.frame(par = c("depletion", "harvest_rate", "captures"), par2 = c("Depletion", "Harvest rate", "Captures")), by = "par")
-    
-    if (length(y) > 1) {
-        gg <- ggplot(dfr, aes(.data$time, .data$value, col = .data$label, fill = .data$label))
-    } else {
-        gg <- ggplot(dfr, aes(.data$time, .data$value))
-    }
-    
-    gg <- gg + 
-        stat_summary(fun.min = function(x) quantile(x, 0.025), fun.max = function(x) quantile(x, 0.975), geom = 'ribbon', alpha = 0.3) +
-        stat_summary(fun.min = function(x) quantile(x, 0.125), fun.max = function(x) quantile(x, 0.875), geom = 'ribbon', alpha = 0.3) +
-        stat_summary(fun = function(x) median(x), geom = 'line', lwd = 1) +
-        stat_summary(fun = function(x) mean(x), geom = 'line', lwd = 0.5, linetype = "dashed")
-    
-    if (length(pars) > 1) {
-        gg <- gg + facet_grid(.data$par2~., scales  =  'free_y')
-    }
-    
-    return(gg)
-}
-#}}}
-
-#}}}

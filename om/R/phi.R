@@ -19,7 +19,7 @@ setMethod("phi<-",
               if (length(value) != 1) {
                   stop("'value' should be of length '1'")
               }
-              if (any(value <= 0)) {
+              if (any(value < 0)) {
                   stop("'value' must be >0")
               }
               

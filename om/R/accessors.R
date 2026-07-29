@@ -1,7 +1,6 @@
-
-#' @title Access outputs from \code{\link{om-class}} object. 
-#' @aliases targets diagnostics pst objectives
-#' @description Access outputs stored in \code{\link{om-class}} object following call to [pdyn()].
+#' @title Access outputs from operating model object. 
+#' @aliases targets diagnostics pst objectives pars numbers settings
+#' @description Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.
 #' @param object \code{\link{om-class}} object. 
 #' @importFrom crayon blue
 #' @importFrom dplyr bind_rows
@@ -77,7 +76,7 @@ setGeneric("numbers", function(object, ...) standardGeneric("numbers"))
 #' @rdname targets
 setMethod("numbers", signature = c("om"), function(object) {
     get_dim(object, env = environment())
-    array2dfr(object@.Data, dim.names = list(sample = 1:NITER, iteration = 1:SITER, age = object@ages, time = object@time))
+    array2dfr(object@.Data, dim.names = list(sample = 1:NITER, iteration = 1:SITER, time = object@time))
 })
 #}}}
 

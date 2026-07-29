@@ -2,7 +2,7 @@
 % Please edit documentation in R/om.R
 \name{om}
 \alias{om}
-\title{Create \code{\link{om-class}} object}
+\title{Create \code{om-class} object}
 \usage{
 om(ages, harvest_function = .harvest_rate, ...)
 }
@@ -10,5 +10,5 @@ om(ages, harvest_function = .harvest_rate, ...)
 Initialise operating model class object
 }
 \seealso{
-[om-class]
+\code{\link{om-class}}
 }

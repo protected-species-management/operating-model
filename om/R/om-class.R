@@ -3,17 +3,15 @@
 #' @description 
 #' Operating model class definition.
 #' @slot ages integer vector of ages assumed by operating model. Set to \code{NA} when a cohort aggregated model is assumed.
-#' @slot time integer vector of times used for operating model projection or single value given the number of time steps.
-#' @slot iter integer value indicating number of stochastic iterations.
-#' @slot stochastic logical indicating whether stochastic dynamics are being assumed. 
-#' @slot pars list of estimated values used by the operating model. See \code{\link{load_pars}}.
-#' @slot fixed list of fixed input values used by the operating model. See \code{\link{load_data}}.
+#' @slot time integer vector of times used for operating model projection or single value giving the number of time steps.
+#' @slot samples integer value indicating number of samples from the input value distributions specified in \code{pars}.
+#' @slot settings list of settings used to for reference point evaluation with \code{\link{shape}} and \code{\link{rp}}. 
+#' @slot pars list of input parameter distributions used by the operating model. See \code{\link{load_pars}}.
+#' @slot shape numeric vector of shape values estimated or specified using \code{\link{shape}}.
 #' @slot harvest_rate function containing the harvest rate function.
-#' @slot pst list containing \code{phi}, \code{rmax}, \code{numbers} and \code{value} elements related to the PST threshold reference point.
-#' @slot targets list containing \code{catch}, \code{depletion} and \code{harvest_rate} target reference points. These should be set at the appropriate level for the operating model being assumed. See \code{load_targets}.
-#' @slot objectives list containing probability values indicating whether management target has been reached (i.e., the realised objective values) for comparison with the probabilistic management objective. 
-#' 
-#' @details Each list entry in \code{life_history}, \code{fishery_inputs} and \code{pars} slots should be an array with \code{dim(x)[length(dim(x))] == iter} (i.e., length of the last dimension should be equal to the number of iterations).
+#' @slot pst list containing \code{phi}, \code{rmax} and \code{value} elements related to the PST threshold reference point.
+#' @slot targets list containing \code{capture}, \code{depletion} and \code{harvest_rate} target reference points estimated using \code{\link{rp}}.
+#' @slot objectives list containing probability values indicating whether management target has been reached (i.e., the realised objective values). 
 #' 
 #' @importFrom crayon blue red
 #{{{
@@ -68,15 +66,15 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # estimation and projection
     .Object@settings$ref_points <- list(stochastic = NA, iterations = NA_integer_, time = NA_integer_)
     .Object@settings$projection <- list(stochastic = NA, iterations = NA_integer_, time = length(.Object@time))
-    .Object@settings$cv         <- list(survivorship = 0.0, birth = 0.0, observation = 0.0, mortality = 0.0)
-    .Object@settings$qn         <- list(observation = c(0.0, NA_real_))
-    .Object@settings$bias       <- list(observation = 1.0, mortality = 1.0)
+    .Object@settings$cv         <- list(survivorship = 0.0, birth = 0.0, numbers = 0.0, harvest_rate = 0.0, capture = 0.0, rmax = 0.0)
+    .Object@settings$qn         <- list(numbers = c(0.0, NA_real_))
+    .Object@settings$bias       <- list(numbers = 1.0, harvest_rate = 1.0, capture = 1.0, rmax = 1.0)
     
     # setup PST limit
     # reference point
-    .Object@pst$phi      <- phi
-    .Object@pst$rmax     <- rep(NA_real_, samples)
-    .Object@pst$value    <- NA_real_
+    .Object@pst$phi   <- phi
+    .Object@pst$rmax  <- rep(NA_real_, samples)
+    .Object@pst$value <- NA_real_
     
     # setup pars
     # (intrinsic growth)
@@ -92,7 +90,7 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     # (age at female maturity)
     .Object@pars$m <- NA_real_
     # (age at observation)
-    .Object@pars$o <- distribution(value = 1, name = "Age at observation")
+    .Object@pars$o <- NA_real_
     # (age at selectivity)
     .Object@pars$v <- NA_real_
     # (carrying capacity)
@@ -100,14 +98,18 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     
     # setup values to 
     # store pars iterations
-    .Object@values$r <- rep(NA_real_, samples)
-    .Object@values$s <- rep(NA_real_, samples)
-	.Object@values$l <- rep(NA_real_, samples)
-    .Object@values$b <- rep(NA_real_, samples)
-    .Object@values$m <- rep(NA_real_, samples)
-    .Object@values$o <- rep(NA_real_, samples)
-    .Object@values$v <- rep(NA_real_, samples)
-    .Object@values$K <- rep(NA_real_, samples)
+	.Object@values$rmax  <- NA_real_
+    .Object@values$r     <- NA_real_
+	.Object@values$shape <- NA_real_
+    .Object@values$s     <- NA_real_
+	.Object@values$l     <- NA_real_
+    .Object@values$b     <- NA_real_
+	.Object@values$beq   <- NA_real_
+	.Object@values$bstar <- NA_real_
+    .Object@values$m     <- NA_real_
+    .Object@values$o     <- NA_real_
+    .Object@values$v     <- NA_real_
+    .Object@values$K     <- NA_real_
     
     # setup management
     # target reference points
@@ -130,7 +132,6 @@ setMethod("initialize", "om", function(.Object, ages, harvest_function, samples 
     seeds <- floor((runif(samples)) * 1e7)
     if (any(duplicated(seeds))) warning(sum(duplicated(seeds)), "/", samples, " (approx. ", round(100 * sum(duplicated(seeds)) / samples), "%) of seeds are duplicated")
     if (any(is.na(as.integer(seeds)))) warning(sum(is.na(as.integer(seeds))), "/", samples, " seeds are 'NA' values")
-    #while (length(seeds[!duplicated(seeds)]) < length(seeds)) seeds <- floor(runif(samples, 1, 1e6))
     .Object@seeds <- as.integer(seeds)
     
     # return

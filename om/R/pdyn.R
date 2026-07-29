@@ -148,11 +148,11 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     if (STOCHASTIC & object@settings$cv$capture > 0) {
         if (object@settings$bias$capture != 1.0) {
             .capture_error <- function(a, cv = object@settings$cv$capture, bias = object@settings$bias$capture) {
-                bias * rlnorm(1, log(a + ((cv * a)^2) / 2), cv * a)
+                bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
             }
         } else {
             .capture_error <- function(a, cv = object@settings$cv$capture) {
-                rlnorm(1, log(a + ((cv * a)^2) / 2), cv * a)
+                exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
             }
         }
     } else {

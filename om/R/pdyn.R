@@ -1,12 +1,12 @@
 #' @title Population dynamics function
 #' @description Project the population dynamics foward in time.
 #' @param object an \code{om} class object
-#' @param stochastic logical value
-#' @param iterations number of stochastic iterations
-#' @param time number of time steps (can be used to override value stored in object)
-#' @param initial_depletion starting depletion (must be >0 and <= 1)
-#' @param verbose logical value
-#' @param use_rmax logical value
+#' @param stochastic logical value (no default value)
+#' @param iterations number of iterations for stochastic projection
+#' @param time number of time steps (can be used to override value stored in \code{object})
+#' @param initial_depletion starting depletion (must be >0 and <= 1; defaults to 1.0)
+#' @param verbose logical value (defaults to FALSE)
+#' @param use_rmax logical value (defaults to TRUE)
 #' @details Reference points are always estimated using \eqn{r_{max}}, meaning that projections that use \eqn{r_{max}} have better behavioural properties when examined relative to reference point values. This is because the \eqn{\theta} shape parameter has been estimated per sample and will therefore be correctly correlated with the samples from the distribution of \eqn{r_{max}} values. However, it is also possible to project the dynamics using \eqn{r}, which is provided as a separate and independent distribution to the dynamics equation. This is helpful for robustness testing when it may be assumed that the population is currently not in it's optimal state, meaning that \eqn{r < r_{max}}. Note however, that the PST is always calculated using \eqn{r_{max}}, and if \eqn{r} is used for the population dynamics, then the this will decouple the assumed \eqn{r_{max}} from the true \eqn{r} value.   
 #' @export
 #' @include om-class.R get_dim.R dot-survivorship.R

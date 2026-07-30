@@ -9,17 +9,17 @@ pdyn(object, ...)
 \arguments{
 \item{object}{an \code{om} class object}
 
-\item{stochastic}{logical value}
+\item{stochastic}{logical value (no default value)}
 
-\item{iterations}{number of stochastic iterations}
+\item{iterations}{number of iterations for stochastic projection}
 
-\item{time}{number of time steps (can be used to override value stored in object)}
+\item{time}{number of time steps (can be used to override value stored in \code{object})}
 
-\item{initial_depletion}{starting depletion (must be >0 and <= 1)}
+\item{initial_depletion}{starting depletion (must be >0 and <= 1; defaults to 1.0)}
 
-\item{verbose}{logical value}
+\item{verbose}{logical value (defaults to FALSE)}
 
-\item{use_rmax}{logical value}
+\item{use_rmax}{logical value (defaults to TRUE)}
 }
 \description{
 Project the population dynamics foward in time.

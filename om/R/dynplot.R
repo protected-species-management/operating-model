@@ -6,13 +6,13 @@
 #' @param pars character vector of model parameters to be plotted. Must be one or more of \code{'depletion'}, \code{'captures'} or \code{'harvest_rate'}.
 #' @param labels character vector of labels per model run
 #' @param ... additional \code{om} class objects
-#' 
-#' @return Returns a \code{ggplot} object that can be displayed or assigned and manipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles. 
+#' @note Multiple model objects can be supplied, in which case they are over-plotted. 
+#' @return Returns a \code{ggplot} object that can be displayed or assigned and manipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles across samples from the input life-history distributions and stochastic iterations (where stochastic projection has been used to generate the object). 
 #' @importFrom ggplot2 ggplot stat_summary facet_grid
 #' @importFrom rlang .data
 #' @importFrom dplyr bind_rows left_join
 #' @importFrom stats na.omit
-#' 
+#' @seealso \code{\link{objplot}}
 #' @export
 dynplot <- function(object, ...) UseMethod("dynplot")
 #'

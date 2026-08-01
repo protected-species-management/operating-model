@@ -2,7 +2,7 @@ Package: om
 Type: Package
 Title: Operating model
 Version: 0.2.1
-Date: 2026-07-30
+Date: 2026-08-01
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation model for the evaluation of protected species reference points
@@ -44,6 +44,7 @@ Collate:
     'load_quantiles.R'
     'load_rmax.R'
     'load_rps.R'
+    'objplot.R'
     'om.R'
     'pdyn.R'
     'phi.R'

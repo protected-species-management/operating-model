@@ -17,7 +17,7 @@ jobs:
       - name: Checkout 
         uses: actions/checkout@v7
         with:
-          repository: om
+          path: om
     
       - name: LaTeX
         uses: r-lib/actions/setup-tinytex@v2

@@ -1,5 +1,5 @@
 #' @title Plot function for distribution class
-#' @importFrom logitnorm dlogitnorm
+#' @importFrom logitnorm dlogitnorm invlogit
 #' @exportS3Method base::plot
 plot.distribution <- function(x, y = "missing", ...) {
     

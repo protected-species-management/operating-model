@@ -1,24 +1,24 @@
-#' @title Plot dynamics from \code{om} object
+#' @title Plot performance diagnostics over time
 #' @description
-#' Plots the dynamics over time of the projected captures, depletion or harvest rate.
+#' Plots the dynamics over time of the projected captures, depletion or harvest rate, each summarised as a probability relative to the MNPL reference points.
 #' 
 #' @param object \code{om} class object.
 #' @param pars character vector of model parameters to be plotted. Must be one or more of \code{'depletion'}, \code{'captures'} or \code{'harvest_rate'}.
 #' @param labels character vector of labels per model run
 #' @param ... additional \code{om} class objects
-#' @note Multiple model objects can be supplied, in which case they are over-plotted. 
-#' @return Returns a \code{ggplot} object that can be displayed or assigned and manipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles across samples from the input life-history distributions and stochastic iterations (where stochastic projection has been used to generate the object). 
+#' @note Multiple model objects can be supplied, in which case they are over-plotted, using the \code{labels} argument in the legend if supplied. 
+#' @return Returns a \code{ggplot} object that can be displayed or assigned and manipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles across samples from the input life-history distributions. 
 #' @importFrom ggplot2 ggplot stat_summary facet_grid aes
 #' @importFrom rlang .data
 #' @importFrom dplyr bind_rows left_join
 #' @importFrom stats na.omit
-#' @seealso \code{\link{objplot}}
+#' @seealso \code{\link{dynplot}}
 #' @export
-dynplot <- function(object, ...) UseMethod("dynplot")
+objplot <- function(object, ...) UseMethod("objplot")
 #'
-#' @rdname dynplot
+#' @rdname objplot
 #' @export
-dynplot.om <- function(object, ..., pars = 'depletion', labels) {
+objplot.om <- function(object, ..., pars = 'depletion', labels) {
     
     stopifnot(all(pars %in% c("depletion", "harvest_rate", "captures")))
     
@@ -31,7 +31,7 @@ dynplot.om <- function(object, ..., pars = 'depletion', labels) {
         
         get_dim(y[[mdl]], env = environment())
         
-        dm <- list(sample = 1:NITER, iteration = 1:SITER, time = time)
+        dm <- list(sample = 1:NITER, time = time)
         
         for (par in pars) {
             
@@ -42,20 +42,19 @@ dynplot.om <- function(object, ..., pars = 'depletion', labels) {
                 dm2$time <- dm$time
             }
         
-            dfr <- slot(y[[mdl]], 'diagnostics')[[par]]
+            dfr <- slot(y[[mdl]], 'objectives')[[par]]
             dimnames(dfr) <- dm2
             dfr <- array2DF(dfr, responseName = "value")
             
             dfr$time      <- as.numeric(dfr$time)
             dfr$sample    <- as.numeric(dfr$sample)
-            dfr$iteration <- as.numeric(dfr$iteration)
             
             lst1[[par]] <- na.omit(dfr)
         }
     
         lst2[[mdl]] <- bind_rows(lst1, .id = 'par')    
     
-        lst2[[mdl]] <- left_join(lst2[[mdl]], data.frame(par = c("depletion", "harvest_rate", "captures"), par2 = c("Depletion", "Harvest rate", "Captures")), by = 'par')
+        lst2[[mdl]] <- left_join(lst2[[mdl]], data.frame(par = c("depletion", "harvest_rate", "captures"), par2 = c("P(D > D[MNPL])", "P(H < H[MNPL])", "P(C < C[MNPL])")), by = 'par')
         
     }
     
@@ -80,7 +79,7 @@ dynplot.om <- function(object, ..., pars = 'depletion', labels) {
         #stat_summary(fun = function(x) median(x), geom = 'line', lwd = 0.5, linetype = "dashed")
     
     if (length(pars) > 1) {
-        gg <- gg + facet_grid(.data$par2~., scales  =  'free_y')
+        gg <- gg + facet_grid(.data$par2~., scales  =  'free_y', labeller = label_parsed)
     }
     
     return(gg)

@@ -34,6 +34,7 @@ jobs:
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: |
+            any::TMB
             any::RTMB
             any::roxygen2
             any::BH

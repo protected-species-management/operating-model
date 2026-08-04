@@ -1,4 +1,4 @@
-
+name: R-CMD-check
 on:
   workflow_dispatch:
   push:
@@ -6,8 +6,6 @@ on:
     
 permissions:
   contents: write
-
-name: R-CMD-check
 
 jobs:
   simple-check:

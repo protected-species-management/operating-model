@@ -9,8 +9,8 @@ Description: Simulation model for the evaluation of protected species reference 
 License: GPL (>= 3)
 VignetteBuilder: knitr
 Depends:
-    R (>= 4.4),
-    RTMB (>= 1.8)
+    R (>= 4.6),
+    RTMB (>= 1.9)
 Imports:
     ggplot2 (>= 4.0),
     dplyr (>= 1.2)

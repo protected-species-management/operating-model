@@ -43,7 +43,7 @@ jobs:
             roxygen2
         
       - name: Document
-        run: roxygen2::roxygenise()
+        run: roxygen2::roxygenise("om")
         shell: Rscript {0}
         
       - name: Commit and push document changes

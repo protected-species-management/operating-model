@@ -17,8 +17,7 @@ jobs:
       - name: Checkout 
         uses: actions/checkout@v7
         with:
-          repository: protected-species-management/operating-model
-          path: om
+          fetch-depth: 0
     
       - name: LaTeX
         uses: r-lib/actions/setup-tinytex@v2

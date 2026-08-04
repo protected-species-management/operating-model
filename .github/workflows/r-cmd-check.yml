@@ -34,7 +34,8 @@ jobs:
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          working-directory: operating-model/om
+          working-directory: om
+          packages: deps::om
           extra-packages: |
             any::TMB
             any::RTMB

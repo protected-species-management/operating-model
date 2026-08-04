@@ -4,7 +4,15 @@
 \alias{om}
 \title{Create \code{om-class} object}
 \usage{
-om(ages, harvest_function = .harvest_rate, ...)
+om(
+  ages,
+  harvest_function = function(object, numbers = n[, y - 1], selectivity = sel, pst =
+    pst[y - 1], i) {
+     ifelse(all(is.na(object@targets$harvest_rate)), 0,
+    object@targets$harvest_rate[i])
+ },
+  ...
+)
 }
 \description{
 Initialise operating model class object

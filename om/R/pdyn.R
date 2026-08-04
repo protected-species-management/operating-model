@@ -441,7 +441,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 for (y in 2:NTIME) {
                     
                     # calculate harvest rate
-                    h[y - 1] <- object@harvest_rate(numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i)
+                    h[y - 1] <- object@harvest_rate(object, numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i)
                     
                     # apply harvest rate
                     # and mortality

@@ -1,4 +1,4 @@
-#' @importFrom cli cli_alert_info
+#' @importFrom cli cli_alert_info cli_abort
 .check_rp <- function(object, stochastic, time, iterations, verbose) {
  
     object_settings <- object@settings$ref_points

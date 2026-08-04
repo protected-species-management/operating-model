@@ -8,13 +8,8 @@
 #'
 #{{{
 # constructor
-om <- function(ages, harvest_function = .harvest_rate, ...) new('om', ages, harvest_function, ...)
-#}}}
-#{{{
-# default
-.harvest_rate <- function(numbers, selectivity, pst, i) {
-    
-    # return target harvest rate
-    ifelse(all(is.na(object@targets$harvest_rate)), 0, object@targets$harvest_rate[i])
-}
+om <- function(ages, harvest_function = function(object, numbers = n[, y - 1], selectivity = sel, pst = pst[y - 1], i) {
+			# return target harvest rate
+			ifelse(all(is.na(object@targets$harvest_rate)), 0, object@targets$harvest_rate[i])
+		}, ...) new('om', ages, harvest_function, ...)
 #}}}

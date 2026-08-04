@@ -6,21 +6,27 @@ Date: 2026-08-01
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation model for the evaluation of protected species reference points
+License: GPL (>= 3)
 VignetteBuilder: knitr
 Depends:
     R (>= 4.4),
     utils (>= 4.5),
     methods (>= 4.3),
     RTMB (>= 1.8)
-Repos:
-    kaskr/RTMB
+Imports:
+	ggplot2 (>= 4.0),
+	dplyr (>= 1.2)
+	cli (>= 3.6),
+	crayon (>= 1.5),
+	glue (>= 1.8),
+	logitnorm (>= 0.8),
+	tibble (>= 3.3),
+	rlang (>= 1.3)
 Suggests:
     rmarkdown (>= 2.6),
     knitr (>= 1.31),
     testthat (>= 3.0),
-    kableExtra (>= 1.3),
-	ggplot2 (>= 4.0),
-	dplyr (>= 1.2)
+    kableExtra (>= 1.3)
 Collate: 
     'array2dfr.R'
     'om-class.R'

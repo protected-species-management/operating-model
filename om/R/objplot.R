@@ -8,7 +8,7 @@
 #' @param ... additional \code{om} class objects
 #' @note Multiple model objects can be supplied, in which case they are over-plotted, using the \code{labels} argument in the legend if supplied. 
 #' @return Returns a \code{ggplot} object that can be displayed or assigned and manipulated using further arguments from the \pkg{ggplot2} package. The plotted dynamics are summarised as the mean and the 75th and 95th percentiles across samples from the input life-history distributions. 
-#' @importFrom ggplot2 ggplot stat_summary facet_grid
+#' @importFrom ggplot2 ggplot stat_summary facet_grid aes
 #' @importFrom rlang .data
 #' @importFrom dplyr bind_rows left_join
 #' @importFrom stats na.omit

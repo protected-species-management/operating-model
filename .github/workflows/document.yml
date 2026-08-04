@@ -36,7 +36,7 @@ jobs:
         
       - name: Update onAttach
         run: |
-          Rscript -e 'cat(paste0(".onAttach <- function(libname, pkgname) {\n    packageStartupMessage(\"om version ", scan("om/DESCRIPTION",what=character(),skip=3,nlines=1,quiet=TRUE)[2], " (", format(Sys.Date(), format = "%d-%b-%Y"), ")\")\n}\n"), "\n.onLoad <- function(libname, pkgname) {\n  invisible(suppressPackageStartupMessages(\n    sapply(c(\"rlang\", \"dplyr\"),\n        requireNamespace, quietly = TRUE)\n  ))\n}\n" , file = "om/R/zzz.R")'
+          Rscript -e 'cat(paste0(".onAttach <- function(libname, pkgname) {\n    packageStartupMessage(\"om version ", scan("om/DESCRIPTION",what=character(),skip=3,nlines=1,quiet=TRUE)[2], " (", format(Sys.Date(), format = "%d-%b-%Y"), ")\")\n}\n") , file = "om/R/zzz.R")'
       
       - name: Update DESCRIPTION
         run: |

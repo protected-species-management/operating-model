@@ -15,8 +15,10 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
     steps:
       - name: Checkout 
-        uses: actions/checkout@v4
-        
+        uses: actions/checkout@v7
+        with:
+          repository: om
+    
       - name: LaTeX
         uses: r-lib/actions/setup-tinytex@v2
       

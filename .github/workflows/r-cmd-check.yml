@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     paths: ["om/R/**"]
-    
+
 permissions:
   contents: write
 
@@ -12,54 +12,51 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-      R_KEEP_PKG_SOURCE: yes
     steps:
-      - name: Checkout 
-        uses: actions/checkout@v7
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-    
+          repository: protected-species-management/operating-model
+          path: om
+
       - name: LaTeX
         uses: r-lib/actions/setup-tinytex@v2
-      
+        
       - name: Setup
         uses: r-lib/actions/setup-r@v2
         with:
           use-public-rspm: true
-
-      - name: Install Boost Headers
-        run:  sudo apt update -y && sudo apt install -y libboost-all-dev
 
       - name: Install dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
           working-directory: om
           packages: deps::om
-          extra-packages: |
-            any::TMB
-            any::RTMB
-            any::roxygen2
-            any::BH
-            any::Rcpp
-            any::RcppEigen
-          needs: |
-            check
-            roxygen2
-        
+          extra-packages: any::roxygen2
+          needs: roxygen2
+
       - name: Document
         run: roxygen2::roxygenise("om")
         shell: Rscript {0}
         
-      - name: Commit and push document changes
+      - name: Update onAttach
+        run: |
+          Rscript -e 'cat(paste0(".onAttach <- function(libname, pkgname) {\n    packageStartupMessage(\"om version ", scan("om/DESCRIPTION",what=character(),skip=3,nlines=1,quiet=TRUE)[2], " (", format(Sys.Date(), format = "%d-%b-%Y"), ")\")\n}\n") , file = "om/R/zzz.R")'
+      
+      - name: Update DESCRIPTION
+        run: |
+          Rscript -e 'DESC <- readLines("om/DESCRIPTION"); DESC[5] <- paste("Date:", Sys.Date()); writeLines(DESC, con = "om/DESCRIPTION")'
+
+      - name: Commit and push changes
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git add om/man/\* NAMESPACE DESCRIPTION
+          git add om/man/\* om/NAMESPACE om/DESCRIPTION
+          git add om/R/zzz.R
           git commit -m "Update documentation" || echo "No changes to commit"
-          git pull
-          git push
+          git merge --ff-only
+          git push origin
 
       - name: Simple check
         uses: r-lib/actions/check-r-package@v2
 
-          

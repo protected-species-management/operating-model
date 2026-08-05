@@ -2,7 +2,7 @@ Package: om
 Type: Package
 Title: Operating model
 Version: 0.2.1
-Date: 2026-08-01
+Date: 2026-08-04
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation model for the evaluation of protected species reference points
@@ -13,7 +13,7 @@ Depends:
     RTMB (>= 1.9)
 Imports:
     ggplot2 (>= 4.0),
-    dplyr (>= 1.2)
+    dplyr (>= 1.2),
     cli (>= 3.6),
     crayon (>= 1.5),
     glue (>= 1.8),

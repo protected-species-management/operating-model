@@ -37,9 +37,9 @@ jobs:
             check
 
       - name: Check
-        run: rcmdcheck::rcmdcheck("om")
+        run: rcmdcheck::rcmdcheck()
         shell: Rscript {0}
-        working-directory: ..
+        working-directory: om
           
       
 

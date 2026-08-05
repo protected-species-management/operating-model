@@ -39,7 +39,7 @@ jobs:
       - name: Check
         run: rcmdcheck::rcmdcheck("om")
         shell: Rscript {0}
-        working-directory: ".."
+        working-directory: [".."]
           
       
 

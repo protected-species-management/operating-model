@@ -30,7 +30,10 @@ jobs:
           working-directory: om
           packages: deps::om
           extra-packages: |
+            any::rcmdcheck
             any::TMB
+          needs: |
+            check
 
       - name: Simple check
         uses: r-lib/actions/check-r-package@v2

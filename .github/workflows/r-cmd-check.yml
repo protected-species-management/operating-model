@@ -32,21 +32,23 @@ jobs:
         with:
           working-directory: om
           packages: deps::om
-          extra-packages: any::roxygen2
+          extra-packages: |
+            any::TMB
+            any::roxygen2
           needs: roxygen2
 
       - name: Document
         run: roxygen2::roxygenise("om")
         shell: Rscript {0}
         
+      - name: Update DESCRIPTION
+        run: |
+          Rscript -e 'DESC <- readLines("om/DESCRIPTION"); DESC[5] <- paste("Date:", Sys.Date()); writeLines(DESC, con = "om/DESCRIPTION")'  
+          
       - name: Update onAttach
         run: |
           Rscript -e 'cat(paste0(".onAttach <- function(libname, pkgname) {\n    packageStartupMessage(\"om version ", scan("om/DESCRIPTION",what=character(),skip=3,nlines=1,quiet=TRUE)[2], " (", format(Sys.Date(), format = "%d-%b-%Y"), ")\")\n}\n") , file = "om/R/zzz.R")'
       
-      - name: Update DESCRIPTION
-        run: |
-          Rscript -e 'DESC <- readLines("om/DESCRIPTION"); DESC[5] <- paste("Date:", Sys.Date()); writeLines(DESC, con = "om/DESCRIPTION")'
-
       - name: Commit and push changes
         run: |
           git config --local user.name "$GITHUB_ACTOR"

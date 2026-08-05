@@ -16,7 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: protected-species-management/operating-model
           path: om
           
       - name: Setup

@@ -6,10 +6,9 @@
 \usage{
 om(
   ages,
-  harvest_function = function(object, numbers = n[, y - 1], selectivity = sel, pst =
-    pst[y - 1], i) {
-     ifelse(all(is.na(object@targets$harvest_rate)), 0,
-    object@targets$harvest_rate[i])
+  harvest_function = function(object, numbers, selectivity, pst, i) {
+    
+    ifelse(all(is.na(object@targets$harvest_rate)), 0, object@targets$harvest_rate[i])
  },
   ...
 )

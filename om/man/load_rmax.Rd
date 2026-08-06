@@ -2,9 +2,15 @@
 % Please edit documentation in R/load_rmax.R
 \name{load_rmax}
 \alias{load_rmax}
+\alias{load_rmax,om,distribution-method}
+\alias{load_rmax,om,missing-method}
 \title{load rmax}
 \usage{
 load_rmax(object, value, ...)
+
+\S4method{load_rmax}{om,distribution}(object, value, ...)
+
+\S4method{load_rmax}{om,missing}(object, value, ...)
 }
 \description{
 Load \eqn{r_{max}} into the \code{pars} slot of an \code{om-class} object.

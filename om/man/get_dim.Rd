@@ -5,7 +5,7 @@
 \alias{get_values}
 \alias{get_dim.om}
 \alias{get_values.om}
-\alias{get_fixed.om}
+\alias{get_settings.om}
 \alias{get_seeds.om}
 \alias{get_shape.om}
 \title{Get dimensions and values}
@@ -16,16 +16,17 @@ get_dim(object, ...)
   object,
   projection = TRUE,
   ref_points = !projection,
-  env = environment()
+  env = environment(),
+  ...
 )
 
-\method{get_values}{om}(object, iter = 1, env = environment())
+\method{get_values}{om}(object, iter = 1, env = environment(), ...)
 
-\method{get_fixed}{om}(object, env = environment())
+\method{get_settings}{om}(object, env = environment(), ...)
 
-\method{get_seeds}{om}(object, env = environment())
+\method{get_seeds}{om}(object, env = environment(), ...)
 
-\method{get_shape}{om}(object, env = environment())
+\method{get_shape}{om}(object, env = environment(), ...)
 }
 \description{
 Extract dimensions and/or values from \code{\link{om-class}} object for use within a function call.

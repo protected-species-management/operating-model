@@ -6,12 +6,24 @@
 \alias{sample.numeric}
 \title{Sample from distribution class object}
 \usage{
-sample(x, n, ...)
+sample(x, ...)
 
-\method{sample}{distribution}(x, n = 1, ...)
+\method{sample}{distribution}(x, size = 1, replace = NULL, prob = NULL)
 
-\method{sample}{numeric}(x, n = 1, ...)
+\method{sample}{numeric}(x, size = 1, replace = NULL, prob = NULL)
+}
+\arguments{
+\item{x}{input distribution class object}
+
+\item{size}{sample size}
+
+\item{replace}{(ignored)}
+
+\item{prob}{(ignored)}
 }
 \description{
-Sample from distribution class object
+Overwrites the generic \code{sample} function to sample from a \code{distribution} class object.
+}
+\details{
+Monte-Carlo samples are generated from the parametric distribution contained in the \code{\link{distribution}} class object. If the distribution is \code{'unspecified'} then values are sampled from the values stored in the object (with replacement if necessary). If \code{x} is a numeric value rather than a distribution, then that value is return (this is designed to prevent the function from breaking when distributions are not specified).
 }

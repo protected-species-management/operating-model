@@ -2,12 +2,24 @@
 % Please edit documentation in R/shape.R
 \name{shape}
 \alias{shape}
+\alias{shape,om,numeric-method}
 \alias{shape,om,ANY-method}
 \alias{shape<-}
 \alias{shape<-,om,numeric-method}
 \title{Calculate shape}
 \usage{
 shape(object, depletion, ...)
+
+\S4method{shape}{om,numeric}(
+  object,
+  depletion,
+  stochastic,
+  time,
+  iterations,
+  verbose = FALSE,
+  safe = TRUE,
+  ...
+)
 
 \S4method{shape}{om,ANY}(object, depletion, ...)
 

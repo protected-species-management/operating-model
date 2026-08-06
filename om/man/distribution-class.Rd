@@ -31,6 +31,10 @@ The inputs determine how the distribution is initialised. If a vector of values 
 \item{\code{iter}}{integer value}
 
 \item{\code{pars}}{distribution parameter values}
+
+\item{\code{density}}{probability density function}
+
+\item{\code{name}}{optional label}
 }}
 
 \examples{
@@ -56,14 +60,19 @@ summary(y)
 # create object
 # without values
 y <- distribution(pars = c(mu, sd), density = "lognormal")
+
+# summarise
 summary(y)
 
+# plot
+plot(y)
+
 # parametric sampling
-hist(om::sample(y, n = 1e5))
+hist(sample(y, size = 1e5))
 
 # non-parametric sampling
-y <- distribution(values = 0:10, density = "unspecified")
-om::sample(y)
+z <- distribution(values = 0:10, density = "unspecified")
+sample(z, size = 3)
  
 }
 \seealso{

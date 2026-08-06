@@ -3,9 +3,12 @@
 \name{load_quantiles}
 \alias{load_quantiles}
 \alias{load_quantile}
+\alias{load_quantiles,om,list-method}
 \title{Load quantiles}
 \usage{
 load_quantiles(object, value, ...)
+
+\S4method{load_quantiles}{om,list}(object, value, ...)
 }
 \arguments{
 \item{value}{named list object containing value for \code{observation} only.}

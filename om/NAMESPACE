@@ -7,8 +7,8 @@ S3method(distribution,numeric)
 S3method(dynplot,om)
 S3method(expectation,distribution)
 S3method(get_dim,om)
-S3method(get_fixed,om)
 S3method(get_seeds,om)
+S3method(get_settings,om)
 S3method(get_shape,om)
 S3method(get_values,om)
 S3method(objplot,om)
@@ -24,8 +24,8 @@ export(distribution)
 export(dynplot)
 export(expectation)
 export(get_dim)
-export(get_fixed)
 export(get_seeds)
+export(get_settings)
 export(get_shape)
 export(get_values)
 export(lambda)
@@ -54,8 +54,17 @@ export(targets)
 export(update_pars)
 export(values)
 exportClasses(distribution)
+exportClasses(om)
+exportMethods(pdyn)
+exportMethods(rp)
+exportMethods(shape)
 exportMethods(spf)
 import(RTMB)
+importFrom(RTMB,
+  dgamma,
+  dnorm,
+  uniroot
+)
 importFrom(cli,
   cli_abort,
   cli_alert_danger,
@@ -76,9 +85,16 @@ importFrom(ggplot2,
   aes,
   facet_grid,
   ggplot,
+  label_parsed,
   stat_summary
 )
 importFrom(glue,glue)
+importFrom(graphics,
+  abline,
+  curve,
+  hist,
+  mtext
+)
 importFrom(logitnorm,
   dlogitnorm,
   invlogit,
@@ -88,12 +104,17 @@ importFrom(logitnorm,
   twCoefLogitnormMLEFlat
 )
 importFrom(methods,
+  is,
   new,
-  show
+  show,
+  slot
 )
 importFrom(rlang,.data)
 importFrom(stats,
+  dunif,
   na.omit,
+  optimise,
+  quantile,
   rbeta,
   rgamma,
   rlnorm,

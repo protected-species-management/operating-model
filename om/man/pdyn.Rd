@@ -2,9 +2,21 @@
 % Please edit documentation in R/pdyn.R
 \name{pdyn}
 \alias{pdyn}
+\alias{pdyn,om-method}
 \title{Population dynamics function}
 \usage{
 pdyn(object, ...)
+
+\S4method{pdyn}{om}(
+  object,
+  stochastic,
+  iterations,
+  time,
+  initial_depletion = 1,
+  verbose = FALSE,
+  use_rmax = TRUE,
+  ...
+)
 }
 \arguments{
 \item{object}{an \code{om} class object}

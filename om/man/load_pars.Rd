@@ -3,11 +3,17 @@
 \name{load_pars}
 \alias{load_pars}
 \alias{update_pars}
+\alias{load_pars,om,list-method}
+\alias{update_pars,om,list-method}
 \title{Load or update parameters}
 \usage{
 load_pars(object, value, ...)
 
+\S4method{load_pars}{om,list}(object, value, ...)
+
 update_pars(object, value, ...)
+
+\S4method{update_pars}{om,list}(object, value, ...)
 }
 \arguments{
 \item{value}{named list object containing parameter distributions.}

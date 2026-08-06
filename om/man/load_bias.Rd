@@ -3,9 +3,12 @@
 \name{load_bias}
 \alias{load_bias}
 \alias{load_biases}
+\alias{load_bias,om,list-method}
 \title{Load bias}
 \usage{
 load_bias(object, value, ...)
+
+\S4method{load_bias}{om,list}(object, value, ...)
 }
 \arguments{
 \item{value}{named list object containing values for \code{observation} or \code{mortality}.}

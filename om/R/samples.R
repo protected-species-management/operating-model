@@ -1,7 +1,7 @@
 #' @title Specify number of samples
 #' 
 #' @description Specify the number of samples with which to represent uncertainty in the input parameters.
-#' 
+#' @importFrom stats runif
 #' @export
 setGeneric("samples", function(object, ...) standardGeneric("samples"))
 #' @rdname samples

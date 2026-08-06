@@ -8,6 +8,7 @@
 #{{{ load rmax into om object
 setGeneric("load_rmax", function(object, value, ...) standardGeneric("load_rmax"))
 #{{ distribution object
+#' @rdname load_rmax
 setMethod("load_rmax", signature = c("om", "distribution"), function(object, value, ...) {
 
     # checks
@@ -26,6 +27,7 @@ setMethod("load_rmax", signature = c("om", "distribution"), function(object, val
     # return    
     return(object)
 })
+#' @rdname load_rmax
 setMethod("load_rmax", signature = c("om", "missing"), function(object, value, ...) {
     
     # use 'r' by default

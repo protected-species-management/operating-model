@@ -2,11 +2,14 @@
 #' @aliases update_pars 
 #' @description Load or update parameters in \code{\link{om-class}} object. Each parameter should be provided as a \code{\link{distribution-class}}.
 #' @param value named list object containing parameter distributions. 
-#' @include om-class.R distribution-class.R dot-el.R
+#' @include om-class.R distribution-class.R dot-el.R sample.distribution.R
 #' @importFrom cli cli_alert_info cli_alert_warning
+#' @importFrom methods is
+#' @importFrom RTMB uniroot
 #' @export
 #{{{
 setGeneric("load_pars", function(object, value, ...) standardGeneric("load_pars"))
+#' @rdname load_pars
 setMethod("load_pars", signature = c("om", "list"), function(object, value, ...) {
     
     # check names
@@ -34,10 +37,10 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
         
         for (i in 1:length(lambda_values)) {
             
-            m_sample <- sample(object@pars[["m"]])
-            s_sample <- sample(object@pars[["s"]])
-            b_sample <- sample(object@pars[["b"]])
-            l_sample <- sample(object@pars[["l"]])
+            m_sample <- om::sample(object@pars[["m"]])
+            s_sample <- om::sample(object@pars[["s"]])
+            b_sample <- om::sample(object@pars[["b"]])
+            l_sample <- om::sample(object@pars[["l"]])
             
             lambda_values[i] <- .solve_lambda(m = m_sample, s = s_sample, s0 = s_sample * l_sample, b = b_sample)
         }
@@ -65,6 +68,7 @@ setMethod("load_pars", signature = c("om", "list"), function(object, value, ...)
 #' @rdname load_pars
 #{{{
 setGeneric("update_pars", function(object, value, ...) standardGeneric("update_pars"))
+#' @rdname load_pars
 setMethod("update_pars", signature = c("om", "list"), function(object, value, ...) {
     
     # check names

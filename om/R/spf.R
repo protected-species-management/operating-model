@@ -60,7 +60,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
         msg <- ifelse(NITER > 1, glue(", sample {i}/", NITER), " ...")
 			
         # sample pars
-        pars_sample <- lapply(object@pars, sample, n = 1)
+        pars_sample <- lapply(object@pars, om::sample, size = 1)
         
         # assign pars
 		m <- pars_sample$m

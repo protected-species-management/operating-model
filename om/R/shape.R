@@ -9,14 +9,16 @@
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
 #' @param safe logical value indicating whether RTMB model should be recompiled with each sample (resulting in a more stable estimation)
 #' @seealso \code{\link{rp}}
-#' @export
 #' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
 #' @importFrom cli cli_progress_step cli_progress_update
 #{{{ shape()
 # wrapper for execution of population
 # dynamics function
+#' @export
 setGeneric("shape", function(object, depletion, ...) standardGeneric("shape"))
+#' @rdname shape
+#' @export
 setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = FALSE, safe = TRUE, ...) {
     
     # current environment
@@ -138,7 +140,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 		
 		# objective function
 		#objective <- -1 * dnorm(sum(n[(m + 2):dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
-        objective <- -1 * dnorm(sum(n[2:dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
+        objective <- -1 * RTMB::dnorm(sum(n[2:dim(n)[1], dim(n)[2]]), target, 0.01, log = TRUE)
 		
 		# return objective
 		return(objective)
@@ -233,7 +235,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
                 # log of the equilibrium catch
                 # per iteration
                 #objective <- objective - dnorm(mean(apply(n[(m + 2):dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
-                objective <- objective - dnorm(mean(apply(n[2:dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
+                objective <- objective - RTMB::dnorm(mean(apply(n[2:dim(n)[1], loc], 2, sum)), target, 0.01, log = TRUE)
             }
             
             # return objective
@@ -254,7 +256,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     set.seed(rng_seed[1])
     
     # sample pars
-    pars_sample <- lapply(object@pars, sample, n = 1)
+    pars_sample <- lapply(object@pars, om::sample, size = 1)
     
     # assign pars
 	m <- pars_sample$m
@@ -324,7 +326,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
             set.seed(rng_seed[i])
             
             # sample pars
-            pars_sample <- lapply(object@pars, sample, n = 1)
+            pars_sample <- lapply(object@pars, om::sample, size = 1)
             
             # assign pars
 			m <- pars_sample$m

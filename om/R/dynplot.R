@@ -11,7 +11,8 @@
 #' @importFrom ggplot2 ggplot stat_summary facet_grid aes
 #' @importFrom rlang .data
 #' @importFrom dplyr bind_rows left_join
-#' @importFrom stats na.omit
+#' @importFrom stats na.omit quantile
+#' @importFrom methods slot
 #' @seealso \code{\link{objplot}}
 #' @export
 dynplot <- function(object, ...) UseMethod("dynplot")
@@ -30,7 +31,7 @@ dynplot.om <- function(object, ..., pars = 'depletion', labels) {
     for (mdl in 1:length(y)) {
         
         get_dim(y[[mdl]], env = environment())
-        
+		
         dm <- list(sample = 1:NITER, iteration = 1:SITER, time = time)
         
         for (par in pars) {

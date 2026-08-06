@@ -7,6 +7,7 @@
 #' @export
 #{{{
 setGeneric("load_bias", function(object, value, ...) standardGeneric("load_bias"))
+#' @rdname load_bias
 setMethod("load_bias", signature = c("om", "list"), function(object, value, ...) {
     
     # assign

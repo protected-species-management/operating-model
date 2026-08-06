@@ -2,12 +2,13 @@
 #' @aliases get_values
 #' @description
 #' Extract dimensions and/or values from \code{\link{om-class}} object for use within a function call.
+#' @importFrom methods slot
 #' @include om-class.R
 #' @export
 get_dim <- function(object, ...) UseMethod("get_dim")
 #' @rdname get_dim
 #' @export
-get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env = environment()) {
+get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env = environment(), ...) {
     
     ages   <- object@ages
     time   <- object@time
@@ -40,7 +41,7 @@ get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env 
 get_values <- function(object, ...) UseMethod("get_values")
 #' @rdname get_dim
 #' @export
-get_values.om <- function(object, iter = 1, env = environment()) {
+get_values.om <- function(object, iter = 1, env = environment(), ...) {
     
     ll <- object@pars
     
@@ -55,13 +56,13 @@ get_values.om <- function(object, iter = 1, env = environment()) {
     invisible()
 }
 #' @export
-get_fixed <- function(object, ...) UseMethod("get_fixed")
+get_settings <- function(object, ...) UseMethod("get_settings")
 #' @rdname get_dim
 #' @export
-get_fixed.om <- function(object, env = environment()) {
+get_settings.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {
-        lapply(names(object@fixed), function(x) assign(x, slot(get("object"), "fixed")[[x]], envir = env))
+        lapply(names(object@settings), function(x) assign(x, slot(get("object"), "settings")[[x]], envir = env))
     } else {
         warning("not a valid environment!")    
     }
@@ -72,7 +73,7 @@ get_fixed.om <- function(object, env = environment()) {
 get_seeds <- function(object, ...) UseMethod("get_seeds")
 #' @rdname get_dim
 #' @export
-get_seeds.om <- function(object, env = environment()) {
+get_seeds.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {
         assign("rng_seed", slot(get("object"), "seeds"), envir = env)
@@ -87,7 +88,7 @@ get_seeds.om <- function(object, env = environment()) {
 get_shape <- function(object, ...) UseMethod("get_shape")
 #' @rdname get_dim
 #' @export
-get_shape.om <- function(object, env = environment()) {
+get_shape.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {
         assign("shape", slot(get("object"), "shape"), envir = env)

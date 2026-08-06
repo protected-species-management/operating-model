@@ -8,15 +8,16 @@
 #' @param verbose logical value (defaults to FALSE)
 #' @param use_rmax logical value (defaults to TRUE)
 #' @details Reference points are always estimated using \eqn{r_{max}}, meaning that projections that use \eqn{r_{max}} have better behavioural properties when examined relative to reference point values. This is because the \eqn{\theta} shape parameter has been estimated per sample and will therefore be correctly correlated with the samples from the distribution of \eqn{r_{max}} values. However, it is also possible to project the dynamics using \eqn{r}, which is provided as a separate and independent distribution to the dynamics equation. This is helpful for robustness testing when it may be assumed that the population is currently not in it's optimal state, meaning that \eqn{r < r_{max}}. Note however, that the PST is always calculated using \eqn{r_{max}}, and if \eqn{r} is used for the population dynamics, then the this will decouple the assumed \eqn{r_{max}} from the true \eqn{r} value.   
-#' @export
 #' @include om-class.R get_dim.R dot-survivorship.R
-#' @import RTMB
 #' @importFrom cli cli_progress_step cli_progress_update cli_alert_warning
 #' @importFrom logitnorm rlogitnorm
-#' @importFrom stats rlnorm rnorm
+#' @importFrom stats rlnorm rnorm runif optimise
 #' @importFrom glue glue
 #{{{ pdyn()
+#' @export
 setGeneric("pdyn", function(object, ...) standardGeneric("pdyn"))
+#' @rdname pdyn
+#' @export
 setMethod("pdyn", signature = "om", function(object, stochastic, iterations, time, initial_depletion = 1.0, verbose = FALSE, use_rmax = TRUE, ...) {
     
     # current environment
@@ -291,7 +292,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             msg <- ifelse(NITER > 1, glue(", sample {i}/", NITER), " ...")
             
             # sample
-            pars_sample <- lapply(object@pars, sample, n = 1)
+            pars_sample <- lapply(object@pars, om::sample, size = 1)
             rmax_sample <- pars_sample$rmax
                 
             # spin spinner

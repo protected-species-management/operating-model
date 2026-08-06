@@ -8,13 +8,15 @@
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
 #' @note This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function. 
 #' @seealso \code{\link{shape}} \code{\link{targets}}
-#' @export
 #' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
 #' @importFrom cli cli_progress_step cli_progress_update
 #{{{ rp()
 # wrapper for execution of function
+#' @export
 setGeneric("rp", function(object, ...) standardGeneric("rp"))
+#' @rdname rp
+#' @export
 setMethod("rp", signature = "om", function(object, stochastic, time, iterations, verbose = FALSE, ...) {
     
     # current environment
@@ -182,7 +184,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         set.seed(rng_seed[1])
         
         # sample pars
-        pars_sample <- lapply(object@pars, sample, n = 1)
+        pars_sample <- lapply(object@pars, om::sample, size = 1)
 		
 		# assign pars
         m <- pars_sample$m
@@ -271,7 +273,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
                 set.seed(rng_seed[i])
                 
                 # sample pars
-                pars_sample <- lapply(object@pars, sample, n = 1)
+                pars_sample <- lapply(object@pars, om::sample, size = 1)
 				
 				# assign pars
 				m <- pars_sample$m

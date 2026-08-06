@@ -7,6 +7,7 @@
 #' @export
 #{{{
 setGeneric("load_cvs", function(object, value, ...) standardGeneric("load_cvs"))
+#' @rdname load_cvs
 setMethod("load_cvs", signature = c("om", "list"), function(object, value, ...) {
     
 	# assign

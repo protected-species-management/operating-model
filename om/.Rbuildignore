@@ -1,3 +1,4 @@
 ^vignettes/*.Rmd
 ^R/ignore/*.R
+^..Rcheck
 

@@ -7,6 +7,7 @@
 #' @export
 #{{{
 setGeneric("load_quantiles", function(object, value, ...) standardGeneric("load_quantiles"))
+#' @rdname load_quantiles
 setMethod("load_quantiles", signature = c("om", "list"), function(object, value, ...) {
     
     # assign

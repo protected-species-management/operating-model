@@ -7,6 +7,7 @@
 #' @include pdyn.R
 #{{{ values()
 setGeneric("values", function(object, ...) standardGeneric("values"))
+#' @rdname values
 setMethod("values", signature = "om", function(object, stochastic, iterations, ...) {
     
     if (all(unlist(lapply(lapply(object@values, is.na), all)))) {

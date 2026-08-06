@@ -7,11 +7,15 @@
 #' @slot .Data numeric vector of derived values
 #' @slot iter integer value
 #' @slot pars  distribution parameter values
+#' @slot density  probability density function
+#' @slot name  optional label
 #' @importFrom logitnorm rlogitnorm momentsLogitnorm logit
 #' @importFrom crayon blue
+#' @importFrom stats sd var runif rbeta rgamma
+#' @importFrom methods show
 #' @export
 setClass("distribution", contains = "numeric", slots = list(iter = "integer", name = "character", pars = "numeric", density = "character"))
-
+# initialisation function
 setMethod("initialize", "distribution", function(.Object, ...) {
     
     .Object@.Data         <- numeric()
@@ -132,7 +136,7 @@ setMethod("show", "distribution",
 # }}}
 
 #' @exportS3Method base::summary
-summary.distribution <- function(object) {
+summary.distribution <- function(object, ...) {
     
     if (grepl("^unspecified", object@density))  return(.show_unspecified_moments(object@.Data))
     if (grepl("^uniform", object@density))      return(.show_uniform_moments(object@pars))
@@ -147,7 +151,7 @@ summary.distribution <- function(object) {
 #' @export
 expectation <- function(...) UseMethod("expectation")
 #' @exportS3Method
-expectation.distribution <- function(object) {
+expectation.distribution <- function(object, ...) {
     summary(object)['E[x]']
 }
 

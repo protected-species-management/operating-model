@@ -2,12 +2,9 @@
 % Please edit documentation in R/rp.R
 \name{rp}
 \alias{rp}
-\alias{rp,om-method}
 \title{Stochastic reference point calculation}
 \usage{
 rp(object, ...)
-
-\S4method{rp}{om}(object, stochastic, time, iterations, verbose = FALSE, ...)
 }
 \arguments{
 \item{object}{\code{om} class object}

@@ -2,9 +2,12 @@
 % Please edit documentation in R/lambda.R
 \name{lambda}
 \alias{lambda}
+\alias{lambda,om-method}
 \title{Extract growth rate}
 \usage{
 lambda(object, ...)
+
+\S4method{lambda}{om}(object, log = FALSE)
 }
 \arguments{
 \item{object}{\code{om} class object}

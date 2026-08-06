@@ -3,12 +3,9 @@
 \name{load_cvs}
 \alias{load_cvs}
 \alias{load_cv}
-\alias{load_cvs,om,list-method}
 \title{Load coefficients of variation}
 \usage{
 load_cvs(object, value, ...)
-
-\S4method{load_cvs}{om,list}(object, value, ...)
 }
 \arguments{
 \item{value}{named list object containing values for \code{survivorship}, \code{birth}, \code{observation}, \code{mortality}}

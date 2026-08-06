@@ -2,12 +2,9 @@
 % Please edit documentation in R/values.R
 \name{values}
 \alias{values}
-\alias{values,om-method}
 \title{Values calculated by the population dynamics function}
 \usage{
 values(object, ...)
-
-\S4method{values}{om}(object, stochastic, iterations, ...)
 }
 \description{
 Extracts values generated internally for projection by \code{\link{pdyn}}.

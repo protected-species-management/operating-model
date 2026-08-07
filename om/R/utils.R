@@ -1,3 +1,4 @@
+#' @rdname distribution-class
 #' @export
 #' @importFrom graphics curve mtext abline
 #' @importFrom logitnorm twCoefLogitnormMLEFlat momentsLogitnorm momentsLogitnorm dlogitnorm

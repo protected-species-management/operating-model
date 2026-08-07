@@ -23,7 +23,7 @@ solveLogitNormal <- function(expected_value, sigma, plot = FALSE) {
     z$cv     <- round(as.numeric(sqrt(mmt[2]) / mmt[1]), 3)
     
     if (plot) {
-        curve(dlogitnorm(x, mu, sigma), from = 0, to = 1, yaxt = 'n', ylab = '')
+        curve(dlogitnorm(.data$x, mu, sigma), from = 0, to = 1, yaxt = 'n', ylab = '')
         mtext(paste("E[x] =", round(mmt[1], 2)), adj = 0, padj = -1)
         abline(v = mmt[1], col = 2)
     }

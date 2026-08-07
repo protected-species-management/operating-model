@@ -42,6 +42,16 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # get shape
     get_shape(object, env = ENV)
+	
+	NITER <- get("NITER")
+    SITER <- get("SITER")
+	NTIME <- get("NTIME")
+    NAGES <- get("NAGES")
+	
+	STOCHASTIC <- get("STOCHASTIC")
+	
+	shape    <- get("shape")
+	rng_seed <- get("rng_seed")
     
     # check pars
     for (a in names(object@pars)) {
@@ -52,7 +62,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # setup numbers array
     # [life-history samples, process-error samples, ages, time]
-    if (all(is.na(ages))) {
+    if (all(is.na(object@ages))) {
         N <- array(dim = c(NITER, SITER, 1, NTIME))
     } else {
         N <- array(dim = c(NITER, SITER, NAGES, NTIME))

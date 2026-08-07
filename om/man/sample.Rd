@@ -6,7 +6,7 @@
 \alias{sample.numeric}
 \title{Sample from distribution class object}
 \usage{
-sample(x, ...)
+sample(x, size, replace, prob, ...)
 
 \method{sample}{distribution}(x, size = 1, replace = NULL, prob = NULL)
 

@@ -42,16 +42,16 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # get shape
     get_shape(object, env = ENV)
-	
-	NITER <- get("NITER")
+    
+    NITER <- get("NITER")
     SITER <- get("SITER")
-	NTIME <- get("NTIME")
+    NTIME <- get("NTIME")
     NAGES <- get("NAGES")
-	
-	STOCHASTIC <- get("STOCHASTIC")
-	
-	shape    <- get("shape")
-	rng_seed <- get("rng_seed")
+    
+    STOCHASTIC <- get("STOCHASTIC")
+    
+    shape    <- get("shape")
+    rng_seed <- get("rng_seed")
     
     # check pars
     for (a in names(object@pars)) {
@@ -78,17 +78,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # pst
     object@pst$value <- array(dim = c(NITER, SITER, NTIME))
-	
-	# setup values to 
+    
+    # setup values to 
     # store pars iterations
-	object@values$rmax  <- rep(NA_real_, NITER)
+    object@values$rmax  <- rep(NA_real_, NITER)
     object@values$r     <- rep(NA_real_, NITER)
-	object@values$shape <- rep(NA_real_, NITER)
+    object@values$shape <- rep(NA_real_, NITER)
     object@values$s     <- rep(NA_real_, NITER)
-	object@values$l     <- rep(NA_real_, NITER)
+    object@values$l     <- rep(NA_real_, NITER)
     object@values$b     <- rep(NA_real_, NITER)
-	object@values$beq   <- rep(NA_real_, NITER)
-	object@values$bstar <- rep(NA_real_, NITER)
+    object@values$beq   <- rep(NA_real_, NITER)
+    object@values$bstar <- rep(NA_real_, NITER)
     object@values$m     <- rep(NA_real_, NITER)
     object@values$o     <- rep(NA_real_, NITER)
     object@values$v     <- rep(NA_real_, NITER)
@@ -96,42 +96,62 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
     # define log-normal numbers observation error function
     # using: cv, quantile (qn) and/or bias
-    if (STOCHASTIC & object@settings$cv$numbers > 0) {
-        if (object@settings$qn$numbers[1] > 0) {
-            if (is.na(object@settings$qn$numbers[2])) {
-                object@settings$qn$numbers[2] <- object@settings$cv$numbers
-            }
-            if (object@settings$bias$numbers != 1.0) {
-                .obs_error <- function(a, cv = object@settings$cv$numbers, qn = object@settings$qn$numbers, bias = object@settings$bias$numbers) {
-                    bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
-                }
-            } else {
-                .obs_error <- function(a, cv = object@settings$cv$numbers, qn = object@settings$qn$numbers) {
-                    exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2))) / exp(abs(qnorm(qn[1])) * sqrt(log(1 + (qn[2])^2)))
-                }
-            }
-        } else {
-            if (object@settings$bias$numbers != 1.0) {
-                .obs_error <- function(a, cv = object@settings$cv$numbers, bias = object@settings$bias$numbers) {
-                    bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
-                }
-            } else {
-                .obs_error <- function(a, cv = object@settings$cv$numbers) {
-                    exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
-                }
-            }
-        }
-    } else {
-        if (object@settings$bias$numbers != 1.0) {
-            .obs_error <- function(a, bias = object@settings$bias$numbers) {
-                bias * a
-            }
-        } else {
-            .obs_error <- function(a) {
-                a
-            }
-        }
+    cv_numbers   <- object@settings$cv$numbers
+    qn_numbers   <- object@settings$qn$numbers
+    bias_numbers <- object@settings$bias$numbers
+
+    # Ensure qn[2] is set if needed
+    if (qn_numbers[1] > 0 && is.na(qn_numbers[2])) {
+        qn_numbers[2] <- cv_numbers
     }
+
+    # build the function based on input values
+    .obs_error <- (function() {
+        # stochastic case
+        if (STOCHASTIC && cv_numbers > 0) {
+            if (qn_numbers[1] > 0) {
+                # with quantile adjustment
+                if (bias_numbers != 1.0) {
+                    return(function(a) {
+                        bias_numbers * exp(log(a / sqrt(1 + cv_numbers^2)) + rnorm(1) * sqrt(log(1 + cv_numbers^2))) / exp(abs(qnorm(qn_numbers[1])) * sqrt(log(1 + (qn_numbers[2])^2)))
+                    })
+                } else {
+                    return(function(a) {
+                        exp(log(a / sqrt(1 + cv_numbers^2)) + rnorm(1) * sqrt(log(1 + cv_numbers^2))) / exp(abs(qnorm(qn_numbers[1])) * sqrt(log(1 + (qn_numbers[2])^2)))
+                    })
+                }
+            } else {
+                # without quantile adjustment
+                if (bias_numbers != 1.0) {
+                    return(function(a) {
+                        bias_numbers * exp(log(a / sqrt(1 + cv_numbers^2)) + rnorm(1) * sqrt(log(1 + cv_numbers^2)))
+                    })
+                } else {
+                    return(function(a) {
+                        exp(log(a / sqrt(1 + cv_numbers^2)) + rnorm(1) * sqrt(log(1 + cv_numbers^2)))
+                    })
+                }
+            }
+        } else {
+            # non-stochastic case
+            if (qn_numbers[1] > 0) {
+                # with quantile adjustment
+                if (bias_numbers != 1.0) {
+                    return(function(a) bias_numbers * a / exp(abs(qnorm(qn_numbers[1])) * sqrt(log(1 + (qn_numbers[2])^2))))
+                } else {
+                    return(function(a) a / exp(abs(qnorm(qn_numbers[1])) * sqrt(log(1 + (qn_numbers[2])^2))))
+                }
+            } else {
+                # without quantile adjustment
+                if (bias_numbers != 1.0) {
+                    return(function(a) bias_numbers * a)
+                } else {
+                    return(function(a) a)
+                }
+            }
+        }
+    })()
+
     
     # define logit-normal harvest rate
     # error function
@@ -163,7 +183,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     cv_capture   <- object@settings$cv$capture
     bias_capture <- object@settings$bias$capture
 
-    # Build the function once based on conditions
+    # build the function based on input values
     .capture_error <- (function() {
         if (STOCHASTIC && cv_capture > 0) {
             if (bias_capture != 1.0) {
@@ -189,7 +209,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     cv_rmax   <- object@settings$cv$rmax
     bias_rmax <- object@settings$bias$rmax
 
-    # Build the function once based on conditions
+    # build the function based on input values
     .rmax_error <- (function() {
         if (STOCHASTIC && cv_rmax > 0) {
             if (bias_rmax != 1.0) {
@@ -212,7 +232,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         }
     })()
 
-    
+    # print functions to check
     if (verbose) {
         message("harvest rate function:")
         message(writeLines(deparse(object@harvest_rate)))

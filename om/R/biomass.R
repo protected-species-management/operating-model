@@ -1,14 +1,17 @@
 #' @title Return population biomass
 #' 
 #' @description Reconstruct biomass trajectory based on input data
-#' 
+#' @param object \code{om} class object
+#' @param type optional character string, being one of \code{total}, \code{mature}, or \code{exploitable}
+#' @param ... arguments for the generic function definition
 #' @export
 #' 
 #' @include om-class.R
 #' 
 #{{{ biomass()
 setGeneric("biomass", function(object, ...) standardGeneric("biomass"))
-setMethod("biomass", signature = "om",function(object, type, ...) {
+#' @rdname biomass
+setMethod("biomass", signature = "om",function(object, type) {
     
     if(!(length(object@.Data) > 0)) {
         object <- pdyn(object)

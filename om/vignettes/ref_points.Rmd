@@ -98,7 +98,7 @@ ggplot() +
 
 ```{r}
 # population dynamics
-om_object0 <- pdyn(om_object0, stochastic = FALSE, initial_depletion = 0.1, test = TRUE)
+om_object0 <- pdyn(om_object0, stochastic = FALSE, initial_depletion = 0.1)
 dynplot(om_object0)
 
 #diagnostics(om_object0)

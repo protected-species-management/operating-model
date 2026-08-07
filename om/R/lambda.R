@@ -2,6 +2,7 @@
 #' @description Extracts \eqn{lambda} from an \code{om} object.
 #' @param object \code{om} class object
 #' @param log logical value indication whether \eqn{r = \log(\lambda)} should be returned.
+#' @param ... (not used)
 #' @export
 #' @include om-class.R distribution-class.R sample.distribution.R
 #' @importFrom methods is

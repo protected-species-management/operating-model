@@ -1,7 +1,8 @@
 #' @title Values calculated by the population dynamics function
 #' 
 #' @description Extracts values generated internally for projection by \code{\link{pdyn}}. 
-#' 
+#' @param object \code{om} class object
+#' @param ... arguments for the generic function definition
 #' @export
 #' @importFrom tibble as_tibble
 #' @include pdyn.R
@@ -11,7 +12,7 @@ setGeneric("values", function(object, ...) standardGeneric("values"))
 setMethod("values", signature = "om", function(object, stochastic, iterations, ...) {
     
     if (all(unlist(lapply(lapply(object@values, is.na), all)))) {
-	    values <- suppressMessages(pdyn(object, stochastic, iterations, time = 1, initial_depletion = 1.0, verbose = FALSE, ...))
+	    values <- suppressMessages(pdyn(object, stochastic, iterations, time = 1, initial_depletion = 1.0, verbose = FALSE))
     } else {
         values <- object
     }

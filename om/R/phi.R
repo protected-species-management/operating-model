@@ -1,10 +1,14 @@
 #' @title Access or assign phi parameter
 #' @description Access or assign the \eqn{\phi} value used to tune the PST reference point. 
+#' @param object \code{om} class object
+#' @param value numeric value
+#' @param ... arguments for the generic function definition
+#' @param value numeric value
 #' @export
 setGeneric("phi", function(object, ...) standardGeneric("phi"))
 # accessor function
 #' @rdname phi
-setMethod("phi", signature = c(object = "om"), function(object, ...) {
+setMethod("phi", signature = c(object = "om"), function(object) {
     object@pst$phi
 })
 # assignment function

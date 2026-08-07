@@ -9,6 +9,8 @@
 distribution(...)
 }
 \arguments{
+\item{...}{(not used)}
+
 \item{values}{vector of values}
 
 \item{name}{label for parameter}

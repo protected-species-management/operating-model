@@ -5,7 +5,7 @@
 #' @param name label for parameter
 #' @param pars parameters for distriution (of length 2)
 #' @param density density distribution (i.e., beta, uniform, normal, lognormal, logitnormal or gamma)
-#' 
+#' @param ... (not used)
 #' @examples
 #' # create object containing
 #' # vector of values

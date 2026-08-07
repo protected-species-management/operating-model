@@ -9,6 +9,11 @@ values(object, ...)
 
 \S4method{values}{om}(object, stochastic, iterations, ...)
 }
+\arguments{
+\item{object}{\code{om} class object}
+
+\item{...}{arguments for the generic function definition}
+}
 \description{
 Extracts values generated internally for projection by \code{\link{pdyn}}.
 }

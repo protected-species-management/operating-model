@@ -8,9 +8,16 @@
 \usage{
 load_rmax(object, value, ...)
 
-\S4method{load_rmax}{om,distribution}(object, value, ...)
+\S4method{load_rmax}{om,distribution}(object, value)
 
 \S4method{load_rmax}{om,missing}(object, value, ...)
+}
+\arguments{
+\item{object}{\code{om} class object}
+
+\item{value}{\code{distribution} class object}
+
+\item{...}{arguments for the generic function definition}
 }
 \description{
 Load \eqn{r_{max}} into the \code{pars} slot of an \code{om-class} object.

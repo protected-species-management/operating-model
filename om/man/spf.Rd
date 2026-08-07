@@ -7,10 +7,14 @@
 \usage{
 spf(object, harvest_rate, ...)
 
-\S4method{spf}{om,numeric}(object, harvest_rate, stochastic, time, iterations, verbose = FALSE, ...)
+\S4method{spf}{om,numeric}(object, harvest_rate, stochastic, time, iterations, verbose = FALSE)
 }
 \arguments{
+\item{object}{\code{om} class object}
+
 \item{harvest_rate}{numeric vector of harvest rates over which surplus production should be calculated}
+
+\item{...}{arguments for the generic function definition}
 
 \item{stochastic}{logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})}
 

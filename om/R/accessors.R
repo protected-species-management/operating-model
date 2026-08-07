@@ -2,6 +2,7 @@
 #' @aliases targets diagnostics pst objectives pars numbers settings
 #' @description Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.
 #' @param object \code{\link{om-class}} object. 
+#' @param ... arguments for the generic function definition
 #' @importFrom crayon blue
 #' @importFrom dplyr bind_rows
 #' @include om-class.R get_dim.R array2dfr.R

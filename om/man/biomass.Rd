@@ -2,9 +2,19 @@
 % Please edit documentation in R/biomass.R
 \name{biomass}
 \alias{biomass}
+\alias{biomass,om-method}
 \title{Return population biomass}
 \usage{
 biomass(object, ...)
+
+\S4method{biomass}{om}(object, type)
+}
+\arguments{
+\item{object}{\code{om} class object}
+
+\item{...}{arguments for the generic function definition}
+
+\item{type}{optional character string, being one of \code{total}, \code{mature}, or \code{exploitable}}
 }
 \description{
 Reconstruct biomass trajectory based on input data

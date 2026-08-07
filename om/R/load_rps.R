@@ -1,7 +1,9 @@
 #' @title Load reference point targets. 
 #' 
 #' @description Load management targets into \code{\link{om-class}} object. These can be the Maximum Net Productivity Level (MNPL) and corresponding harvest rate and depletion values. 
+#' @param object \code{om} class object
 #' @param value named list object containing target reference points. List elements can be all or one of \code{captures}, \code{depletion} and \code{harvest_rate}.
+#' @param ... arguments for the generic function definition
 #' @details Targets are assumed to be known without error, and used to measure outcome of the population projection. 
 #' @seealso See \code{\link{rp}} for reference point estimation. 
 #' @include om-class.R

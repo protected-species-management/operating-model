@@ -17,8 +17,7 @@ shape(object, depletion, ...)
   time,
   iterations,
   verbose = FALSE,
-  safe = TRUE,
-  ...
+  safe = TRUE
 )
 
 \S4method{shape}{om,ANY}(object, depletion, ...)
@@ -32,6 +31,8 @@ shape(object, ...) <- value
 
 \item{depletion}{Assumed depletion of breeding-age individuals at MNPL}
 
+\item{...}{arguments for the generic function definition}
+
 \item{stochastic}{logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})}
 
 \item{time}{equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})}
@@ -41,6 +42,8 @@ shape(object, ...) <- value
 \item{verbose}{logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed}
 
 \item{safe}{logical value indicating whether RTMB model should be recompiled with each sample (resulting in a more stable estimation)}
+
+\item{value}{numeric value or vector of length equal to \code{object@samples}}
 }
 \description{
 Calculates shape parameter given assumed depletion at MNPL.

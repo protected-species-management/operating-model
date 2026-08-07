@@ -7,10 +7,12 @@
 \usage{
 rp(object, ...)
 
-\S4method{rp}{om}(object, stochastic, time, iterations, verbose = FALSE, ...)
+\S4method{rp}{om}(object, stochastic, time, iterations, verbose = FALSE)
 }
 \arguments{
 \item{object}{\code{om} class object}
+
+\item{...}{arguments for the generic function definition}
 
 \item{stochastic}{logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})}
 

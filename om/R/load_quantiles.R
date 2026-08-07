@@ -1,14 +1,15 @@
 #' @title Load quantiles
 #' @aliases load_quantile
 #' @description Load observation quantile into \code{\link{om-class}} object for stochastic projection.
+#' @param object \code{om} class object
 #' @param value named list object containing value for \code{observation} only. 
-#' @param ... (not used)
+#' @param ... arguments for the generic function definition
 #' @include om-class.R
 #' @export
 #{{{
 setGeneric("load_quantiles", function(object, value, ...) standardGeneric("load_quantiles"))
 #' @rdname load_quantiles
-setMethod("load_quantiles", signature = c("om", "list"), function(object, value, ...) {
+setMethod("load_quantiles", signature = c("om", "list"), function(object, value) {
     
     # assign
     for (i in names(object@settings$qn)) {

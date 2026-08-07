@@ -9,11 +9,18 @@
 \usage{
 phi(object, ...)
 
-\S4method{phi}{om}(object, ...)
+\S4method{phi}{om}(object)
 
 phi(object, ...) <- value
 
 \S4method{phi}{om,numeric}(object) <- value
+}
+\arguments{
+\item{object}{\code{om} class object}
+
+\item{...}{arguments for the generic function definition}
+
+\item{value}{numeric value}
 }
 \description{
 Access or assign the \eqn{\phi} value used to tune the PST reference point.

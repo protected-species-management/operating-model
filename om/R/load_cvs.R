@@ -1,14 +1,15 @@
 #' @title Load coefficients of variation 
 #' @aliases load_cv
 #' @description Load coefficients of variation into \code{\link{om-class}} object for stochastic projection and (optionally) reference point estimation.
+#' @param object \code{om} class object
 #' @param value named list object containing values for \code{survivorship}, \code{birth}, \code{observation}, \code{mortality}
-#' @param ... (not used)
+#' @param ... arguments for the generic function definition
 #' @include om-class.R
 #' @export
 #{{{
 setGeneric("load_cvs", function(object, value, ...) standardGeneric("load_cvs"))
 #' @rdname load_cvs
-setMethod("load_cvs", signature = c("om", "list"), function(object, value, ...) {
+setMethod("load_cvs", signature = c("om", "list"), function(object, value) {
     
 	# assign
     for (i in names(object@settings$cv)) {

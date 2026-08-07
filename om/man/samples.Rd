@@ -9,11 +9,18 @@
 \usage{
 samples(object, ...)
 
-\S4method{samples}{om}(object, ...)
+\S4method{samples}{om}(object)
 
 samples(object, ...) <- value
 
 \S4method{samples}{om,numeric}(object) <- value
+}
+\arguments{
+\item{object}{\code{om} class object}
+
+\item{...}{arguments for the generic function definition}
+
+\item{value}{numeric value with which to update \code{object@samples}}
 }
 \description{
 Specify the number of samples with which to represent uncertainty in the input parameters.

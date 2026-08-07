@@ -33,6 +33,10 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
     
     # get seeds
     get_seeds(object, env = ENV)
+	
+	NITER      <- get("NITER")
+	STOCHASTIC <- get("STOCHASTIC")
+	rng_seed   <- get("rng_seed")
     
     # check pars
     for (a in c("m", "s", "l", "b", "v")) {

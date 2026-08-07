@@ -6,20 +6,18 @@
 \alias{sample.numeric}
 \title{Sample from distribution class object}
 \usage{
-sample(x, ...)
+sample(x, size, ...)
 
-\method{sample}{distribution}(x, size = 1, replace = NULL, prob = NULL)
+\method{sample}{distribution}(x, size = 1, ...)
 
-\method{sample}{numeric}(x, size = 1, replace = NULL, prob = NULL)
+\method{sample}{numeric}(x, size = 1, ...)
 }
 \arguments{
 \item{x}{input distribution class object}
 
 \item{size}{sample size}
 
-\item{replace}{(ignored)}
-
-\item{prob}{(ignored)}
+\item{...}{(ignored)}
 }
 \description{
 Overwrites the generic \code{sample} function to sample from a \code{distribution} class object.

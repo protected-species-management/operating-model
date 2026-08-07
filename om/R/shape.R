@@ -38,6 +38,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	
     # get seeds
     get_seeds(object, env = ENV)
+	
+    NITER      <- get("NITER")
+    STOCHASTIC <- get("STOCHASTIC")
+    rng_seed   <- get("rng_seed")
     
     # check pars
     for (a in c("m", "s", "l", "b", "v")) {

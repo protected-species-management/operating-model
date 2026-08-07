@@ -144,17 +144,17 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
                 bias * rlogitnorm(1, mu = a, sigma = cv * a)
             }
         } else {
-            .harvest_error <- function(a, cv = object@settings$cv$harvest_rate) {
+            .harvest_error <- function(a, cv = object@settings$cv$harvest_rate, bias = NULL) {
                 rlogitnorm(1, mu = a, sigma = cv * a)
             }
         }
     } else {
         if (object@settings$bias$harvest_rate != 1.0) {
-            .harvest_error <- function(a, bias = object@settings$bias$harvest_rate) {
+            .harvest_error <- function(a, cv = NULL, bias = object@settings$bias$harvest_rate) {
                 bias * a
             }
         } else {
-            .harvest_error <- function(a) {
+            .harvest_error <- function(a, cv = NULL, bias = NULL) {
                 a
             }
         }

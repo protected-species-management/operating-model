@@ -2,16 +2,15 @@
 #' @description Overwrites the generic \code{sample} function to sample from a \code{distribution} class object.
 #' @param x input distribution class object
 #' @param size sample size
-#' @param replace (ignored)
-#' @param prob (ignored)
+#' @param ... (ignored)
 #' @importFrom logitnorm rlogitnorm
 #' @importFrom cli cli_alert_warning
 #' @details Monte-Carlo samples are generated from the parametric distribution contained in the \code{\link{distribution}} class object. If the distribution is \code{'unspecified'} then values are sampled from the values stored in the object (with replacement if necessary). If \code{x} is a numeric value rather than a distribution, then that value is return (this is designed to prevent the function from breaking when distributions are not specified). 
 #' @export
-sample <- function(x, size, replace, prob, ...) UseMethod("sample")
+sample <- function(x, size, ...) UseMethod("sample")
 #' @rdname sample
 #' @exportS3Method om::sample
-sample.distribution <- function(x, size = 1, replace = NULL, prob = NULL) {
+sample.distribution <- function(x, size = 1, ...) {
     
     # if only a single value then
     # return this value
@@ -74,7 +73,7 @@ sample.distribution <- function(x, size = 1, replace = NULL, prob = NULL) {
 }
 #' @rdname sample
 #' @exportS3Method om::sample
-sample.numeric <- function(x, size = 1, replace = NULL, prob = NULL) {
+sample.numeric <- function(x, size = 1, ...) {
     
 	cli_alert_warning("Found empty parameter (no distribution)")
 	

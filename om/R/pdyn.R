@@ -135,30 +135,28 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # define logit-normal harvest rate
     # error function
-    if (STOCHASTIC & object@settings$cv$harvest_rate > 0) {
-        if (object@settings$cv$harvest_rate > 0.3) {
-            cli_alert_warning("Recommend reducing CV[harvest rate] to less than 0.3")
-        }
-        if (object@settings$bias$harvest_rate != 1.0) {
-            .harvest_error <- function(a, cv = object@settings$cv$harvest_rate, bias = object@settings$bias$harvest_rate) {
-                bias * rlogitnorm(1, mu = a, sigma = cv * a)
+    cv_harvest_rate   <- object@settings$cv$harvest_rate
+    bias_harvest_rate <- object@settings$bias$harvest_rate
+
+    # build the function based on input values
+    .harvest_error <- (function() {
+        if (STOCHASTIC && cv_harvest_rate > 0) {
+            if (cv_harvest_rate > 0.3) {
+                cli_alert_warning("Recommend reducing CV[harvest rate] to less than 0.3")
+            }
+            if (bias_harvest_rate != 1.0) {
+                return(function(a) bias_harvest_rate * rlogitnorm(1, mu = a, sigma = cv_harvest_rate * a))
+            } else {
+                return(function(a) rlogitnorm(1, mu = a, sigma = cv_harvest_rate * a))
             }
         } else {
-            .harvest_error <- function(a, cv = object@settings$cv$harvest_rate, bias = NULL) {
-                rlogitnorm(1, mu = a, sigma = cv * a)
+            if (bias_harvest_rate != 1.0) {
+                return(function(a) bias_harvest_rate * a)
+            } else {
+                return(function(a) a)
             }
         }
-    } else {
-        if (object@settings$bias$harvest_rate != 1.0) {
-            .harvest_error <- function(a, cv = NULL, bias = object@settings$bias$harvest_rate) {
-                bias * a
-            }
-        } else {
-            .harvest_error <- function(a, cv = NULL, bias = NULL) {
-                a
-            }
-        }
-    }
+    })()
     
     # define log-normal capture
     # error function
@@ -274,7 +272,7 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
         
         # set-up birth function
         birth <- function(y) {
-			0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape[i]))			
+            0.5 * sum(pat[-1] * n[-1,y]) * (b_eq + (b_max - b_eq) * (1 - (sum(n[-1,y]) / sum(k[-1]))^shape[i]))            
         }
         
         # pst observation function
@@ -501,13 +499,13 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
             
             # record values
             object@values$rmax[i]  <- pars_sample$rmax
-			object@values$r[i]     <- pars_sample$r
-			object@values$shape[i] <- shape[i]
+            object@values$r[i]     <- pars_sample$r
+            object@values$shape[i] <- shape[i]
             object@values$s[i]     <- pars_sample$s
             object@values$l[i]     <- pars_sample$l
-			object@values$b[i]     <- pars_sample$b
+            object@values$b[i]     <- pars_sample$b
             object@values$beq[i]   <- b_eq
-			object@values$bstar[i] <- b_max
+            object@values$bstar[i] <- b_max
             object@values$m[i]     <- pars_sample$m
             object@values$o[i]     <- pars_sample$o
             object@values$v[i]     <- pars_sample$v

@@ -160,51 +160,58 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     
     # define log-normal capture
     # error function
-    if (STOCHASTIC & object@settings$cv$capture > 0) {
-        if (object@settings$bias$capture != 1.0) {
-            .capture_error <- function(a, cv = object@settings$cv$capture, bias = object@settings$bias$capture) {
-                bias * exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+    cv_capture   <- object@settings$cv$capture
+    bias_capture <- object@settings$bias$capture
+
+    # Build the function once based on conditions
+    .capture_error <- (function() {
+        if (STOCHASTIC && cv_capture > 0) {
+            if (bias_capture != 1.0) {
+                return(function(a) {
+                    bias_capture * exp(log(a / sqrt(1 + cv_capture^2)) + rnorm(1) * sqrt(log(1 + cv_capture^2)))
+                })
+            } else {
+                return(function(a) {
+                    exp(log(a / sqrt(1 + cv_capture^2)) + rnorm(1) * sqrt(log(1 + cv_capture^2)))
+                })
             }
         } else {
-            .capture_error <- function(a, cv = object@settings$cv$capture) {
-                exp(log(a / sqrt(1 + cv^2)) + rnorm(1) * sqrt(log(1 + cv^2)))
+            if (bias_capture != 1.0) {
+                return(function(a) bias_capture * a)
+            } else {
+                return(function(a) a)
             }
         }
-    } else {
-        if (object@settings$bias$capture != 1.0) {
-            .capture_error <- function(a, bias = object@settings$bias$capture) {
-                bias * a
-            }
-        } else {
-            .capture_error <- function(a) {
-                a
-            }
-        }
-    }
+    })()
     
     # define zt-normal rmax
     # error function
-    if (STOCHASTIC & object@settings$cv$rmax > 0) {
-        if (object@settings$bias$rmax != 1.0) {
-            .rmax_error <- function(a, cv = object@settings$cv$rmax, bias = object@settings$bias$rmax) {
-                bias * (a + (cv * a) * qnorm(runif(1, pnorm((0 - a) / (cv * a)), pnorm(Inf))))
+    cv_rmax   <- object@settings$cv$rmax
+    bias_rmax <- object@settings$bias$rmax
+
+    # Build the function once based on conditions
+    .rmax_error <- (function() {
+        if (STOCHASTIC && cv_rmax > 0) {
+            if (bias_rmax != 1.0) {
+                return(function(a) {
+                    bias_rmax * (a + (cv_rmax * a) * qnorm(runif(1, pnorm((0 - a) / (cv_rmax * a)), pnorm(Inf))
+                    ))
+                })
+            } else {
+                return(function(a) {
+                    a + (cv_rmax * a) * qnorm(runif(1, pnorm((0 - a) / (cv_rmax * a)), pnorm(Inf))
+                    )
+                })
             }
         } else {
-            .rmax_error <- function(a, cv = object@settings$cv$rmax) {
-                a + (cv * a) * qnorm(runif(1, pnorm((0 - a) / (cv * a)), pnorm(Inf)))
+            if (bias_rmax != 1.0) {
+                return(function(a) bias_rmax * a)
+            } else {
+                return(function(a) a)
             }
         }
-    } else {
-        if (object@settings$bias$rmax != 1.0) {
-            .rmax_error <- function(a, bias = object@settings$bias$rmax) {
-                bias * a
-            }
-        } else {
-            .rmax_error <- function(a) {
-                a
-            }
-        }
-    }
+    })()
+
     
     if (verbose) {
         message("harvest rate function:")

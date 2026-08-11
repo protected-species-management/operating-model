@@ -37,8 +37,9 @@ jobs:
             check
 
       - name: Check
-        run: r-lib/actions/check-r-package@v2
-        working-directory: om
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: om
           
       
 

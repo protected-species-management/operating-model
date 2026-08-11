@@ -12,6 +12,8 @@ lambda(object, ...)
 \arguments{
 \item{object}{\code{om} class object}
 
+\item{...}{(not used)}
+
 \item{log}{logical value indication whether \eqn{r = \log(\lambda)} should be returned.}
 }
 \description{

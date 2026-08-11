@@ -8,12 +8,14 @@
 \usage{
 load_quantiles(object, value, ...)
 
-\S4method{load_quantiles}{om,list}(object, value, ...)
+\S4method{load_quantiles}{om,list}(object, value)
 }
 \arguments{
+\item{object}{\code{om} class object}
+
 \item{value}{named list object containing value for \code{observation} only.}
 
-\item{...}{(not used)}
+\item{...}{arguments for the generic function definition}
 }
 \description{
 Load observation quantile into \code{\link{om-class}} object for stochastic projection.

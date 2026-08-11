@@ -2,13 +2,9 @@
 % Please edit documentation in R/get_dim.R
 \name{get_dim}
 \alias{get_dim}
-\alias{get_values}
+\alias{get_dims}
 \alias{get_dim.om}
-\alias{get_values.om}
-\alias{get_settings.om}
-\alias{get_seeds.om}
-\alias{get_shape.om}
-\title{Get dimensions and values}
+\title{Get dimensions from object}
 \usage{
 get_dim(object, ...)
 
@@ -19,15 +15,18 @@ get_dim(object, ...)
   env = environment(),
   ...
 )
+}
+\arguments{
+\item{object}{\code{om} class object}
 
-\method{get_values}{om}(object, iter = 1, env = environment(), ...)
+\item{...}{(not used)}
 
-\method{get_settings}{om}(object, env = environment(), ...)
+\item{projection}{logical value}
 
-\method{get_seeds}{om}(object, env = environment(), ...)
+\item{ref_points}{logical value}
 
-\method{get_shape}{om}(object, env = environment(), ...)
+\item{env}{environment into which values should be returned using \code{\link{assign}}}
 }
 \description{
-Extract dimensions and/or values from \code{\link{om-class}} object for use within a function call.
+Extract dimensions from \code{object@settings} slot in \code{\link{om-class}} object for use within a function call. Which dimensions are extracted depends on whether reference points are being estimated or a projection is being performed.
 }

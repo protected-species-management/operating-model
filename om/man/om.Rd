@@ -6,12 +6,22 @@
 \usage{
 om(
   ages,
+  time,
   harvest_function = function(object, numbers, selectivity, pst, i) {
     
     ifelse(all(is.na(object@targets$harvest_rate)), 0, object@targets$harvest_rate[i])
  },
   ...
 )
+}
+\arguments{
+\item{ages}{a numeric value giving the maximum age or a vector of ages}
+
+\item{time}{a numeric value giving the number of time steps or a vector of times}
+
+\item{harvest_function}{harvest rate function for use in projection}
+
+\item{...}{optional input arguments with default values: \code{samples = 1}, \code{shape = 1}, \code{phi = 1}}
 }
 \description{
 Initialise operating model class object

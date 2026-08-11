@@ -4,7 +4,14 @@
 \alias{plot.distribution}
 \title{Plot function for distribution class}
 \usage{
-\method{plot}{distribution}(x, y = "missing", ...)
+\method{plot}{distribution}(x, y, ...)
+}
+\arguments{
+\item{x}{input \code{om} class object}
+
+\item{y}{not used}
+
+\item{...}{not used}
 }
 \description{
 Plot function for distribution class

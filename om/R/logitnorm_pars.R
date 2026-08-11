@@ -1,7 +1,12 @@
+#' @title Retrieve parameters of logitnormal distribution
+#' @description A utility function for finding logitnormal parameters through numeric search using \pkg{logitnorm}. 
+#' @param expected_value numeric expected value
+#' @param sigma numeric standard error
+#' @param plot logical value
 #' @export
 #' @importFrom graphics curve mtext abline
 #' @importFrom logitnorm twCoefLogitnormMLEFlat momentsLogitnorm momentsLogitnorm dlogitnorm
-solveLogitNormal <- function(expected_value, sigma, plot = FALSE) {
+logitnorm_pars <- function(expected_value, sigma, plot = FALSE) {
     
     z <- list()
     
@@ -23,7 +28,7 @@ solveLogitNormal <- function(expected_value, sigma, plot = FALSE) {
     z$cv     <- round(as.numeric(sqrt(mmt[2]) / mmt[1]), 3)
     
     if (plot) {
-        curve(dlogitnorm(x, mu, sigma), from = 0, to = 1, yaxt = 'n', ylab = '')
+        curve(dlogitnorm(.data$x, mu, sigma), from = 0, to = 1, yaxt = 'n', ylab = '')
         mtext(paste("E[x] =", round(mmt[1], 2)), adj = 0, padj = -1)
         abline(v = mmt[1], col = 2)
     }

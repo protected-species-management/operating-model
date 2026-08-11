@@ -6,6 +6,7 @@
 #' @param time equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})
 #' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
+#' @param ... arguments for the generic function definition
 #' @note This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function. 
 #' @seealso \code{\link{shape}} \code{\link{targets}}
 #' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
@@ -17,7 +18,7 @@
 setGeneric("rp", function(object, ...) standardGeneric("rp"))
 #' @rdname rp
 #' @export
-setMethod("rp", signature = "om", function(object, stochastic, time, iterations, verbose = FALSE, ...) {
+setMethod("rp", signature = "om", function(object, stochastic, time, iterations, verbose = FALSE) {
     
     # current environment
     ENV <- environment()
@@ -33,6 +34,10 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
     
     # get seeds
     get_seeds(object, env = ENV)
+	
+	NITER      <- get("NITER")
+	STOCHASTIC <- get("STOCHASTIC")
+	rng_seed   <- get("rng_seed")
     
     # check pars
     for (a in c("m", "s", "l", "b", "v")) {
@@ -193,6 +198,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         l <- pars_sample$l
         v <- pars_sample$v
 		b <- pars_sample$b
+		K <- pars_sample$K
 		
 		s <- .survivorship(s, env = ENV)
 		e <- .epsilon(env = ENV)
@@ -257,7 +263,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         }
         
         if (!is.na(object@targets$harvest_rate[1])) {
-            object@targets$captures[1]  <- fast_forward(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
+            object@targets$captures[1]  <- fast_forward(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures * K
             object@targets$depletion[1] <- fast_forward(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion    
         }
         
@@ -282,6 +288,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 				l <- pars_sample$l
 				v <- pars_sample$v
 				b <- pars_sample$b
+				K <- pars_sample$K
 				
 				#print(paste("r:", round(pars_sample$r, 5)))
 				#print(paste("rmax:", round(pars_sample$rmax, 5)))
@@ -301,7 +308,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 				
 				if (!is.na(object@targets$harvest_rate[i])) {
 				    
-				    object@targets$captures[i]  <- fast_forward(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
+				    object@targets$captures[i]  <- fast_forward(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures * K
 				    object@targets$depletion[i] <- fast_forward(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion    
 				}
             }

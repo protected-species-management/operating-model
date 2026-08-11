@@ -35,6 +35,8 @@ targets(object, ...)
 }
 \arguments{
 \item{object}{\code{\link{om-class}} object.}
+
+\item{...}{arguments for the generic function definition}
 }
 \description{
 Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.

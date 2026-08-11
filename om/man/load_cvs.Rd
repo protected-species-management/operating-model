@@ -8,12 +8,14 @@
 \usage{
 load_cvs(object, value, ...)
 
-\S4method{load_cvs}{om,list}(object, value, ...)
+\S4method{load_cvs}{om,list}(object, value)
 }
 \arguments{
+\item{object}{\code{om} class object}
+
 \item{value}{named list object containing values for \code{survivorship}, \code{birth}, \code{observation}, \code{mortality}}
 
-\item{...}{(not used)}
+\item{...}{arguments for the generic function definition}
 }
 \description{
 Load coefficients of variation into \code{\link{om-class}} object for stochastic projection and (optionally) reference point estimation.

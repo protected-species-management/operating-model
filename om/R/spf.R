@@ -1,11 +1,13 @@
 #' @title Surplus production function
 #' @description Extracts data frame containing relationships between the depletion, sustainable captures and the harvest rate. Depletion is measured using the breeding age classes.
 #' @details This function is designed to facilitate the easy creation of plots of the production function, that can be used to validate operating model assumptions regarding the depletion and harvest rate at MNPL. The production function is calculated assuming either deterministic or stochastic reference point calculations, depending on the setting stored in \code{object@settings$ref_points}.
+#' @param object \code{om} class object
 #' @param harvest_rate numeric vector of harvest rates over which surplus production should be calculated 
 #' @param stochastic logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})
 #' @param time equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})
 #' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
+#' @param ... arguments for the generic function definition
 #' @return A data frame containing depletion, sustainable captures and the harvest rate, for each of the input harvest rate values. If life-history inputs are uncertain, iterations are sampled. These iterations do not represent any process error, only uncertainty in the operating model conditioning. 
 #' @include dot-pdyn.R dot-survivorship.R
 #' @importFrom dplyr bind_rows
@@ -15,7 +17,7 @@
 setGeneric("spf", function(object, harvest_rate, ...) standardGeneric("spf"))
 #' @rdname spf
 #' @export
-setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), function(object, harvest_rate, stochastic, time, iterations, verbose = FALSE, ...) {
+setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), function(object, harvest_rate, stochastic, time, iterations, verbose = FALSE) {
     
     # current environment
     ENV <- environment()
@@ -32,6 +34,10 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
     # get seeds
     get_seeds(object, env = ENV)
     
+	NITER      <- get("NITER")
+    STOCHASTIC <- get("STOCHASTIC")
+    rng_seed   <- get("rng_seed")
+	
     # check pars
     for (a in c("m", "s", "l", "b", "v")) {
         if (isTRUE(is.na(object@pars[[a]]))) {

@@ -10,7 +10,11 @@ load_rps(object, value, ...)
 \S4method{load_rps}{om,list}(object, value)
 }
 \arguments{
+\item{object}{\code{om} class object}
+
 \item{value}{named list object containing target reference points. List elements can be all or one of \code{captures}, \code{depletion} and \code{harvest_rate}.}
+
+\item{...}{arguments for the generic function definition}
 }
 \description{
 Load management targets into \code{\link{om-class}} object. These can be the Maximum Net Productivity Level (MNPL) and corresponding harvest rate and depletion values.

@@ -9,14 +9,18 @@
 \usage{
 load_pars(object, value, ...)
 
-\S4method{load_pars}{om,list}(object, value, ...)
+\S4method{load_pars}{om,list}(object, value)
 
 update_pars(object, value, ...)
 
 \S4method{update_pars}{om,list}(object, value, ...)
 }
 \arguments{
+\item{object}{\code{om} class object}
+
 \item{value}{named list object containing parameter distributions.}
+
+\item{...}{arguments for the generic function definition}
 }
 \description{
 Load or update parameters in \code{\link{om-class}} object. Each parameter should be provided as a \code{\link{distribution-class}}.

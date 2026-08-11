@@ -8,6 +8,8 @@
 #' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
 #' @param safe logical value indicating whether RTMB model should be recompiled with each sample (resulting in a more stable estimation)
+#' @param value numeric value or vector of length equal to \code{object@samples}
+#' @param ... arguments for the generic function definition
 #' @seealso \code{\link{rp}}
 #' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
 #' @import RTMB
@@ -19,7 +21,7 @@
 setGeneric("shape", function(object, depletion, ...) standardGeneric("shape"))
 #' @rdname shape
 #' @export
-setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = FALSE, safe = TRUE, ...) {
+setMethod("shape", signature = c(object = "om", depletion = "numeric"), function(object, depletion, stochastic, time, iterations, verbose = FALSE, safe = TRUE) {
     
     # current environment
     ENV <- environment()
@@ -38,6 +40,10 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	
     # get seeds
     get_seeds(object, env = ENV)
+	
+    NITER      <- get("NITER")
+    STOCHASTIC <- get("STOCHASTIC")
+    rng_seed   <- get("rng_seed")
     
     # check pars
     for (a in c("m", "s", "l", "b", "v")) {

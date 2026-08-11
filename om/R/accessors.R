@@ -2,6 +2,7 @@
 #' @aliases targets diagnostics pst objectives pars numbers settings
 #' @description Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.
 #' @param object \code{\link{om-class}} object. 
+#' @param ... arguments for the generic function definition
 #' @importFrom crayon blue
 #' @importFrom dplyr bind_rows
 #' @include om-class.R get_dim.R array2dfr.R
@@ -13,6 +14,8 @@ setGeneric("targets", function(object, ...) standardGeneric("targets"))
 setMethod("targets", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: management target :::"))
+    NITER <- get("NITER")
+    
     lapply(object@targets, function(x) { y <- data.frame(sample = 1:NITER, value = x);  as_tibble(y) })  
 })
 #}}}
@@ -22,7 +25,7 @@ setGeneric("diagnostics", function(object, ...) standardGeneric("diagnostics"))
 # accessor function
 #' @rdname targets
 setMethod("diagnostics", signature = c("om"), function(object) {
-    get_dim(object, env = environment())
+    #get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
     lapply(object@diagnostics, function(x) array2dfr(x, dim.names = list(sample = 1:dim(x)[1], iteration = 1:dim(x)[2], time = object@time)))
 })
@@ -35,6 +38,8 @@ setGeneric("pst", function(object, ...) standardGeneric("pst"))
 setMethod("pst", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: operating model output :::"))
+	NITER <- get("NITER")
+    SITER <- get("SITER")
     array2dfr(object@pst$value, dim.names = list(sample = 1:NITER, iteration = 1:SITER, time = object@time))
 })
 #}}}
@@ -47,6 +52,9 @@ setGeneric("objectives", function(object, ...) standardGeneric("objectives"))
 setMethod("objectives", signature = c("om"), function(object) {
     get_dim(object, env = environment())
     #message(blue("::: probability of reaching management target :::"))
+	
+	NITER <- get("NITER")
+	
     lapply(object@objectives,  function(x) array2dfr(x, dim.names = list(sample = 1:NITER, time = object@time)))
 })
 #}}}
@@ -75,7 +83,12 @@ setGeneric("numbers", function(object, ...) standardGeneric("numbers"))
 # accessor function
 #' @rdname targets
 setMethod("numbers", signature = c("om"), function(object) {
-    get_dim(object, env = environment())
+    
+	get_dim(object, env = environment())
+	
+	NITER <- get("NITER")
+    SITER <- get("SITER")
+	
     array2dfr(object@.Data, dim.names = list(sample = 1:NITER, iteration = 1:SITER, time = object@time))
 })
 #}}}

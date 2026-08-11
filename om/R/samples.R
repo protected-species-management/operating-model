@@ -1,11 +1,14 @@
 #' @title Specify number of samples
 #' 
 #' @description Specify the number of samples with which to represent uncertainty in the input parameters.
+#' @param object \code{om} class object
+#' @param value numeric value with which to update \code{object@samples}
+#' @param ... arguments for the generic function definition
 #' @importFrom stats runif
 #' @export
 setGeneric("samples", function(object, ...) standardGeneric("samples"))
 #' @rdname samples
-setMethod("samples", signature = c(object = "om"), function(object, ...) {
+setMethod("samples", signature = c(object = "om"), function(object) {
     object@samples
 })
 #' @rdname samples

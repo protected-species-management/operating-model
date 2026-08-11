@@ -9,13 +9,7 @@
 distribution(...)
 }
 \arguments{
-\item{values}{vector of values}
-
-\item{name}{label for parameter}
-
-\item{pars}{parameters for distriution (of length 2)}
-
-\item{density}{density distribution (i.e., beta, uniform, normal, lognormal, logitnormal or gamma)}
+\item{...}{optional input arguments: \code{values}, \code{name}, \code{pars}, \code{density}}
 }
 \description{
 This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution.
@@ -37,6 +31,9 @@ The inputs determine how the distribution is initialised. If a vector of values 
 \item{\code{name}}{optional label}
 }}
 
+\note{
+density distribution specified by \code{density} argument can be one of \code{beta}, \code{uniform}, \code{normal}, \code{lognormal}, \code{logitnormal} or \code{gamma}
+}
 \examples{
 # create object containing
 # vector of values

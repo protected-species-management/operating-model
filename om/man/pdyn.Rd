@@ -14,12 +14,13 @@ pdyn(object, ...)
   time,
   initial_depletion = 1,
   verbose = FALSE,
-  use_rmax = TRUE,
-  ...
+  use_rmax = TRUE
 )
 }
 \arguments{
 \item{object}{an \code{om} class object}
+
+\item{...}{arguments for the generic function definition}
 
 \item{stochastic}{logical value (no default value)}
 

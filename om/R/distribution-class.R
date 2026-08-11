@@ -135,26 +135,6 @@ setMethod("show", "distribution",
         })
 # }}}
 
-#' @exportS3Method base::summary
-summary.distribution <- function(object, ...) {
-    
-    if (grepl("^unspecified", object@density))  return(.show_unspecified_moments(object@.Data))
-    if (grepl("^uniform", object@density))      return(.show_uniform_moments(object@pars))
-    if (grepl("^beta", object@density))         return(.show_beta_moments(object@pars))
-    if (grepl("^normal", object@density))       return(.show_normal_moments(object@pars))
-    if (grepl("^zt?.normal", object@density))   return(.show_ztnormal_moments(object@pars))
-    if (grepl("^log?normal", object@density))   return(.show_lognormal_moments(object@pars))
-    if (grepl("^gamma", object@density))        return(.show_gamma_moments(object@pars))
-    if (grepl("^logit?normal", object@density)) return(.show_logitnormal_moments(object@pars))
-}
-
-#' @export
-expectation <- function(...) UseMethod("expectation")
-#' @exportS3Method
-expectation.distribution <- function(object, ...) {
-    summary(object)['E[x]']
-}
-
 # distribution-specific functions
 # {{{
 .calc_uniform_pars <- function(x) {

@@ -32,6 +32,10 @@ dynplot.om <- function(object, ..., pars = 'depletion', labels) {
         
         get_dim(y[[mdl]], env = environment())
 		
+		NITER <- get("NITER")
+		SITER <- get("SITER")
+		time  <- get("time")
+		
         dm <- list(sample = 1:NITER, iteration = 1:SITER, time = time)
         
         for (par in pars) {

@@ -10,6 +10,7 @@
 #' @include om-class.R
 #' @export
 get_values <- function(object, ...) UseMethod("get_values")
+#' @rdname get_values
 #' @export
 get_values.om <- function(object, iter = 1, env = environment(), ...) {
     

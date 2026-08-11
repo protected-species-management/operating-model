@@ -1,10 +1,13 @@
 #' @title Plot function for distribution class
+#' @param x input \code{om} class object
+#' @param y not used
+#' @param ... not used
 #' @importFrom logitnorm dlogitnorm invlogit
 #' @importFrom RTMB dnorm dgamma
 #' @importFrom stats dunif
 #' @importFrom graphics curve mtext abline hist
 #' @exportS3Method base::plot
-plot.distribution <- function(x, y = "missing", ...) {
+plot.distribution <- function(x, y, ...) {
     
     pars   <- x@pars
     dens   <- x@density

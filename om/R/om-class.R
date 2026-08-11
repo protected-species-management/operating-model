@@ -26,7 +26,7 @@ setClass("om", contains = "array", slots = list(ages = 'integer', samples = 'int
 #}}}
 #{{{
 # initialisation function
-setMethod("initialize", "om", function(.Object, ages, harvest_function, samples = 1, time, shape = 1, phi = 1, ...) {
+setMethod("initialize", "om", function(.Object, ages, time, harvest_function, samples = 1, shape = 1, phi = 1) {
     
     if(missing(harvest_function) | missing(ages)) {
         .Object@harvest_rate <- function() NA_real_

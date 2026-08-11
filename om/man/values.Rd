@@ -7,7 +7,7 @@
 \usage{
 values(object, ...)
 
-\S4method{values}{om}(object, stochastic, iterations, ...)
+\S4method{values}{om}(object)
 }
 \arguments{
 \item{object}{\code{om} class object}
@@ -16,4 +16,7 @@ values(object, ...)
 }
 \description{
 Extracts values generated internally for projection by \code{\link{pdyn}}.
+}
+\note{
+Requires that the \code{om} object already has values for \code{stochastic} and \code{iterations} stored in \code{object@settings}.
 }

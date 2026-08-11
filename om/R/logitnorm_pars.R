@@ -1,8 +1,12 @@
-#' @rdname distribution-class
+#' @title Retrieve parameters of logitnormal distribution
+#' @description A utility function for finding logitnormal parameters through numeric search using \pkg{logitnorm}. 
+#' @param expected_value numeric expected value
+#' @param sigma numeric standard error
+#' @param plot logical value
 #' @export
 #' @importFrom graphics curve mtext abline
 #' @importFrom logitnorm twCoefLogitnormMLEFlat momentsLogitnorm momentsLogitnorm dlogitnorm
-solveLogitNormal <- function(expected_value, sigma, plot = FALSE) {
+logitnorm_pars <- function(expected_value, sigma, plot = FALSE) {
     
     z <- list()
     

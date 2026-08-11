@@ -1,11 +1,8 @@
 #' 
 #' @rdname distribution-class
 #' 
-#' @param values vector of values
-#' @param name label for parameter
-#' @param pars parameters for distriution (of length 2)
-#' @param density density distribution (i.e., beta, uniform, normal, lognormal, logitnormal or gamma)
-#' @param ... (not used)
+#' @param ... optional input arguments: \code{values}, \code{name}, \code{pars}, \code{density}
+#' @note density distribution specified by \code{density} argument can be one of \code{beta}, \code{uniform}, \code{normal}, \code{lognormal}, \code{logitnormal} or \code{gamma}
 #' @examples
 #' # create object containing
 #' # vector of values

@@ -7,14 +7,12 @@
 \usage{
 \method{summary}{distribution}(object, ...)
 
-expectation(...)
+expectation(object, ...)
 }
 \arguments{
+\item{object}{input distribution class object}
+
 \item{...}{(ignored)}
-
-\item{x}{input distribution class object}
-
-\item{size}{sample size}
 }
 \description{
 Returns summary statistics for a given distribution.

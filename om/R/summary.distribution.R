@@ -1,7 +1,6 @@
 #' @title Summarise distribution class object
 #' @description Returns summary statistics for a given distribution.
-#' @param x input distribution class object
-#' @param size sample size
+#' @param object input distribution class object
 #' @param ... (ignored)
 #' @include distribution-class.R
 #' @exportS3Method base::summary
@@ -18,7 +17,7 @@ summary.distribution <- function(object, ...) {
 }
 #' @export
 #' @rdname summary.distribution
-expectation <- function(...) UseMethod("expectation")
+expectation <- function(object, ...) UseMethod("expectation")
 #' @exportS3Method om::expectation
 expectation.distribution <- function(object, ...) {
     summary(object)['E[x]']

@@ -198,6 +198,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         l <- pars_sample$l
         v <- pars_sample$v
 		b <- pars_sample$b
+		K <- pars_sample$K
 		
 		s <- .survivorship(s, env = ENV)
 		e <- .epsilon(env = ENV)
@@ -262,7 +263,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
         }
         
         if (!is.na(object@targets$harvest_rate[1])) {
-            object@targets$captures[1]  <- fast_forward(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
+            object@targets$captures[1]  <- fast_forward(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures * K
             object@targets$depletion[1] <- fast_forward(object@targets$harvest_rate[1], shape = object@shape[1], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion    
         }
         
@@ -287,6 +288,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 				l <- pars_sample$l
 				v <- pars_sample$v
 				b <- pars_sample$b
+				K <- pars_sample$K
 				
 				#print(paste("r:", round(pars_sample$r, 5)))
 				#print(paste("rmax:", round(pars_sample$rmax, 5)))
@@ -306,7 +308,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
 				
 				if (!is.na(object@targets$harvest_rate[i])) {
 				    
-				    object@targets$captures[i]  <- fast_forward(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures
+				    object@targets$captures[i]  <- fast_forward(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$captures * K
 				    object@targets$depletion[i] <- fast_forward(object@targets$harvest_rate[i], shape = object@shape[i], survivorship = s, multiplier = l, fecundity = b, epsilon = e, maturity = m, selectivity = v, lambda = exp(r), env = ENV)$depletion    
 				}
             }

@@ -37,9 +37,8 @@ jobs:
             check
 
       - name: Check
-        run: rcmdcheck::rcmdcheck()
-        shell: Rscript {0}
-        working-directory: ./om
+        run: r-lib/actions/check-r-package@v2
+        working-directory: om
           
       
 

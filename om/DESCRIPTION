@@ -31,7 +31,6 @@ Collate:
     'om-class.R'
     'get_dim.R'
     'accessors.R'
-    'biomass.R'
     'distribution-class.R'
     'sample.distribution.R'
     'distribution.R'
@@ -71,3 +70,4 @@ Config/testthat/edition: 3
 URL: https://github.com/protected-species-management/operating-model/om
 BugReports: https://github.com/protected-species-management/operating-model/issues
 Config/roxygen2/version: 8.1.0
+LazyData: true

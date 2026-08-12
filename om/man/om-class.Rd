@@ -27,8 +27,6 @@ om(
 }
 \description{
 Operating model class definition.
-
-Initialise operating model class object
 }
 \section{Slots}{
 

@@ -1,5 +1,4 @@
 #' @rdname om-class
-#' @description Initialise operating model class object
 #' @param ages a numeric value giving the maximum age or a vector of ages
 #' @param time a numeric value giving the number of time steps or a vector of times
 #' @param harvest_function harvest rate function for use in projection

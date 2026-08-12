@@ -1,7 +1,7 @@
 #' @title Get shape values from object
 #' @description
 #' Extract vector of shape values from \code{\link{om}} object.
-#' @returns A vector of length equal to \code{object@samples} is assigned to \code{shape} within the specified environment. This will rarely be useful in a standard workflow. Use \code{\link{shape}} instead.
+#' @returns A vector of length equal to \code{object@samples} is assigned to \code{'shape'} within the specified environment. This will rarely be useful in a standard workflow. Use \code{\link{shape}} instead.
 #' @param object \code{om} class object
 #' @param env environment into which values should be returned using \code{\link{assign}}
 #' @param ... (not used)

@@ -1,6 +1,6 @@
 #' @title Access outputs from operating model object. 
 #' @aliases targets diagnostics pst objectives pars numbers settings
-#' @description Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.
+#' @description Access information stored in \code{\link{om}} object.
 #' @param object \code{\link{om-class}} object. 
 #' @param ... arguments for the generic function definition
 #' @importFrom crayon blue
@@ -72,7 +72,7 @@ setMethod("pars", signature = c("om"), function(object) {
 #' @export
 setGeneric("settings", function(object, ...) standardGeneric("settings"))
 # accessor function
-#' @rdname targets
+#' @rdname settings
 setMethod("settings", signature = c("om"), function(object) {
     lapply(lapply(object@settings, bind_rows), data.frame)
 })

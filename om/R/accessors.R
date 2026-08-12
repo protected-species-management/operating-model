@@ -1,11 +1,18 @@
-#' @title Access outputs from operating model object. 
+#' @title Access slots within an \code{om} object. 
 #' @aliases targets diagnostics pst objectives pars numbers settings
-#' @description Access information stored in \code{\link{om}} object.
-#' @param object \code{\link{om-class}} object. 
+#' @description Access information stored in \code{\link{om}} object. The same information can be accessed in raw format using \code{object@<function>}.
+#' @param object \code{\link{om}} class object. 
 #' @param ... arguments for the generic function definition
 #' @importFrom crayon blue
 #' @importFrom dplyr bind_rows
 #' @include om-class.R get_dim.R array2dfr.R
+#' @examples
+#' 
+#' om_object <- om(ages = 0:1, time = 1, samples = 3)
+#' 
+#' om_object@pst
+#' pst(om_object)
+#' 
 #{{{
 #' @export
 setGeneric("targets", function(object, ...) standardGeneric("targets"))
@@ -72,7 +79,7 @@ setMethod("pars", signature = c("om"), function(object) {
 #' @export
 setGeneric("settings", function(object, ...) standardGeneric("settings"))
 # accessor function
-#' @rdname settings
+#' @rdname targets
 setMethod("settings", signature = c("om"), function(object) {
     lapply(lapply(object@settings, bind_rows), data.frame)
 })

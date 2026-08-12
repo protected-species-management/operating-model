@@ -13,8 +13,9 @@
 \alias{pst,om-method}
 \alias{objectives,om-method}
 \alias{pars,om-method}
+\alias{settings,om-method}
 \alias{numbers,om-method}
-\title{Access outputs from operating model object.}
+\title{Access slots within an \code{om} object.}
 \usage{
 targets(object, ...)
 
@@ -28,13 +29,23 @@ targets(object, ...)
 
 \S4method{pars}{om}(object)
 
+\S4method{settings}{om}(object)
+
 \S4method{numbers}{om}(object)
 }
 \arguments{
-\item{object}{\code{\link{om-class}} object.}
+\item{object}{\code{\link{om}} class object.}
 
 \item{...}{arguments for the generic function definition}
 }
 \description{
-Access information stored in \code{\link{om}} object.
+Access information stored in \code{\link{om}} object. The same information can be accessed in raw format using \code{object@<function>}.
+}
+\examples{
+
+om_object <- om(ages = 0:1, time = 1, samples = 3)
+
+om_object@pst
+pst(om_object)
+
 }

@@ -1,4 +1,3 @@
-#' 
 #' @rdname distribution-class
 #' 
 #' @param ... optional input arguments: \code{values}, \code{name}, \code{pars}, \code{density}

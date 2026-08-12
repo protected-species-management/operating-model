@@ -13,4 +13,10 @@ om_hdo
 \description{
 An \code{om} class object containing life-history data and reference points assuming that the depletion at Maximum Net Productivity Level is \eqn{D_{MNPL} = 0.6}.
 }
+\examples{
+pars(om_hdo)
+}
+\author{
+J.O. Roberts and C.T.T. Edwards
+}
 \keyword{datasets}

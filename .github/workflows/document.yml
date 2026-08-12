@@ -36,7 +36,7 @@ jobs:
       
       - name: Update DESCRIPTION
         run: |
-          Rscript -e 'DESC <- readLines("om/DESCRIPTION"); VERSION <- packageVersion("om"); VERSION[1, 3] <- VERSION[1, 3] + 1; DESC[4] <- paste("Version:", VERSION); DESC[5] <- paste("Date:", Sys.Date()); writeLines(DESC, con = "om/DESCRIPTION")'
+          Rscript -e 'DESC <- readLines("om/DESCRIPTION"); VERSION <- package_version(substring(x, 10)); VERSION[[1, 3]] <- VERSION[[1, 3]] + 1; DESC[4] <- paste("Version:", VERSION); DESC[5] <- paste("Date:", Sys.Date()); writeLines(DESC, con = "om/DESCRIPTION")'
 
       - name: Update onAttach
         run: |

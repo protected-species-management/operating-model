@@ -15,11 +15,44 @@ get_settings(object, ...)
 \item{...}{(not used)}
 
 \item{env}{environment into which values should be returned using \code{\link{assign}}}
-
-\item{iter}{index value}
+}
+\value{
+Lists containing values in \code{object@settings} are assigned to \code{'cv'}, \code{'bias'}, \code{'qn'}, \code{'projection'} and \code{'ref_points'} within the specified environment.
 }
 \description{
-Extract values from \code{\link{om}} object for use within a function call.
+Extract settings from \code{\link{om}} object.
+}
+\examples{
+om_object <- om(ages = 0:1, time = 11, samples = 3)
+
+# examine object contents
+# directly
+om_object@settings
+
+# return to local environment
+get_settings(om_object, env = globalenv())
+ls()
+
+# coefficients of variation for
+# stochastic projection
+unlist(cv)
+
+# bias for
+# projection
+unlist(bias)
+
+# numbers quantile for
+# projection
+unlist(qn)
+
+# default settings
+# for projection 
+unlist(projection)
+
+# default settings
+# for projection 
+unlist(ref_points)
+
 }
 \seealso{
 \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}

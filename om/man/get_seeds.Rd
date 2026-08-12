@@ -8,7 +8,7 @@
 \usage{
 get_seeds(object, ...)
 
-\method{get_seeds}{om}(object, env = environment())
+\method{get_seeds}{om}(object, env = environment(), ...)
 }
 \arguments{
 \item{object}{\code{om} class object}
@@ -29,10 +29,15 @@ om_object <- om(ages = 0:1, time = 1, samples = 3)
 get_seeds(om_object, env = globalenv())
 rng_seed
 
-ff <- function() { get_seeds(om_object, env = environment()); return(rng_seed) }
+ff <- function() { 
+    get_seeds(om_object, env = environment()); return(rng_seed) 
+}
 ff()
 
-ff <- function() { get_seeds(om_object, env = environment()); unlist(lapply(rng_seed, function(x) { set.seed(x); rnorm(1) }))}
+ff <- function() { 
+    get_seeds(om_object, env = environment())
+    unlist(lapply(rng_seed, function(x) { set.seed(x); rnorm(1) }))
+}
 ff()
 
 }

@@ -13,10 +13,15 @@
 #' get_seeds(om_object, env = globalenv())
 #' rng_seed
 #' 
-#' ff <- function() { get_seeds(om_object, env = environment()); return(rng_seed) }
+#' ff <- function() { 
+#'     get_seeds(om_object, env = environment()); return(rng_seed) 
+#' }
 #' ff()
 #' 
-#' ff <- function() { get_seeds(om_object, env = environment()); unlist(lapply(rng_seed, function(x) { set.seed(x); rnorm(1) }))}
+#' ff <- function() { 
+#'     get_seeds(om_object, env = environment())
+#'     unlist(lapply(rng_seed, function(x) { set.seed(x); rnorm(1) }))
+#' }
 #' ff()
 #' 
 #' @importFrom methods slot
@@ -25,7 +30,7 @@
 get_seeds <- function(object, ...) UseMethod("get_seeds")
 #' @rdname get_seeds
 #' @exportS3Method om::get_seeds
-get_seeds.om <- function(object, env = environment()) {
+get_seeds.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {
         assign("rng_seed", slot(get("object"), "seeds"), envir = env)

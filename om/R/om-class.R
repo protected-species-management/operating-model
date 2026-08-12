@@ -70,8 +70,8 @@ setMethod("initialize", "om", function(.Object, ages, time, harvest_function, sa
     # setup settings required
     # for reference point
     # estimation and projection
-    .Object@settings$ref_points <- list(stochastic = NA, iterations = NA_integer_, time = NA_integer_)
-    .Object@settings$projection <- list(stochastic = NA, iterations = NA_integer_, time = length(.Object@time))
+    .Object@settings$ref_points <- list(stochastic = FALSE, iterations = NA_integer_, time = 1000)
+    .Object@settings$projection <- list(stochastic = TRUE,  iterations = 300,         time = length(.Object@time))
     .Object@settings$cv         <- list(survivorship = 0.0, birth = 0.0, numbers = 0.0, harvest_rate = 0.0, capture = 0.0, rmax = 0.0)
     .Object@settings$qn         <- list(numbers = c(0.0, NA_real_))
     .Object@settings$bias       <- list(numbers = 1.0, harvest_rate = 1.0, capture = 1.0, rmax = 1.0)

@@ -1,7 +1,7 @@
 Package: om
 Type: Package
 Title: Operating model
-Version: 0.2.4
+Version: 0.2.5
 Date: 12-Aug-2026
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>

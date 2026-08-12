@@ -12,7 +12,7 @@
 #' @export
 get_dim <- function(object, ...) UseMethod("get_dim")
 #' @rdname get_dim
-#' @export
+#' @exportS3Method om::get_dim
 get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env = environment(), ...) {
     
     ages   <- object@ages

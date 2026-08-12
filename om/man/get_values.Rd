@@ -3,24 +3,12 @@
 \name{get_values}
 \alias{get_values}
 \alias{get_value}
-\alias{get_settings}
-\alias{get_seeds}
-\alias{get_shape}
 \alias{get_values.om}
-\alias{get_settings.om}
-\alias{get_seeds.om}
-\alias{get_shape.om}
 \title{Get values from object}
 \usage{
 get_values(object, ...)
 
 \method{get_values}{om}(object, iter = 1, env = environment(), ...)
-
-\method{get_settings}{om}(object, env = environment(), ...)
-
-\method{get_seeds}{om}(object, env = environment(), ...)
-
-\method{get_shape}{om}(object, env = environment(), ...)
 }
 \arguments{
 \item{object}{\code{om} class object}
@@ -32,5 +20,8 @@ get_values(object, ...)
 \item{env}{environment into which values should be returned using \code{\link{assign}}}
 }
 \description{
-Extract values from \code{\link{om-class}} object for use within a function call.
+Extract values from \code{\link{om}} object for use within a function call.
+}
+\seealso{
+\code{\link{get_settings}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}
 }

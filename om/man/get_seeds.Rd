@@ -18,7 +18,7 @@ get_seeds(object, ...)
 \item{env}{environment into which values should be returned using \code{\link{assign}}}
 }
 \value{
-An integer vector of length equal to \code{object@samples} is assigned to \code{rng_seed} within the specified environment. This vector contains random number seeds generated automatically during construction of the \code{om} object. These seeds are used to ensure that each function call during conditioning of an \code{om} object execute the same sequence of random samples from the life-history input distributions.
+An integer vector of length equal to \code{object@samples} is assigned to \code{'rng_seed'} within the specified environment. This vector contains random number seeds generated automatically during construction of the \code{om} object. These seeds are used to ensure that each function call during conditioning of an \code{om} object execute the same sequence of random samples from the life-history input distributions.
 }
 \description{
 Extract vector of random number seeds from \code{\link{om}} object.

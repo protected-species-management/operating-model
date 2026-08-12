@@ -17,7 +17,7 @@ get_settings(object, ...)
 \item{env}{environment into which values should be returned using \code{\link{assign}}}
 }
 \value{
-Lists containing values in \code{object@settings} are assigned to \code{'cv'}, \code{'bias'}, \code{'qn'}, \code{'projection'} and \code{'ref_points'} within the specified environment.
+Lists containing values in \code{object@settings} are assigned to \code{'cv'}, \code{'bias'}, \code{'qn'}, \code{'projection'} and \code{'ref_points'} within the specified environment. This will rarely be useful in a standard workflow. Use \code{\link{settings}} instead.
 }
 \description{
 Extract settings from \code{\link{om}} object.
@@ -29,9 +29,8 @@ om_object <- om(ages = 0:1, time = 11, samples = 3)
 # directly
 om_object@settings
 
-# return to local environment
+# return to global environment
 get_settings(om_object, env = globalenv())
-ls()
 
 # coefficients of variation for
 # stochastic projection
@@ -55,5 +54,5 @@ unlist(ref_points)
 
 }
 \seealso{
-\code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}
+\code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}, \code{\link{settings}}
 }

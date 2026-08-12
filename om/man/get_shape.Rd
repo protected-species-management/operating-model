@@ -17,7 +17,7 @@ get_shape(object, ...)
 \item{env}{environment into which values should be returned using \code{\link{assign}}}
 }
 \value{
-A vector of length equal to \code{object@samples} is assigned to \code{shape} within the specified environment. This will rarely be useful in a standard workflow. Use \code{\link{shape}} instead.
+A vector of length equal to \code{object@samples} is assigned to \code{'shape'} within the specified environment. This will rarely be useful in a standard workflow. Use \code{\link{shape}} instead.
 }
 \description{
 Extract vector of shape values from \code{\link{om}} object.

@@ -13,7 +13,6 @@
 \alias{pst,om-method}
 \alias{objectives,om-method}
 \alias{pars,om-method}
-\alias{settings,om-method}
 \alias{numbers,om-method}
 \title{Access outputs from operating model object.}
 \usage{
@@ -29,8 +28,6 @@ targets(object, ...)
 
 \S4method{pars}{om}(object)
 
-\S4method{settings}{om}(object)
-
 \S4method{numbers}{om}(object)
 }
 \arguments{
@@ -39,5 +36,5 @@ targets(object, ...)
 \item{...}{arguments for the generic function definition}
 }
 \description{
-Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.
+Access information stored in \code{\link{om}} object.
 }

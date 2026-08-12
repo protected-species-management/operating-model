@@ -60,8 +60,6 @@ settings(om_object)
 
 # when slots have values
 # they can be retrieved
-data(om_hdo)
-
 targets(om_hdo)
 pars(om_hdo)
 

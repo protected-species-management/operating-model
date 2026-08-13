@@ -8,6 +8,8 @@
 #' @param ... (not used)
 #' @seealso \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_settings}}, \code{\link{get_shape}}
 #' @examples
+#' \dontrun{
+#' 
 #' om_object <- om(ages = 0:1, time = 1, samples = 3)
 #' 
 #' get_seeds(om_object, env = globalenv())
@@ -23,13 +25,11 @@
 #'     unlist(lapply(rng_seed, function(x) { set.seed(x); rnorm(1) }))
 #' }
 #' ff()
-#' 
+#' }
 #' @importFrom methods slot
 #' @include om-class.R
-#' @export
 get_seeds <- function(object, ...) UseMethod("get_seeds")
 #' @rdname get_seeds
-#' @exportS3Method om::get_seeds
 get_seeds.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {

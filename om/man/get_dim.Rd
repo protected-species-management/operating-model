@@ -28,5 +28,5 @@ get_dim(object, ...)
 \item{env}{environment into which values should be returned using \code{\link{assign}}}
 }
 \description{
-Extract dimensions from \code{object@settings} slot in \code{\link{om-class}} object for use within a function call. Which dimensions are extracted depends on whether reference points are being estimated or a projection is being performed.
+Extract dimensions from \code{object@settings} slot in \code{\link{om}} object for use within a function call. Which dimensions are extracted depends on whether reference points are being estimated or a projection is being performed.
 }

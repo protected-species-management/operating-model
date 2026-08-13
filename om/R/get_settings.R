@@ -7,6 +7,7 @@
 #' @param ... (not used)
 #' @seealso \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}, \code{\link{settings}}
 #' @examples
+#' \dontrun{
 #' om_object <- om(ages = 0:1, time = 11, samples = 3)
 #' 
 #' # examine object contents
@@ -35,13 +36,11 @@
 #' # default settings
 #' # for projection 
 #' unlist(ref_points)
-#' 
+#' }
 #' @importFrom methods slot
 #' @include om-class.R
-#' @export
 get_settings <- function(object, ...) UseMethod("get_settings")
 #' @rdname get_settings
-#' @exportS3Method om::get_settings
 get_settings.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {

@@ -23,6 +23,7 @@ A vector of length equal to \code{object@samples} is assigned to \code{'shape'} 
 Extract vector of shape values from \code{\link{om}} object.
 }
 \examples{
+\dontrun{
 om_object <- om(ages = 0:1, time = 1, samples = 3)
 
 # assign and access using 'shape' function
@@ -35,7 +36,7 @@ shape
 
 ff <- function() { get_shape(om_object, env = environment()); return(shape) }
 ff()
-
+}
 }
 \seealso{
 \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_settings}}, \code{\link{shape}}

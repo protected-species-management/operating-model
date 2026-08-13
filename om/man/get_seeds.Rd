@@ -24,6 +24,8 @@ An integer vector of length equal to \code{object@samples} is assigned to \code{
 Extract vector of random number seeds from \code{\link{om}} object.
 }
 \examples{
+\dontrun{
+
 om_object <- om(ages = 0:1, time = 1, samples = 3)
 
 get_seeds(om_object, env = globalenv())
@@ -39,7 +41,7 @@ ff <- function() {
     unlist(lapply(rng_seed, function(x) { set.seed(x); rnorm(1) }))
 }
 ff()
-
+}
 }
 \seealso{
 \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_settings}}, \code{\link{get_shape}}

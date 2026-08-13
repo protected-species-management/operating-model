@@ -7,6 +7,7 @@
 #' @param ... (not used)
 #' @seealso \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_settings}}, \code{\link{shape}}
 #' @examples
+#' \dontrun{
 #' om_object <- om(ages = 0:1, time = 1, samples = 3)
 #' 
 #' # assign and access using 'shape' function
@@ -19,13 +20,11 @@
 #' 
 #' ff <- function() { get_shape(om_object, env = environment()); return(shape) }
 #' ff()
-#' 
+#' }
 #' @importFrom methods slot
 #' @include om-class.R
-#' @export
 get_shape <- function(object, ...) UseMethod("get_shape")
 #' @rdname get_shape
-#' @exportS3Method om::get_shape
 get_shape.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {

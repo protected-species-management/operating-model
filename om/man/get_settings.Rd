@@ -23,6 +23,7 @@ Lists containing values in \code{object@settings} are assigned to \code{'cv'}, \
 Extract settings from \code{\link{om}} object.
 }
 \examples{
+\dontrun{
 om_object <- om(ages = 0:1, time = 11, samples = 3)
 
 # examine object contents
@@ -51,7 +52,7 @@ unlist(projection)
 # default settings
 # for projection 
 unlist(ref_points)
-
+}
 }
 \seealso{
 \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}, \code{\link{settings}}

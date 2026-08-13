@@ -8,19 +8,17 @@
 \usage{
 get_values(object, ...)
 
-\method{get_values}{om}(object, iter = 1, env = environment(), ...)
+\method{get_values}{om}(object, env = environment(), ...)
 }
 \arguments{
 \item{object}{\code{om} class object}
 
 \item{...}{(not used)}
 
-\item{iter}{index value}
-
 \item{env}{environment into which values should be returned using \code{\link{assign}}}
 }
 \description{
-Extract values from \code{\link{om}} object for use within a function call.
+Extract life-history sample values from \code{\link{om}} object.
 }
 \seealso{
 \code{\link{get_settings}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}

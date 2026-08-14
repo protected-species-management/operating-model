@@ -22,7 +22,7 @@ setMethod("rp", signature = "om", function(object, ...) {
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, env = ENV)
+    .get_dim(object, env = ENV)
     
     # load data inputs stored
     # in object@data

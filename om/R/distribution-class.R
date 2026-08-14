@@ -149,7 +149,10 @@ setMethod("show", "distribution",
         })
 # }}}
 # {{{
-#' @rdname distribution
+#' @rdname distribution-class
+#' @param x = \code{distribution} class object
+#' @param i optional index value
+#' @param value numeric values to assign
 setMethod("[<-",
           signature(x = "distribution", i = "ANY", j = "missing", value = "numeric"),
           function(x, i, value) {

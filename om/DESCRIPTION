@@ -29,7 +29,7 @@ Suggests:
 Collate: 
     'array2dfr.R'
     'om-class.R'
-    'get_dim.R'
+    'dot-get_dim.R'
     'accessors.R'
     'data.R'
     'distribution-class.R'

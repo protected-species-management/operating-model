@@ -29,7 +29,7 @@ setMethod("spf", signature = c(object = "om", harvest_rate = "numeric"), functio
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, ref_points = TRUE, env = ENV)
+    .get_dim(object, ref_points = TRUE, env = ENV)
     
     # get seeds
     get_seeds(object, env = ENV)

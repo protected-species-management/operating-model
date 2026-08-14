@@ -1,3 +1,4 @@
+#' @noRd
 #' @title Get shape values from object
 #' @description
 #' Extract vector of shape values from \code{\link{om}} object.
@@ -5,7 +6,7 @@
 #' @param object \code{om} class object
 #' @param env environment into which values should be returned using \code{\link{assign}}
 #' @param ... (not used)
-#' @seealso \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_seeds}}, \code{\link{get_settings}}, \code{\link{shape}}
+#' @seealso \code{\link{get_values}}, \code{\link{.get_dim}}, \code{\link{get_seeds}}, \code{\link{get_settings}}, \code{\link{shape}}
 #' @examples
 #' \dontrun{
 #' om_object <- om(ages = 0:1, time = 1, samples = 3)
@@ -24,7 +25,6 @@
 #' @importFrom methods slot
 #' @include om-class.R
 get_shape <- function(object, ...) UseMethod("get_shape")
-#' @rdname get_shape
 get_shape.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {

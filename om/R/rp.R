@@ -30,7 +30,7 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, ref_points = TRUE, env = ENV)
+    .get_dim(object, ref_points = TRUE, env = ENV)
     
     # get seeds
     get_seeds(object, env = ENV)

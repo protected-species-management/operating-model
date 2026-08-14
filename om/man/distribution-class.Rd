@@ -3,12 +3,26 @@
 \docType{class}
 \name{distribution-class}
 \alias{distribution-class}
+\alias{[<-,distribution,ANY,missing,numeric-method}
 \alias{distribution}
 \title{Class containing a probability distribution}
 \usage{
-distribution(values, pars, density, ...)
+\S4method{[}{distribution,ANY,missing,numeric}(x, i) <- value
+
+distribution(
+  values = NA_real_,
+  pars = c(NA_real_, NA_real_),
+  density = "unspecified",
+  ...
+)
 }
 \arguments{
+\item{x}{= \code{distribution} class object}
+
+\item{i}{optional index value}
+
+\item{value}{numeric values to assign}
+
 \item{values}{vector of values to be stored in the object. If a \code{density} argument is also supplied, then parameters for that distribution are estimated from the \code{values} using maximum likelihood.}
 
 \item{pars}{vector of length two containing parameters for the parametric distribution specified by the \code{density} argument. If \code{pars} are provided but no \code{density} then this generates a warning.}

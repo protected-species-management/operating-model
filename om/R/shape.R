@@ -33,7 +33,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, ref_points = TRUE, env = ENV)
+    .get_dim(object, ref_points = TRUE, env = ENV)
     
 	# recompile model for each sample?
 	SAFE <- ifelse(safe, TRUE, FALSE)

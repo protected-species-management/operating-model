@@ -1,5 +1,5 @@
+#' @noRd
 #' @title Get dimensions from object
-#' @aliases get_dims
 #' @description
 #' Extract dimensions from \code{object@settings} slot in \code{\link{om}} object for use within a function call. Which dimensions are extracted depends on whether reference points are being estimated or a projection is being performed. 
 #' @param object \code{om} class object
@@ -9,9 +9,8 @@
 #' @param ... (not used)
 #' @importFrom methods slot
 #' @include om-class.R
-get_dim <- function(object, ...) UseMethod("get_dim")
-#' @rdname get_dim
-get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env = environment(), ...) {
+.get_dim <- function(object, ...) UseMethod(".get_dim")
+.get_dim.om <- function(object, projection = TRUE, ref_points = !projection, env = environment(), ...) {
     
     ages   <- object@ages
     time   <- object@time

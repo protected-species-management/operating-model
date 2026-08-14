@@ -5,7 +5,7 @@
 #' @param ... arguments for the generic function definition
 #' @importFrom cli cli_alert_danger cli_alert_warning
 #' @importFrom dplyr bind_rows
-#' @include om-class.R get_dim.R array2dfr.R
+#' @include om-class.R dot-get_dim.R array2dfr.R
 #' @examples
 #' 
 #' # error messages are
@@ -43,7 +43,7 @@ setGeneric("targets", function(object, ...) standardGeneric("targets"))
 #' @rdname targets
 setMethod("targets", signature = c("om"), function(object) {
     
-    get_dim(object, env = environment())
+    .get_dim(object, env = environment())
     NITER <- get("NITER")
     
     if (all(is.na(unlist(object@targets)))) {
@@ -75,7 +75,7 @@ setGeneric("pst", function(object, ...) standardGeneric("pst"))
 # accessor function
 #' @rdname targets
 setMethod("pst", signature = c("om"), function(object) {
-    get_dim(object, env = environment())
+    .get_dim(object, env = environment())
 	NITER <- get("NITER")
     SITER <- get("SITER")
     tryCatch(array2dfr(object@pst$value, dim.names = list(sample = 1:NITER, iteration = 1:SITER, time = object@time)), error = function(e) cli_alert_danger("'<object>@pst' is empty - run 'pdyn()'"))
@@ -88,7 +88,7 @@ setGeneric("objectives", function(object, ...) standardGeneric("objectives"))
 # accessor function
 #' @rdname targets
 setMethod("objectives", signature = c("om"), function(object) {
-    get_dim(object, env = environment())
+    .get_dim(object, env = environment())
 	NITER <- get("NITER")
     tryCatch(lapply(object@objectives,  function(x) array2dfr(x, dim.names = list(sample = 1:NITER, time = object@time))), error = function(e) cli_alert_danger("'<object>@objectives' is empty - run 'pdyn()'"))
 })
@@ -120,7 +120,7 @@ setGeneric("numbers", function(object, ...) standardGeneric("numbers"))
 #' @rdname targets
 setMethod("numbers", signature = c("om"), function(object) {
     
-	get_dim(object, env = environment())
+	.get_dim(object, env = environment())
 	
 	NITER <- get("NITER")
     SITER <- get("SITER")

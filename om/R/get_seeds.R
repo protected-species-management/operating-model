@@ -1,3 +1,4 @@
+#' @noRd
 #' @title Get random seeds from object
 #' @aliases get_seed
 #' @description
@@ -6,7 +7,7 @@
 #' @param object \code{om} class object
 #' @param env environment into which values should be returned using \code{\link{assign}}
 #' @param ... (not used)
-#' @seealso \code{\link{get_values}}, \code{\link{get_dim}}, \code{\link{get_settings}}, \code{\link{get_shape}}
+#' @seealso \code{\link{get_values}}, \code{\link{.get_dim}}, \code{\link{get_settings}}, \code{\link{get_shape}}
 #' @examples
 #' \dontrun{
 #' 
@@ -29,7 +30,6 @@
 #' @importFrom methods slot
 #' @include om-class.R
 get_seeds <- function(object, ...) UseMethod("get_seeds")
-#' @rdname get_seeds
 get_seeds.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {

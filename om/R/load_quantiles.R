@@ -1,6 +1,6 @@
 #' @title Load quantiles
 #' @aliases load_quantile
-#' @description Load observation quantile into \code{\link{om-class}} object for stochastic projection.
+#' @description Load observation quantile into \code{\link{om}} class object for stochastic projection.
 #' @param object \code{om} class object
 #' @param value named list object containing value for \code{observation} only. 
 #' @param ... arguments for the generic function definition

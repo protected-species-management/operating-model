@@ -1,6 +1,6 @@
 #' @title Load or update parameters
 #' @aliases update_pars 
-#' @description Load or update parameters in \code{\link{om-class}} object. Each parameter should be provided as a \code{\link{distribution-class}}.
+#' @description Load or update parameters in \code{\link{om}} class object. Each parameter should be provided as a \code{\link{distribution-class}}.
 #' @param object \code{om} class object
 #' @param value named list object containing parameter distributions. 
 #' @param ... arguments for the generic function definition

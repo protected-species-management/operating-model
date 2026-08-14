@@ -2,7 +2,7 @@
 #' @description Overwrites the generic \code{sample} function to sample from a \code{distribution} class object.
 #' @param x input distribution class object
 #' @param size sample size
-#' @param replace logical indicating whether values should be sampled with replacement (set to 'replace = TRUE' if \code{size} is greater than the number of values stored in the object). Only used for non-parametric sampling. 
+#' @param replace logical indicating whether values should be sampled with replacement (set to \code{'replace = TRUE'} if \code{size} is greater than the number of values stored in the object). Only used for non-parametric sampling. 
 #' @param ... (ignored)
 #' @importFrom logitnorm rlogitnorm
 #' @importFrom cli cli_alert_warning cli_abort

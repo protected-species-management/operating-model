@@ -5,13 +5,13 @@
 \alias{om_hdo}
 \title{Hector's dolphin}
 \format{
-See \code{\link{om}}
+See \code{\link{om}}, \code{\link{pars}}, \code{\link{distribution}}
 }
 \usage{
 om_hdo
 }
 \description{
-An \code{om} class object containing life-history data and reference points assuming that the depletion at Maximum Net Productivity Level is \eqn{D_{MNPL} = 0.6}.
+An \code{\link{om}} class object containing life-history data and reference points for Hector's dolphin assuming that the depletion at Maximum Net Productivity Level is \eqn{D_{MNPL} = 0.6}.
 }
 \examples{
 pars(om_hdo)

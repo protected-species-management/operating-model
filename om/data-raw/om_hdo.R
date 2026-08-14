@@ -13,10 +13,10 @@ l_values <- 0.9
 # loading pars with calculate r
 om_object <- om_object |> load_pars(list(
     # parametric sampling
-    's' = distribution(pars = s_pars, density = "logitnormal", name = "adult survivorship"),
-    'b' = distribution(pars = b_pars, density = "beta",        name = "female fecundity"),
+    's' = distribution(pars = s_pars,          density = "logitnormal", name = "adult survivorship"),
+    'b' = distribution(pars = b_pars,          density = "beta",        name = "female fecundity"),
+    'm' = distribution(pars = range(m_values), density = "int-uniform", name = "age at maturity"),
     # non-parametric sampling
-    'm' = distribution(values = m_values, name = "age at maturity"),
     'l' = distribution(values = l_values, name = "age zero survivorship multiplier")
 ))
 
@@ -25,9 +25,9 @@ om_object <- om_object |> load_rmax()
 
 # assign selectivity
 om_object <- om_object |> update_pars(list(
-    # non-parametric sampling
-    'v' = distribution(value = m_values, name = "age at selectivity"),
-	'o' = distribution(value = m_values, name = "age at observation")
+    # parametric sampling
+    'v' = distribution(pars = range(m_values), density = "int-uniform", name = "age at selectivity"),
+	'o' = distribution(pars = range(m_values), density = "int-uniform", name = "age at observation")
 ))
 
 # load default uncertainty

@@ -1,28 +1,31 @@
 #' @title Class containing a probability distribution
 #' @description 
-#' This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution. 
+#' This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution. Only a selection of two-parameter distributions are currently supported.
 #' @details
-#' The inputs determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then parameters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated. 
-#' @seealso \code{\link{sample}}
-#' @slot .Data numeric vector of derived values
-#' @slot iter integer value
+#' The inputs determine how the \code{distribution} object is initialised. If a vector of values are provided these are stored. If a distribution is also provided via the \code{density} argument then parameters for this distribution are estimated. Parameters can be provided without values via the combined \code{pars} and \code{density} arguments. If \code{pars}, \code{density} and \code{iter} are all provided then values are generated internally during initialisation of the object. 
+#' 
+#' Monte Carlo simulation from the \code{distribution} object will depend on whether values are present. If present, they are sampled at random (i.e., non-parametrically) regardless of whether the distribution is specified. If values are missing, then parametric sampling is performed. Switching between parametric and non-parametric sampling is possible by adding or removing values. 
+#' @seealso \code{\link{sample}}, \code{\link{summary}}, \code{\link[om]{plot}}
+#' @slot .Data numeric vector of values
 #' @slot pars  distribution parameter values
-#' @slot density  probability density function
+#' @slot density  probability density (or mass) function
 #' @slot name  optional label
 #' @importFrom logitnorm rlogitnorm momentsLogitnorm logit
 #' @importFrom crayon blue
 #' @importFrom stats sd var runif rbeta rgamma
 #' @importFrom methods show
+#' @importFrom cli cli_alert_danger
 #' @export
-setClass("distribution", contains = "numeric", slots = list(iter = "integer", name = "character", pars = "numeric", density = "character"))
+setClass("distribution", contains = "numeric", slots = list(name = "character", pars = "numeric", density = "character"))
 # initialisation function
 setMethod("initialize", "distribution", function(.Object, ...) {
     
-    .Object@.Data         <- numeric()
-    .Object@iter          <- 0L
-    .Object@density       <- "unspecified"
-    .Object@pars          <- c(NA_real_, NA_real_)
-    .Object@name          <- character()
+    .Object@.Data   <- numeric()
+    .Object@density <- "unspecified"
+    .Object@pars    <- c(NA_real_, NA_real_)
+    .Object@name    <- character()
+    
+    iter <- 0
     
     x <- list(...)
     
@@ -32,33 +35,37 @@ setMethod("initialize", "distribution", function(.Object, ...) {
         f2 <- function(x, y) if(!is.null(x)) x else y
         
         # assignments
-        .Object@.Data        <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^value?", y) & is.numeric(x[[y]])))))]], .Object@.Data)
-        .Object@iter         <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^iter*", y)  & is.numeric(x[[y]])))))]], .Object@iter) |> as.integer()
-        .Object@density      <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^dens*", y)  & is.character(x[[y]])))))]], .Object@density)
-        .Object@pars         <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^par?", y)   & is.numeric(x[[y]]) & length(x[[y]]) == 2))))]], .Object@pars)
-        .Object@name         <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^name?", y)  & is.character(x[[y]])))))]], .Object@name)
+        .Object@.Data   <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^value?", y) & is.numeric(x[[y]])))))]], .Object@.Data)
+        .Object@density <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^dens*", y)  & is.character(x[[y]])))))]], .Object@density)
+        .Object@pars    <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^par?", y)   & is.numeric(x[[y]]) & length(x[[y]]) == 2))))]], .Object@pars)
+        .Object@name    <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^name?", y)  & is.character(x[[y]])))))]], .Object@name)
         
-        # checks
-        if (length(.Object@.Data) > 0 & .Object@iter == 0) {
-            .Object@iter <- as.integer(length(.Object@.Data))    
+        # get iterations
+        if (any(grepl("^iter*", names(x)))) {
+            iter <- x[[which(grepl("^iter*", names(x)))]] |> as.integer()
         }
         
+        # strip NA values if present
         if (any(is.na(.Object@.Data))) {
-            
             .Object@.Data <- .Object@.Data[!is.na(.Object@.Data)]
-            
-            if (.Object@iter > length(.Object@.Data)) {
-                .Object@iter <- length(.Object@.Data)    
-            }
         }
     }
     
+    # if pars but no density generate error
+    if (.Object@density == "unspecified" & !any(is.na(.Object@pars))) {
+        cli_alert_danger("'pars' provided with no 'density'")
+    }
+    
     # if data and density then estimate pars
-    EST_PARS <- length(.Object@.Data) > 0 & length(.Object@density) > 0 & all(is.na(.Object@pars))
+    EST_PARS <- length(.Object@.Data) > 0 & .Object@density != "unspecified" & all(is.na(.Object@pars))
     if (EST_PARS) {
         
         if (grepl("^uniform", .Object@density)) {
             .Object@pars <- .calc_uniform_pars(.Object@.Data)    
+        }
+        
+        if (grepl("^int?.uniform", .Object@density)) {
+            .Object@pars <- .calc_intuniform_pars(.Object@.Data)    
         }
         
         if (grepl("^beta", .Object@density)) {
@@ -87,35 +94,43 @@ setMethod("initialize", "distribution", function(.Object, ...) {
     }
     
     # if distribution and pars then simulate values
-    SIM_VALUES <- length(.Object@.Data) == 0 & length(.Object@density) > 0 & !any(is.na(.Object@pars)) & .Object@iter > 0
+    SIM_VALUES <- length(.Object@.Data) == 0 & .Object@density != "unspecified" & !any(is.na(.Object@pars))
     if (SIM_VALUES) {
-        
-        if (grepl("^uniform", .Object@density)) {
-            .Object@.Data <- runif(.Object@iter, min = .Object@pars[1], max = .Object@pars[2])    
-        }
-        
-        if (grepl("^beta", .Object@density)) {
-            .Object@.Data <- rbeta(.Object@iter, shape1 = .Object@pars[1], shape2 = .Object@pars[2])    
-        }
-        
-        if (grepl("^normal", .Object@density)) {
-            .Object@.Data <- rnorm(.Object@iter, mean = .Object@pars[1], sd = .Object@pars[2])    
-        }
-        
-        if (grepl("^zt?.normal", .Object@density)) {
-            .Object@.Data <- .Object@pars[1] + .Object@pars[2] * qnorm(runif(.Object@iter, pnorm((0 - .Object@pars[1]) / .Object@pars[2]), pnorm(Inf))) 
-        }
-        
-        if (grepl("^log?.normal", .Object@density)) {
-            .Object@.Data <- rlnorm(.Object@iter, meanlog = .Object@pars[1], sdlog = .Object@pars[2])    
-        }
-        
-        if (grepl("^gamma", .Object@density)) {
-            .Object@.Data <- rgamma(.Object@iter, shape = .Object@pars[1], scale = .Object@pars[2])    
-        }
-        
-        if (grepl("^logit?.normal", .Object@density)) {
-            .Object@.Data <- rlogitnorm(.Object@iter, mu = .Object@pars[1], sigma = .Object@pars[2])    
+        if (iter > 0) {
+            
+            if (grepl("^uniform", .Object@density)) {
+                .Object@.Data <- runif(iter, min = .Object@pars[1], max = .Object@pars[2])    
+            }
+            
+            if (grepl("^int?.uniform", .Object@density)) {
+                .Object@.Data <- (.Object@pars[1]:.Object@pars[2])[sample.int(length(.Object@pars[1]:.Object@pars[2]), iter, replace = TRUE)]
+            }
+            
+            if (grepl("^beta", .Object@density)) {
+                .Object@.Data <- rbeta(iter, shape1 = .Object@pars[1], shape2 = .Object@pars[2])    
+            }
+            
+            if (grepl("^normal", .Object@density)) {
+                .Object@.Data <- rnorm(iter, mean = .Object@pars[1], sd = .Object@pars[2])    
+            }
+            
+            if (grepl("^zt?.normal", .Object@density)) {
+                .Object@.Data <- .Object@pars[1] + .Object@pars[2] * qnorm(runif(iter, pnorm((0 - .Object@pars[1]) / .Object@pars[2]), pnorm(Inf))) 
+            }
+            
+            if (grepl("^log?.normal", .Object@density)) {
+                .Object@.Data <- rlnorm(iter, meanlog = .Object@pars[1], sdlog = .Object@pars[2])    
+            }
+            
+            if (grepl("^gamma", .Object@density)) {
+                .Object@.Data <- rgamma(iter, shape = .Object@pars[1], scale = .Object@pars[2])    
+            }
+            
+            if (grepl("^logit?.normal", .Object@density)) {
+                .Object@.Data <- rlogitnorm(iter, mu = .Object@pars[1], sigma = .Object@pars[2])    
+            }
+        } else {
+            #cli_alert_warning("'iter' argument must be >0 for simulation of values")
         }
     }
     
@@ -126,13 +141,27 @@ setMethod("initialize", "distribution", function(.Object, ...) {
 setMethod("show", "distribution",
           function(object) {
               message(blue("distribution object class"))
-              message("iter: ", object@iter)
               message("density: ", object@density)
               message("pars: ", paste(round(object@pars, 3), collapse = ", "))
               message("values: ", if (length(object@.Data) == 0 | all(is.na(object@.Data))) red("EMPTY") else if (length(object@.Data) > 14) paste0(c(round(object@.Data[1:12], 3), "...", round(object@.Data[length(object@.Data)], 3)), collapse = ", ") else paste0(round(object@.Data, 3), collapse = ", "))
               message("name: ", if (length(object@name) == 0) "--" else object@name)
               message("\t")
         })
+# }}}
+# {{{
+setMethod("[<-",
+          signature(x = "distribution", i = "ANY", j = "missing", value = "numeric"),
+          function(x, i, value) {
+              
+              if (missing(i)) {
+                  x@.Data    <- value
+              } else {
+                  x@.Data[i] <- value
+              }
+              
+              return(x)
+          }
+)
 # }}}
 
 # distribution-specific functions
@@ -148,6 +177,29 @@ setMethod("show", "distribution",
 }
 
 .show_uniform_moments <- function(x) {
+    
+    a <- x[1]
+    b <- x[2]
+    
+    # return
+    c('E[x]' = round((a + b) / 2, 5), 'VAR[x]' = round(((b - a)^2) / 12, 5), 'CV[x]' = round(sqrt(((b - a)^2) / 12) / ((a + b) / 2), 5))
+}
+
+.calc_intuniform_pars <- function(x) {
+    
+    # 
+    a <- min(x)
+    b <- max(x)
+    
+    if (!(a %% 1 == 0 & b %% 1 == 0)) {
+        cli_abort("'int-uniform' distribution requires integer 'a' and 'b' parameters")
+    }
+    
+    # return
+    return(c(a, b))
+}
+
+.show_intuniform_moments <- function(x) {
     
     a <- x[1]
     b <- x[2]

@@ -6,38 +6,41 @@
 \alias{distribution}
 \title{Class containing a probability distribution}
 \usage{
-distribution(...)
+distribution(values, pars, density, ...)
 }
 \arguments{
-\item{...}{optional input arguments: \code{values}, \code{name}, \code{pars}, \code{density}}
+\item{values}{vector of values to be stored in the object. If a \code{density} argument is also supplied, then parameters for that distribution are estimated from the \code{values} using maximum likelihood.}
+
+\item{pars}{vector of length two containing parameters for the parametric distribution specified by the \code{density} argument. If \code{pars} are provided but no \code{density} then this generates a warning.}
+
+\item{density}{character string specifying the probability density (or mass) function. Can be one of \code{beta}, \code{int-uniform}, \code{uniform}, \code{normal}, \code{lognormal}, \code{logitnormal} or \code{gamma}.}
+
+\item{...}{optional \code{name} or \code{iter} arguments}
 }
 \description{
-This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution.
+This is an S4 object class that includes both a numeric vector for storage of values generated using Monte Carlo methods, and a list of parameters describing the associated parameteric distribution. Only a selection of two-parameter distributions are currently supported.
 }
 \details{
-The inputs determine how the distribution is initialised. If a vector of values are contained these are stored. If a distribution is named then parameters for this distribution are estimated. If the name of the distribution and parameters are given but no values then values are simulated.
+The inputs determine how the \code{distribution} object is initialised. If a vector of values are provided these are stored. If a distribution is also provided via the \code{density} argument then parameters for this distribution are estimated. Parameters can be provided without values via the combined \code{pars} and \code{density} arguments. If \code{pars}, \code{density} and \code{iter} are all provided then values are generated internally during initialisation of the object. 
+
+Monte Carlo simulation from the \code{distribution} object will depend on whether values are present. If present, they are sampled at random (i.e., non-parametrically) regardless of whether the distribution is specified. If values are missing, then parametric sampling is performed. Switching between parametric and non-parametric sampling is possible by adding or removing values.
 }
 \section{Slots}{
 
 \describe{
-\item{\code{.Data}}{numeric vector of derived values}
-
-\item{\code{iter}}{integer value}
+\item{\code{.Data}}{numeric vector of values}
 
 \item{\code{pars}}{distribution parameter values}
 
-\item{\code{density}}{probability density function}
+\item{\code{density}}{probability density (or mass) function}
 
 \item{\code{name}}{optional label}
 }}
 
-\note{
-density distribution specified by \code{density} argument can be one of \code{beta}, \code{uniform}, \code{normal}, \code{lognormal}, \code{logitnormal} or \code{gamma}
-}
 \examples{
 # create object containing
 # vector of values
-iter <- 1e5
+iter <- 1e3
 cv <- 0.2
 sd <- sqrt(log(1 + cv^2))
 mu <- log(1) - sd^2/2
@@ -47,31 +50,50 @@ y <- distribution(value = x, density = "lognormal")
 # show
 y
 
-# plot histogram
-hist(y)
-abline(v = mean(y), col = 2)
-
 # summarise
 summary(y)
 
+# when values are provided
+# then sampling is non-parametric
+all(sample(y, size = length(y)) \%in\% x)
+ 
 # create object
 # without values
-y <- distribution(pars = c(mu, sd), density = "lognormal")
+z <- distribution(pars = c(mu, sd), density = "lognormal")
 
-# summarise
-summary(y)
+# with no values the
+# sampling is parametric
+all(sample(z, size = length(y)) \%in\% x)
 
-# plot
+# plotting will show histogram
+# if values are present
 plot(y)
+plot(z)
 
-# parametric sampling
-hist(sample(y, size = 1e5))
+# object otherwise behaves
+# like a numeric vector:
+length(y)
+y[1:10] <- 3
+y 
 
-# non-parametric sampling
+# removing values from
+# object to allow parametric
+# sampling
+y[] <- numeric(0)
+y
+
+# if values are provided but no density
+# then sampling is always non-parametric
 z <- distribution(values = 0:10, density = "unspecified")
 sample(z, size = 3)
+
+# if pars are provided but no density
+# then no values can be simulated
+z <- distribution(pars = c(mu, sd))
+z
+try(sample(z, size = 3))
  
 }
 \seealso{
-\code{\link{sample}}
+\code{\link{sample}}, \code{\link{summary}}, \code{\link[om]{plot}}
 }

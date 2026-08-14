@@ -10,7 +10,7 @@ sample(x, size, ...)
 
 \method{sample}{distribution}(x, size = 1, ...)
 
-\method{sample}{numeric}(x, size = 1, ...)
+\method{sample}{numeric}(x, size = 1, replace = FALSE, ...)
 }
 \arguments{
 \item{x}{input distribution class object}
@@ -23,5 +23,23 @@ sample(x, size, ...)
 Overwrites the generic \code{sample} function to sample from a \code{distribution} class object.
 }
 \details{
-Monte-Carlo samples are generated from the parametric distribution contained in the \code{\link{distribution}} class object. If the distribution is \code{'unspecified'} then values are sampled from the values stored in the object (with replacement if necessary). If \code{x} is a numeric value rather than a distribution, then that value is return (this is designed to prevent the function from breaking when distributions are not specified).
+Monte-Carlo samples are generated from a \code{\link{distribution}} class object. If values are stored in the object then these are sampled non-parameterically (with replacement if necessary). If values are not present, and \code{pars} and \code{density} are specified in the object, then parametric sampling is performed.
+}
+\examples{
+# non-parametric
+# sampling
+x <- distribution(values = 1:3)
+sample(x, 3)
+
+# non-parametric
+# sampling
+x <- distribution(values = 1:3, density = "uniform")
+sample(x, 3)
+
+# parametric sampling
+x[] <- numeric()
+sample(x, 3)
+}
+\seealso{
+\code{\link{distribution}}
 }

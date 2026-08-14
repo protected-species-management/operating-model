@@ -4,8 +4,24 @@
 #' @param size sample size
 #' @param ... (ignored)
 #' @importFrom logitnorm rlogitnorm
-#' @importFrom cli cli_alert_warning
-#' @details Monte-Carlo samples are generated from the parametric distribution contained in the \code{\link{distribution}} class object. If the distribution is \code{'unspecified'} then values are sampled from the values stored in the object (with replacement if necessary). If \code{x} is a numeric value rather than a distribution, then that value is return (this is designed to prevent the function from breaking when distributions are not specified). 
+#' @importFrom cli cli_alert_warning cli_abort
+#' @details Monte-Carlo samples are generated from a \code{\link{distribution}} class object. If values are stored in the object then these are sampled non-parameterically (with replacement if necessary). If values are not present, and \code{pars} and \code{density} are specified in the object, then parametric sampling is performed.
+#' @seealso \code{\link{distribution}}
+#' @examples
+#' # non-parametric
+#' # sampling
+#' x <- distribution(values = 1:3)
+#' sample(x, 3)
+#' 
+#' # non-parametric
+#' # sampling
+#' x <- distribution(values = 1:3, density = "uniform")
+#' sample(x, 3)
+#' 
+#' # parametric sampling
+#' x[] <- numeric()
+#' sample(x, 3)
+
 #' @export
 sample <- function(x, size, ...) UseMethod("sample")
 #' @rdname sample
@@ -14,7 +30,7 @@ sample.distribution <- function(x, size = 1, ...) {
     
     # if only a single value then
     # return this value
-    if (x@iter == 1) {
+    if (length(x@.Data) == 1) {
         
         return(rep(x@.Data, times = size)) 
         
@@ -22,7 +38,7 @@ sample.distribution <- function(x, size = 1, ...) {
         
         # if a vector of values is stored then sample
         # from this vector (non-parametric)
-        if (x@iter > 1 & size >= 1) {
+        if (length(x@.Data) > 1 & size >= 1) {
             
             if (size <= length(x@.Data)) {
                 return(x@.Data[sample.int(length(x@.Data), size = size, replace = FALSE)])
@@ -32,7 +48,8 @@ sample.distribution <- function(x, size = 1, ...) {
             
         } else {
             
-            stopifnot(!any(is.na(x@pars)))
+            if (any(is.na(x@pars))) cli_abort("'@pars' is empty")
+            if (x@density == "unspecified") cli_abort("'@density' is unspecified")
             
             y <- NA_real_
             
@@ -40,6 +57,10 @@ sample.distribution <- function(x, size = 1, ...) {
             # distribution
             if (grepl("^uniform", x@density)) {
                 y <- runif(size, min = x@pars[1], max = x@pars[2])    
+            }
+            
+            if (grepl("^int?.uniform", x@density)) {
+                y <- (x@pars[1]:x@pars[2])[sample.int(length(x@pars[1]:x@pars[2]), size, replace = TRUE)]
             }
             
             if (grepl("^beta", x@density)) {
@@ -73,11 +94,16 @@ sample.distribution <- function(x, size = 1, ...) {
 }
 #' @rdname sample
 #' @exportS3Method om::sample
-sample.numeric <- function(x, size = 1, ...) {
+sample.numeric <- function(x, size = 1, replace = FALSE, ...) {
     
-	cli_alert_warning("Found empty parameter (no distribution)")
-	
-    return(x)
+    if (size <= length(x)) {
+        return(x[sample.int(length(x), size = size, replace = replace)])
+    } else {
+        if (!replace) {
+            cli_alert_warning("setting 'replace <- TRUE'")
+        }
+        return(x[sample.int(length(x), size = size, replace = TRUE)])
+    }
 }
 
 

@@ -18,5 +18,5 @@ load_bias(object, value, ...)
 \item{...}{arguments for the generic function definition}
 }
 \description{
-Load bias into \code{\link{om-class}} object for stochastic projection.
+Load bias into \code{\link{om}} class object for stochastic projection.
 }

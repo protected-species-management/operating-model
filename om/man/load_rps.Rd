@@ -17,7 +17,7 @@ load_rps(object, value, ...)
 \item{...}{arguments for the generic function definition}
 }
 \description{
-Load management targets into \code{\link{om-class}} object. These can be the Maximum Net Productivity Level (MNPL) and corresponding harvest rate and depletion values.
+Load management targets into \code{\link{om}} class object. These can be the Maximum Net Productivity Level (MNPL) and corresponding harvest rate and depletion values.
 }
 \details{
 Targets are assumed to be known without error, and used to measure outcome of the population projection.

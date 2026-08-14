@@ -19,7 +19,7 @@ sample(x, size, ...)
 
 \item{...}{(ignored)}
 
-\item{replace}{logical indicating whether values should be sampled with replacement (set to 'replace = TRUE' if \code{size} is greater than the number of values stored in the object). Only used for non-parametric sampling.}
+\item{replace}{logical indicating whether values should be sampled with replacement (set to \code{'replace = TRUE'} if \code{size} is greater than the number of values stored in the object). Only used for non-parametric sampling.}
 }
 \description{
 Overwrites the generic \code{sample} function to sample from a \code{distribution} class object.

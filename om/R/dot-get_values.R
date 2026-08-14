@@ -6,11 +6,11 @@
 #' @param object \code{om} class object
 #' @param env environment into which values should be returned using \code{\link{assign}}
 #' @param ... (not used)
-#' @seealso \code{\link{get_settings}}, \code{\link{.get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}
+#' @seealso \code{\link{.get_settings}}, \code{\link{.get_dim}}, \code{\link{.get_seeds}}, \code{\link{.get_shape}}
 #' @importFrom methods slot
 #' @include om-class.R
-get_values <- function(object, ...) UseMethod("get_values")
-get_values.om <- function(object, env = environment(), ...) {
+.get_values <- function(object, ...) UseMethod(".get_values")
+.get_values.om <- function(object, env = environment(), ...) {
     
     ll <- object@pars
     

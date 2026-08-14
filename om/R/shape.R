@@ -11,7 +11,7 @@
 #' @param value numeric value or vector of length equal to \code{object@samples}
 #' @param ... arguments for the generic function definition
 #' @seealso \code{\link{rp}}
-#' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
+#' @include om-class.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R dot-epsilon.R dot-get_seeds.R dot-get_dim.R
 #' @import RTMB
 #' @importFrom cli cli_progress_step cli_progress_update
 #{{{ shape()
@@ -39,7 +39,7 @@ setMethod("shape", signature = c(object = "om", depletion = "numeric"), function
 	SAFE <- ifelse(safe, TRUE, FALSE)
 	
     # get seeds
-    get_seeds(object, env = ENV)
+    .get_seeds(object, env = ENV)
 	
     NITER      <- get("NITER")
     STOCHASTIC <- get("STOCHASTIC")

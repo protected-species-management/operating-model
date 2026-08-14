@@ -7,30 +7,30 @@
 #' @param object \code{om} class object
 #' @param env environment into which values should be returned using \code{\link{assign}}
 #' @param ... (not used)
-#' @seealso \code{\link{get_values}}, \code{\link{.get_dim}}, \code{\link{get_settings}}, \code{\link{get_shape}}
+#' @seealso \code{\link{.get_values}}, \code{\link{.get_dim}}, \code{\link{.get_settings}}, \code{\link{.get_shape}}
 #' @examples
 #' \dontrun{
 #' 
 #' om_object <- om(ages = 0:1, time = 1, samples = 3)
 #' 
-#' get_seeds(om_object, env = globalenv())
+#' .get_seeds(om_object, env = globalenv())
 #' rng_seed
 #' 
 #' ff <- function() { 
-#'     get_seeds(om_object, env = environment()); return(rng_seed) 
+#'     .get_seeds(om_object, env = environment()); return(rng_seed) 
 #' }
 #' ff()
 #' 
 #' ff <- function() { 
-#'     get_seeds(om_object, env = environment())
+#'     .get_seeds(om_object, env = environment())
 #'     unlist(lapply(rng_seed, function(x) { set.seed(x); rnorm(1) }))
 #' }
 #' ff()
 #' }
 #' @importFrom methods slot
 #' @include om-class.R
-get_seeds <- function(object, ...) UseMethod("get_seeds")
-get_seeds.om <- function(object, env = environment(), ...) {
+.get_seeds <- function(object, ...) UseMethod(".get_seeds")
+.get_seeds.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {
         assign("rng_seed", slot(get("object"), "seeds"), envir = env)

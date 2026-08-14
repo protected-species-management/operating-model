@@ -1,5 +1,5 @@
 # default population dynamics functions
-# (can use any values returned by get_values() and get_dim())
+# (can use any values returned by .get_values() and get_dim())
 .aspm <- function() {
     
     n    <- array(dim = c(nages, ntime))

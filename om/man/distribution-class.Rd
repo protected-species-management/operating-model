@@ -17,11 +17,11 @@ distribution(
 )
 }
 \arguments{
-\item{x}{= \code{distribution} class object}
+\item{x}{\code{distribution} class object}
 
 \item{i}{optional index value}
 
-\item{value}{numeric values to assign}
+\item{value}{numeric value or values to assign}
 
 \item{values}{vector of values to be stored in the object. If a \code{density} argument is also supplied, then parameters for that distribution are estimated from the \code{values} using maximum likelihood.}
 
@@ -82,17 +82,18 @@ all(sample(z, size = length(y)) \%in\% x)
 # plotting will show histogram
 # if values are present
 plot(y)
-plot(z)
 
 # object otherwise behaves
-# like a numeric vector:
+# like a numeric vector
+# e.g.:
 length(y)
+mean(y)
 y[1:10] <- 3
 y 
 
 # removing values from
-# object to allow parametric
-# sampling
+# object can be used to
+# invoke parametric sampling
 y[] <- numeric(0)
 y
 

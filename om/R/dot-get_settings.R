@@ -6,7 +6,7 @@
 #' @param object \code{om} class object
 #' @param env environment into which values should be returned using \code{\link{assign}}
 #' @param ... (not used)
-#' @seealso \code{\link{get_values}}, \code{\link{.get_dim}}, \code{\link{get_seeds}}, \code{\link{get_shape}}, \code{\link{settings}}
+#' @seealso \code{\link{.get_values}}, \code{\link{.get_dim}}, \code{\link{.get_seeds}}, \code{\link{.get_shape}}, \code{\link{settings}}
 #' @examples
 #' \dontrun{
 #' om_object <- om(ages = 0:1, time = 11, samples = 3)
@@ -16,7 +16,7 @@
 #' om_object@settings
 #' 
 #' # return to global environment
-#' get_settings(om_object, env = globalenv())
+#' .get_settings(om_object, env = globalenv())
 #' 
 #' # coefficients of variation for
 #' # stochastic projection
@@ -40,8 +40,8 @@
 #' }
 #' @importFrom methods slot
 #' @include om-class.R
-get_settings <- function(object, ...) UseMethod("get_settings")
-get_settings.om <- function(object, env = environment(), ...) {
+.get_settings <- function(object, ...) UseMethod(".get_settings")
+.get_settings.om <- function(object, env = environment(), ...) {
     
     if (is.environment(env)) {
         lapply(names(object@settings), function(x) assign(x, slot(get("object"), "settings")[[x]], envir = env))

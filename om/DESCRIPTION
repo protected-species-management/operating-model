@@ -1,8 +1,8 @@
 Package: om
 Type: Package
 Title: Operating model
-Version: 0.2.7
-Date: 13-Aug-2026
+Version: 0.2.8
+Date: 14-Aug-2026
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation model for the evaluation of protected species reference points.

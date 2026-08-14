@@ -2,6 +2,7 @@
 #' @description Overwrites the generic \code{sample} function to sample from a \code{distribution} class object.
 #' @param x input distribution class object
 #' @param size sample size
+#' @param replace logical indicating whether values should be sampled with replacement (set to 'replace = TRUE' if \code{size} is greater than the number of values stored in the object). Only used for non-parametric sampling. 
 #' @param ... (ignored)
 #' @importFrom logitnorm rlogitnorm
 #' @importFrom cli cli_alert_warning cli_abort
@@ -26,7 +27,7 @@
 sample <- function(x, size, ...) UseMethod("sample")
 #' @rdname sample
 #' @exportS3Method om::sample
-sample.distribution <- function(x, size = 1, ...) {
+sample.distribution <- function(x, size = 1, replace, ...) {
     
     # if only a single value then
     # return this value
@@ -39,15 +40,25 @@ sample.distribution <- function(x, size = 1, ...) {
         # if a vector of values is stored then sample
         # from this vector (non-parametric)
         if (length(x@.Data) > 1 & size >= 1) {
-            
             if (size <= length(x@.Data)) {
-                return(x@.Data[sample.int(length(x@.Data), size = size, replace = FALSE)])
+				if (!missing(replace)) {
+					return(x@.Data[sample.int(length(x@.Data), size = size, replace = replace)])
+				} else {
+					cli_alert_warning("sampling with 'replace = FALSE'")
+					return(x@.Data[sample.int(length(x@.Data), size = size, replace = FALSE)])
+				}
             } else {
+				if (!missing(replace)) {
+					if (!isTRUE(replace)) {
+						cli_alert_warning("sampling with 'replace = TRUE'")
+					}
+				}
                 return(x@.Data[sample.int(length(x@.Data), size = size, replace = TRUE)])
             }
             
         } else {
             
+			if (!missing(replace)) cli_alert_warning("'replace' argument is ignored")
             if (any(is.na(x@pars))) cli_abort("'@pars' is empty")
             if (x@density == "unspecified") cli_abort("'@density' is unspecified")
             
@@ -99,7 +110,7 @@ sample.numeric <- function(x, size = 1, replace = FALSE, ...) {
     if (size <= length(x)) {
         return(x[sample.int(length(x), size = size, replace = replace)])
     } else {
-        if (!replace) {
+        if (!isTRUE(replace)) {
             cli_alert_warning("setting 'replace <- TRUE'")
         }
         return(x[sample.int(length(x), size = size, replace = TRUE)])

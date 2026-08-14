@@ -2,8 +2,6 @@
 
 S3method(base::plot,distribution)
 S3method(base::summary,distribution)
-S3method(distribution,character)
-S3method(distribution,numeric)
 S3method(dynplot,om)
 S3method(objplot,om)
 S3method(om::expectation,distribution)

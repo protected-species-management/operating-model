@@ -95,5 +95,5 @@ try(sample(z, size = 3))
  
 }
 \seealso{
-\code{\link{sample}}, \code{\link{summary}}, \code{\link[om]{plot}}
+\code{\link{sample}}, \code{\link{summary}}, \code{\link{plot}}
 }

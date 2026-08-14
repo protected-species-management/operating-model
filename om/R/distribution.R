@@ -62,13 +62,7 @@
 #' @include distribution-class.R sample.distribution.R
 #' @importFrom methods new
 #' @export
-distribution <- function(values, pars, density, ...) UseMethod("distribution")
-#' @export
-distribution.numeric <- function(values = NA_real_, pars = c(NA_real_, NA_real_), density = "unspecified", ...) new("distribution", values = values, pars = pars, density = density, ...)
-#' @export
-distribution.character <- function(density = "unspecified", values = NA_real_, pars = c(NA_real_, NA_real_), ...) new("distribution", values = values, pars = pars, density = density, ...)
-    
-# functionality
-# add vector plus distribution -> calculate parameters
-# add distribution plus pars <- simulate vector
+distribution <- function(values, pars, density, ...) new("distribution", values = values, pars = pars, density = density, ...)
+
+
 

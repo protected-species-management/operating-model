@@ -5,7 +5,7 @@
 #' The inputs determine how the \code{distribution} object is initialised. If a vector of values are provided these are stored. If a distribution is also provided via the \code{density} argument then parameters for this distribution are estimated. Parameters can be provided without values via the combined \code{pars} and \code{density} arguments. If \code{pars}, \code{density} and \code{iter} are all provided then values are generated internally during initialisation of the object. 
 #' 
 #' Monte Carlo simulation from the \code{distribution} object will depend on whether values are present. If present, they are sampled at random (i.e., non-parametrically) regardless of whether the distribution is specified. If values are missing, then parametric sampling is performed. Switching between parametric and non-parametric sampling is possible by adding or removing values. 
-#' @seealso \code{\link{sample}}, \code{\link{summary}}, \code{\link[om]{plot}}
+#' @seealso \code{\link{sample}}, \code{\link{summary}}, \code{\link{plot}}
 #' @slot .Data numeric vector of values
 #' @slot pars  distribution parameter values
 #' @slot density  probability density (or mass) function
@@ -149,6 +149,7 @@ setMethod("show", "distribution",
         })
 # }}}
 # {{{
+#' @rdname distribution
 setMethod("[<-",
           signature(x = "distribution", i = "ANY", j = "missing", value = "numeric"),
           function(x, i, value) {

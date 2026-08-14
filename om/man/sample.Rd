@@ -8,7 +8,7 @@
 \usage{
 sample(x, size, ...)
 
-\method{sample}{distribution}(x, size = 1, ...)
+\method{sample}{distribution}(x, size = 1, replace, ...)
 
 \method{sample}{numeric}(x, size = 1, replace = FALSE, ...)
 }
@@ -18,6 +18,8 @@ sample(x, size, ...)
 \item{size}{sample size}
 
 \item{...}{(ignored)}
+
+\item{replace}{logical indicating whether values should be sampled with replacement (set to 'replace = TRUE' if \code{size} is greater than the number of values stored in the object). Only used for non-parametric sampling.}
 }
 \description{
 Overwrites the generic \code{sample} function to sample from a \code{distribution} class object.

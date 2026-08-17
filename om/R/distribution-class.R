@@ -35,10 +35,16 @@ setMethod("initialize", "distribution", function(.Object, ...) {
         f2 <- function(x, y) if(!is.null(x)) x else y
         
         # assignments
-        .Object@.Data   <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^value?", y) & is.numeric(x[[y]])))))]], .Object@.Data)
+        .Object@.Data   <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^value?", y) & is.numeric(x[[y]])))))]],   .Object@.Data)
         .Object@density <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^dens*", y)  & is.character(x[[y]])))))]], .Object@density)
-        .Object@pars    <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^par?", y)   & is.numeric(x[[y]]) & length(x[[y]]) == 2))))]], .Object@pars)
+        .Object@pars    <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^par?", y)   & is.numeric(x[[y]])))))]],   .Object@pars)
         .Object@name    <- f2(x[[f1(which(unlist(lapply(names(x), function(y) grepl("^name?", y)  & is.character(x[[y]])))))]], .Object@name)
+        
+        # check pars
+        if (length(.Object@pars) > 2) {
+            cli_alert_danger("length(pars) > 2")
+            .Object@pars <- c(NA_real_, NA_real_)
+        }
         
         # get iterations
         if (any(grepl("^iter*", names(x)))) {

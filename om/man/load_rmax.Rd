@@ -4,24 +4,24 @@
 \alias{load_rmax}
 \alias{load_rmax,om,distribution-method}
 \alias{load_rmax,om,missing-method}
-\title{load rmax}
+\title{Load maximum intrinsic growth parameter}
 \usage{
 load_rmax(object, value, ...)
 
 \S4method{load_rmax}{om,distribution}(object, value)
 
-\S4method{load_rmax}{om,missing}(object, value, ...)
+\S4method{load_rmax}{om,missing}(object, value)
 }
 \arguments{
-\item{object}{\code{om} class object}
+\item{object}{\code{om} class object.}
 
-\item{value}{\code{distribution} class object}
+\item{value}{\code{distribution} class object. If no value is provided, the distribution is obtained directly from the life-history parameters stored in the object.}
 
-\item{...}{arguments for the generic function definition}
+\item{...}{arguments for the generic function definition.}
 }
 \description{
-Load \eqn{r_{max}} into the \code{pars} slot of an \code{om-class} object.
+Load \eqn{r_{max}} into the \code{pars} slot of an \code{\link{om}} class object.
 }
 \details{
-The intrinsic growth rate is assumed to have normal distribution. It is converted to a zero-truncated normal on assignment because the maximum growth rate is always assumed to be greater than zero (i.e., \eqn{\lambda > 1}).
+The intrinsic growth rate is assumed to have normal distribution. It is converted to a zero-truncated normal on assignment because the maximum growth rate is always assumed to be greater than zero (i.e., \eqn{r_{max} > 0}).
 }

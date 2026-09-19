@@ -1,6 +1,6 @@
 #' @title Load bias 
 #' @aliases load_biases
-#' @description Load bias into \code{\link{om-class}} object for stochastic projection.
+#' @description Load bias into \code{\link{om}} class object for stochastic projection.
 #' @param object \code{om} class object
 #' @param value named list object containing values for \code{observation} or \code{mortality}. 
 #' @param ... arguments for the generic function definition

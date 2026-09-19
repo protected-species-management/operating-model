@@ -3,7 +3,6 @@
 #' @param value_to column header for array value
 #' @param dim.names list of dimension names
 #' @importFrom tibble as_tibble
-#' @export
 array2dfr <- function(object, value_to = "value", dim.names = list()) {
     
     # check and correct length of dim.names vectors

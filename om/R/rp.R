@@ -2,14 +2,14 @@
 #' @description 
 #' Calculate the Maximum Net Productivity reference points.
 #' @param object \code{om} class object
-#' @param stochastic logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})
+#' @param stochastic logical value indicating whether stochastic production function should be calculated (defaults to value in \code{object@settings$ref_points})
 #' @param time equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})
-#' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})
+#' @param iterations numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{object@settings$ref_points})
 #' @param verbose logical value indicating whether values \code{stochastic}, \code{time} or \code{iterations} should be printed
 #' @param ... arguments for the generic function definition
-#' @note This function would typically be preceded by a call to [shape()], which estimates the shape parameter necessary for definition of the production function. 
+#' @note This function would typically be preceded by a call to \code{\link{shape}}, which estimates the shape parameter necessary for definition of the production function. 
 #' @seealso \code{\link{shape}} \code{\link{targets}}
-#' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R
+#' @include om-class.R distribution-class.R distribution.R sample.distribution.R dot-pdyn.R dot-check.R dot-logit.R dot-survivorship.R dot-epsilon.R dot-get_seeds.R dot-get_dim.R
 #' @import RTMB
 #' @importFrom cli cli_progress_step cli_progress_update
 #{{{ rp()
@@ -30,10 +30,10 @@ setMethod("rp", signature = "om", function(object, stochastic, time, iterations,
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, ref_points = TRUE, env = ENV)
+    .get_dim(object, ref_points = TRUE, env = ENV)
     
     # get seeds
-    get_seeds(object, env = ENV)
+    .get_seeds(object, env = ENV)
 	
 	NITER      <- get("NITER")
 	STOCHASTIC <- get("STOCHASTIC")

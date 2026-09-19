@@ -18,5 +18,5 @@ load_cvs(object, value, ...)
 \item{...}{arguments for the generic function definition}
 }
 \description{
-Load coefficients of variation into \code{\link{om-class}} object for stochastic projection and (optionally) reference point estimation.
+Load coefficients of variation into \code{\link{om}} class object for stochastic projection and (optionally) reference point estimation.
 }

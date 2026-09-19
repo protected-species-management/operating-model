@@ -15,7 +15,7 @@
 \alias{pars,om-method}
 \alias{settings,om-method}
 \alias{numbers,om-method}
-\title{Access outputs from operating model object.}
+\title{Access slots within an \code{om} object.}
 \usage{
 targets(object, ...)
 
@@ -34,10 +34,41 @@ targets(object, ...)
 \S4method{numbers}{om}(object)
 }
 \arguments{
-\item{object}{\code{\link{om-class}} object.}
+\item{object}{\code{\link{om}} class object.}
 
 \item{...}{arguments for the generic function definition}
 }
 \description{
-Access outputs stored in \code{\link{om-class}} object following call to \code{\link{pdyn}}.
+Access information stored in \code{\link{om}} object. The same information can be accessed in raw format using \code{object@<function>}.
+}
+\examples{
+
+# error messages are
+# generated when applied
+# to an empty object
+om_object <- om(ages = 0:1, time = 1, samples = 3)
+
+targets(om_object)
+objectives(om_object)
+diagnostics(om_object)
+pst(om_object)
+
+# an empty object has
+# the following settings
+# by default
+settings(om_object)
+
+# when slots have values
+# they can be retrieved
+targets(om_hdo)
+pars(om_hdo)
+
+# some slots are empty
+# until a projection 
+# has been performed
+pst(om_hdo)
+pst(pdyn(om_hdo))
+diagnostics(om_hdo)
+diagnostics(pdyn(om_hdo))
+
 }

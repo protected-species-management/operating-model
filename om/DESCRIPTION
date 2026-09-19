@@ -1,8 +1,8 @@
 Package: om
 Type: Package
 Title: Operating model
-Version: 0.2.2
-Date: 2026-08-11
+Version: 0.3.1
+Date: 14-Aug-2026
 Author: Charles T T Edwards
 Maintainer: Charles T T Edwards <cescapecs@gmail.com>
 Description: Simulation model for the evaluation of protected species reference points.
@@ -29,20 +29,23 @@ Suggests:
 Collate: 
     'array2dfr.R'
     'om-class.R'
-    'get_dim.R'
+    'dot-get_dim.R'
     'accessors.R'
-    'biomass.R'
+    'data.R'
     'distribution-class.R'
     'sample.distribution.R'
     'distribution.R'
     'dot-check.R'
     'dot-el.R'
     'dot-epsilon.R'
+    'dot-get_seeds.R'
+    'dot-get_settings.R'
+    'dot-get_shape.R'
+    'dot-get_values.R'
     'dot-logit.R'
     'dot-pdyn.R'
     'dot-survivorship.R'
     'dynplot.R'
-    'get_values.R'
     'lambda.R'
     'load_bias.R'
     'load_cvs.R'
@@ -68,3 +71,4 @@ Config/testthat/edition: 3
 URL: https://github.com/protected-species-management/operating-model/om
 BugReports: https://github.com/protected-species-management/operating-model/issues
 Config/roxygen2/version: 8.1.0
+LazyData: true

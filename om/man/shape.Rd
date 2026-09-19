@@ -33,9 +33,9 @@ shape(object, ...) <- value
 
 \item{...}{arguments for the generic function definition}
 
-\item{stochastic}{logical value indicating whether stochastic production function should be calculated (defaults to value in \code{settings$ref_points})}
+\item{stochastic}{logical value indicating whether stochastic production function should be calculated (defaults to value in \code{object@settings$ref_points})}
 
-\item{time}{equilibrium time horizon over which values are calculated (defaults to value in \code{settings$ref_points})}
+\item{time}{equilibrium time horizon over which values are calculated (defaults to value in \code{object@settings$ref_points})}
 
 \item{iterations}{numeric value indicating number of iterations for when \code{stochastic = TRUE} (defaults to value in \code{settings$ref_points})}
 

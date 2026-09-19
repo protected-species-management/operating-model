@@ -30,7 +30,7 @@ objplot.om <- function(object, ..., pars = 'depletion', labels) {
     
     for (mdl in 1:length(y)) {
         
-        get_dim(y[[mdl]], env = environment())
+        .get_dim(y[[mdl]], env = environment())
 		
 		NITER <- get("NITER")
 		time  <- get("time")

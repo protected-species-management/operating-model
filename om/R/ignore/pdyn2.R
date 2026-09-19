@@ -23,7 +23,7 @@ setMethod("pdyn", signature = "om", function(object, ...) {
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, env = ENV)
+    .get_dim(object, env = ENV)
     
     # get data
     get_data(object, env = ENV)

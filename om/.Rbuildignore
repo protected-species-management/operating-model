@@ -1,4 +1,5 @@
-^vignettes/*.Rmd
 ^R/ignore/*.R
 ^..Rcheck
+^Makefile
+^data-raw
 

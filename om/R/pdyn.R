@@ -8,8 +8,8 @@
 #' @param verbose logical value (defaults to FALSE)
 #' @param use_rmax logical value (defaults to TRUE)
 #' @param ... arguments for the generic function definition
-#' @details Reference points are always estimated using \eqn{r_{max}}, meaning that projections that use \eqn{r_{max}} have better behavioural properties when examined relative to reference point values. This is because the \eqn{\theta} shape parameter has been estimated per sample and will therefore be correctly correlated with the samples from the distribution of \eqn{r_{max}} values. However, it is also possible to project the dynamics using \eqn{r}, which is provided as a separate and independent distribution to the dynamics equation. This is helpful for robustness testing when it may be assumed that the population is currently not in it's optimal state, meaning that \eqn{r < r_{max}}. Note however, that the PST is always calculated using \eqn{r_{max}}, and if \eqn{r} is used for the population dynamics, then the this will decouple the assumed \eqn{r_{max}} from the true \eqn{r} value.   
-#' @include om-class.R get_dim.R dot-survivorship.R
+#' @note Reference points are always estimated using \eqn{r_{max}}, meaning that projections that use \eqn{r_{max}} have better behavioural properties when examined relative to reference point values. This is because the \eqn{\theta} shape parameter has been estimated per sample and will therefore be correctly correlated with the samples from the distribution of \eqn{r_{max}} values. However, it is also possible to project the dynamics using \eqn{r} by setting \code{use_rmax = FALSE}. In this case \eqn{r} is provided as a separate and independent distribution to the dynamics equation. This is helpful for robustness testing when it may be assumed that the population is currently not in it's optimal state, meaning that \eqn{r < r_{max}}. Note however, that the PST is always calculated using \eqn{r_{max}}, and if \eqn{r} is used for the population dynamics, then this will decouple the assumed \eqn{r_{max}} from the true \eqn{r} value.   
+#' @include om-class.R dot-get_dim.R dot-survivorship.R dot-epsilon.R dot-get_shape.R dot-get_seeds.R
 #' @importFrom cli cli_progress_step cli_progress_update cli_alert_warning
 #' @importFrom logitnorm rlogitnorm
 #' @importFrom stats rlnorm rnorm runif optimise
@@ -36,13 +36,13 @@ setMethod("pdyn", signature = "om", function(object, stochastic, iterations, tim
     # load time, age and
     # iteration dimensions
     # into function environment
-    get_dim(object, projection = TRUE, env = ENV)
+    .get_dim(object, projection = TRUE, env = ENV)
     
     # get seeds
-    get_seeds(object, env = ENV)
+    .get_seeds(object, env = ENV)
     
     # get shape
-    get_shape(object, env = ENV)
+    .get_shape(object, env = ENV)
     
     NITER <- get("NITER")
     SITER <- get("SITER")

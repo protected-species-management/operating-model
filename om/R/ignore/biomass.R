@@ -17,7 +17,7 @@ setMethod("biomass", signature = "om",function(object, type) {
         object <- pdyn(object)
     }
 
-    get_dim(object, environment())
+    .get_dim(object, environment())
     
     NITER <- get("NITER")
     NTIME <- get("NTIME")

@@ -23,5 +23,5 @@ update_pars(object, value, ...)
 \item{...}{arguments for the generic function definition}
 }
 \description{
-Load or update parameters in \code{\link{om-class}} object. Each parameter should be provided as a \code{\link{distribution-class}}.
+Load or update parameters in \code{\link{om}} class object. Each parameter should be provided as a \code{\link{distribution-class}}.
 }

@@ -18,5 +18,5 @@ load_quantiles(object, value, ...)
 \item{...}{arguments for the generic function definition}
 }
 \description{
-Load observation quantile into \code{\link{om-class}} object for stochastic projection.
+Load observation quantile into \code{\link{om}} class object for stochastic projection.
 }

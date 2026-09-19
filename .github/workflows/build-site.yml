@@ -1,0 +1,75 @@
+name: Build site
+on:
+  workflow_dispatch:
+  push:
+    paths: ["R/**"]
+
+permissions:
+  contents: write
+
+jobs:
+  build-site:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'latest'
+          use-public-rspm: true
+          
+      - name: Install Boost Headers
+        run:  sudo apt update -y && sudo apt install -y libboost-all-dev
+        
+      - name: Install pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+      
+      - name: Install dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            local::.
+            any::roxygen2
+            any::BH
+            any::Rcpp
+            any::RcppEigen
+            any::pkgdown
+          needs: |
+            roxygen2
+            website
+      
+      - name: Document
+        run: roxygen2::roxygenise()
+        shell: Rscript {0}
+        
+      - name: Commit and push document changes
+        run: |
+          git config --local user.name "$GITHUB_ACTOR"
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git add man/\* NAMESPACE DESCRIPTION
+          git commit -m "Update documentation" || echo "No changes to commit"
+          git pull
+          git push
+          
+      - name: Build site
+        run: |
+            pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        shell: Rscript {0}
+        
+      - name: Push site
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+           API_TOKEN_GITHUB: ${{ secrets.GIT_PAT_TOKEN }}
+        with:
+          source-directory: "docs"
+          target-directory: "."
+          destination-github-username: "protected-species-management"
+          destination-repository-name: "protected-species-management.github.io"
+          commit-message: "sync bdm site with io"
+          target-branch: main

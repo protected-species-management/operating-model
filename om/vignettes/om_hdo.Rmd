@@ -83,7 +83,7 @@ samples(om_object_subsample) <- 3
 dfr0 <- spf(om_object_subsample, harvest_rate = seq(0.00, max(om_object_subsample@targets$harvest_rate) * 2, length = 1001))
 dfr1 <- bind_rows(targets(om_object_subsample), .id = "rp") %>% tidyr::pivot_wider(names_from = rp) %>% mutate(sample = as.character(sample))
 
-gg1 <- ggplot(dfr, aes(harvest_rate, captures, col = sample))
+gg1 <- ggplot(dfr0, aes(harvest_rate, captures, col = sample))
 gg1 <- gg1 + 
 	geom_line() +
 	labs(x = "Harvest rate", y = "Equ. captures") +

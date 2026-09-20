@@ -71,5 +71,5 @@ jobs:
           target-directory: "."
           destination-github-username: "protected-species-management"
           destination-repository-name: "protected-species-management.github.io"
-          commit-message: "sync bdm site with io"
+          commit-message: "sync om with io"
           target-branch: main

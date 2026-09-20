@@ -45,21 +45,21 @@ jobs:
             website
       
       - name: Document
-        run: roxygen2::roxygenise()
+        run: roxygen2::roxygenise("om")
         shell: Rscript {0}
         
       - name: Commit and push document changes
         run: |
           git config --local user.name "$GITHUB_ACTOR"
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
-          git add man/\* NAMESPACE DESCRIPTION
+          git add om/man/\* om/NAMESPACE om/DESCRIPTION
           git commit -m "Update documentation" || echo "No changes to commit"
           git pull
           git push
           
       - name: Build site
         run: |
-            pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+            pkgdown::build_site_github_pages(pkg = "om", new_process = FALSE, install = FALSE)
         shell: Rscript {0}
         
       - name: Push site
@@ -67,7 +67,7 @@ jobs:
         env:
            API_TOKEN_GITHUB: ${{ secrets.GIT_PAT_TOKEN }}
         with:
-          source-directory: "docs"
+          source-directory: "om/docs"
           target-directory: "."
           destination-github-username: "protected-species-management"
           destination-repository-name: "protected-species-management.github.io"

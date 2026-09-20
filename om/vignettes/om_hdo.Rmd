@@ -28,7 +28,7 @@ library(ggplot2)
 library(ggpubr)
 ```
 
-# Operating model setup for Hector's dolphin
+# Setup
 
 ```{r}
 # set-up
@@ -69,8 +69,25 @@ om_object <- om_object %>% update_pars(list(
     'v' = distribution(pars = m_pars, density = "int-uniform", name = "age at selectivity"),
     'o' = distribution(pars = m_pars, density = "int-uniform", name = "age at observation")
 ))
+```
 
-# estimate ref. points
+# Check population growth
+```{r}
+# plot lambda and rmax
+dfr <- bind_rows(data.frame(value = exp(sample(om_object@pars$r, size = 1e6)), par = "lambda"), data.frame(value = sample(om_object@pars$rmax, size = 1e6), par = "r[MAX]"))
+
+gg <- ggplot(dfr) + 
+    geom_density(aes(x = value, fill = par, col = par), linewidth = 1, alpha = 0.5) + 
+    facet_wrap(~par, labeller = label_parsed, scales = "free_x") +
+    theme_bw(base_size = 12) + theme(axis.text.y = element_blank()) + 
+    labs(x = "Growth rate", y = "", fill = "", col = "") +
+    guides(fill = "none", col = "none")
+print(gg)
+```
+
+# Estimate reference points
+
+```{r}
 om_object <- om_object %>% shape(depletion = 0.6, stochastic = FALSE) %>% rp()
 targets(om_object)$depletion
 
@@ -99,24 +116,17 @@ gg2 <- gg2 +
     geom_point(data = dfr1, aes(x = depletion, y = captures, col = sample), alpha = 0.7, size = 2) +
     theme_bw(base_size = 18)
 
-gg <- ggarrange(gg1, gg2, ncol = 2)
+gg <- ggarrange(gg1, gg2, ncol = 2, common.legend = TRUE, legend = "bottom")
 print(gg)
+```
 
-# plot lambda and rmax
-dfr <- bind_rows(data.frame(value = exp(sample(om_object@pars$r, size = 1e6)), par = "lambda"), data.frame(value = sample(om_object@pars$rmax, size = 1e6), par = "r[MAX]"))
+# Project to equilibrium
 
-gg <- ggplot(dfr) + 
-    geom_density(aes(x = value, fill = par, col = par), linewidth = 1, alpha = 0.5) + 
-    facet_wrap(~par, labeller = label_parsed, scales = "free_x") +
-    theme_bw(base_size = 12) + theme(axis.text.y = element_blank()) + 
-    labs(x = "Growth rate", y = "", fill = "", col = "") +
-    guides(fill = "none", col = "none")
-print(gg)
-
+```{r}
 # load default uncertainty
 om_object <- om_object %>% load_cvs(list(
-    'survivorship' = 0.05,
-    'birth'        = 0.01,
+    'survivorship' = 0.15,
+    'birth'        = 0.05,
     'numbers'      = 0.00,
     'capture'      = 0.00)
 )

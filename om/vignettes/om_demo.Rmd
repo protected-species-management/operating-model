@@ -117,7 +117,7 @@ ggplot() +
   geom_point(data = dfr1, aes(x = depletion, y = captures, col = sample))
 ```
 
-When performing a stochastic projection, uncertainty is a consequence of the life-history parameter distributions only. By default, projections take place assuming a harvest rate equal the harvest rate at MNPL:
+When performing a deterministic projection, uncertainty is a consequence of the life-history parameter distributions only. By default, projections take place assuming a harvest rate equal the harvest rate at MNPL:
 ```{r}
 om_object0@harvest_rate
 ```

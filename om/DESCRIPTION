@@ -26,7 +26,8 @@ Suggests:
     knitr (>= 1.31),
     testthat (>= 3.0),
     kableExtra (>= 1.3),
-	ggpubr (>= 1.0)
+	ggpubr (>= 1.0),
+	formatR (>= 1.14)
 Collate: 
     'array2dfr.R'
     'om-class.R'

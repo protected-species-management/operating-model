@@ -17,5 +17,9 @@ First, install `remotes` packages from CRAN:
 Then install `om` directly from GitHub:
 
     # remotes command to get om from GitHub
-    remotes::install_github("protected-species-management/operating-model") 
+    remotes::install_github("protected-species-management/operating-model", subdir = "om") 
 
+The `om` package uses [RTMB](https://github.com/kaskr/RTMB), which can be installed from CRAN using:
+    
+    # Install RTMB
+    install.packages("RTMB")

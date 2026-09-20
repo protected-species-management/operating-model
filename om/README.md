@@ -1,6 +1,6 @@
 om
 ==
-![logo](man/figures/logo.png)
+![logo](man/figures/logo.png){width=300px}
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/protected-species-management/operating-model/actions/workflows/r-cmd-check.yml/badge.svg)](https://github.com/protected-species-management/operating-model/actions/workflows/r-cmd-check.yml)

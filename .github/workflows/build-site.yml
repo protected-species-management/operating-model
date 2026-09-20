@@ -68,7 +68,6 @@ jobs:
            API_TOKEN_GITHUB: ${{ secrets.GIT_PAT_TOKEN }}
         with:
           source-directory: "om/docs"
-          target-directory: "."
           destination-github-username: "protected-species-management"
           destination-repository-name: "protected-species-management.github.io"
           commit-message: "sync om with io"

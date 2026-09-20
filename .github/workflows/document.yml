@@ -2,7 +2,7 @@ name: Document
 on:
   workflow_dispatch:
   push:
-    paths: ["om/DESCRIPTION", "om/NAMESPACE", ]
+    paths: ["om/DESCRIPTION", "om/NAMESPACE"]
 
 permissions:
   contents: write

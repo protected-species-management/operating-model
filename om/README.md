@@ -1,8 +1,5 @@
-om
+om <p align="right"> <img src="man/figures/logo.png" alt="Package hexSticker" width="200" height="200"/></p>
 ==
-<p align="right">
-  <img src="man/figures/logo.png" alt="Package hexSticker" width="200" height="230"/>
-</p>
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/protected-species-management/operating-model/actions/workflows/r-cmd-check.yml/badge.svg)](https://github.com/protected-species-management/operating-model/actions/workflows/r-cmd-check.yml)

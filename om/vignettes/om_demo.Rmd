@@ -26,7 +26,10 @@ library(dplyr)
 library(ggplot2)
 ```
 
-Setup om-class object for age-based operating model
+## Setup
+
+Setup operating model class object, assuming 3 samples from the input life-history distribution and a default projection period of 200 years. 
+ 
 ```{r}
 om_object <- om(ages = 0:12, samples = 3L, time = 201)
 ```
@@ -45,28 +48,38 @@ om_object <- om_object %>% load_pars(list(
 ))
 ```
 
-The intrinsic growth rate is calculated automatically when parameters are assigned:
+Each parameter is stored as a `distribution` class object and assigned to the `om_object@pars` slot. A simple plotting function can be used to quickly visualise the parameter input distributions. For example:
+```{r}
+plot(om_object@pars$s)
+```
+
+The intrinsic growth rate is calculated automatically when parameters are assigned and stored in `om_object@pars$r`. There exists a `lambda()` function for extracting the intrinsic growth on either the natural or logarithmic scale. For example:
 ```{r}
 plot(lambda(om_object))
 ```
 
-The intrinsic growth can be assumed to be the maximum, or an alternative can be supplied:
+The intrinsic growth can be assumed to be the maximum, or an alternative can be supplied. The default behaviour assigns `om_object@pars$r` to `om_object@pars$rmax` but truncates the distribution at zero:
 ```{r}
 om_object <- om_object %>% load_rmax()
-```
 
-Assumed to be a zero-truncated normal:
-```{r}
 plot(om_object@pars$rmax)
 ```
 
+To estimate the reference points, we are also required to load the observation and selectivity paramter distributions:
 ```{r}
 om_object <- om_object %>% update_pars(list(
     'o' = distribution(value = 1, name = "age at observation"),
-    'v' = distribution(value = 4, name = "age at selectivity"),
-    'K' = distribution(value = 1, name = "carrying capacity")
+    'v' = distribution(value = 4, name = "age at selectivity")
 ))
+```
 
+By default the 1+ carrying capacity is set to one:
+```{r}
+om_object@pars$K
+```
+
+For the projections, uncertainty is required:
+```{r}
 # load uncertainty
 om_object <- om_object %>% load_cvs(list(
     'survivorship' = 0.05,
@@ -76,14 +89,22 @@ om_object <- om_object %>% load_cvs(list(
 )
 ```
 
+## Fixed shape
+
+Given the input parameter distributions, the shape parameter determines the depeletion at MNPL. This can be illustrated using a fixed shape value. 
+
 ```{r}
 # assume shape
 shape(om_object) <- 1
 
 # deterministic ref. points
 om_object0 <- rp(om_object, stochastic = FALSE, time = 200L)
-targets(om_object0)
 
+targets(om_object0)
+```
+
+The `spf()` function can be useful for plotting the surplus production functions being assumed by the model:
+```{r}
 dfr0 <- spf(om_object0, harvest_rate = seq(0.00, max(targets(om_object0)$harvest_rate$value) * 2, length = 101))
 dfr1 <-  data.frame(sample = as.character(1:om_object@samples), harvest_rate = om_object0@targets$harvest_rate, captures = om_object0@targets$captures, depletion = om_object0@targets$depletion)
 ggplot() + 
@@ -96,20 +117,33 @@ ggplot() +
   geom_point(data = dfr1, aes(x = depletion, y = captures, col = sample))
 ```
 
+When performing a stochastic projection, uncertainty is a consequence of the life-history parameter distributions only. By default, projections take place assuming a harvest rate equal the harvest rate at MNPL:
+```{r}
+om_object0@harvest_rate
+```
+
 ```{r}
 # population dynamics
 om_object0 <- pdyn(om_object0, stochastic = FALSE, initial_depletion = 0.1)
 dynplot(om_object0)
-
-#diagnostics(om_object0)
-#objectives(om_object0)
 ```
 
+Diagnostics are available per sample:
+```{r}
+diagnostics(om_object0)
+```
+
+## Estimated shape
+
+The shape can be estimated per life-history sample using the `shape` function, in which case the desired target depletion must be specified:
 ```{r}
 # estimate shape for assumed d_mnpl assumption
 om_object1 <- shape(om_object, depletion = 0.7, stochastic = FALSE, time = 200L)
 shape(om_object1)
+```
 
+As before reference points can be estimated and the surplus production function(s) plotted:
+```{r}
 # deterministic ref. points
 om_object1 <- rp(om_object1)
 targets(om_object1)
@@ -124,10 +158,12 @@ ggplot() +
   geom_line(data = dfr0, aes(x = depletion, y = captures, col = sample)) +
   geom_vline(data = dfr1, aes(xintercept = depletion, col = sample), linetype = "dashed") +
   geom_point(data = dfr1, aes(x = depletion, y = captures, col = sample))
+```
 
+Projection confirms that the population will converge on the depletion at MNPL specified during estimate of the shape:
+```{r}
 om_object1 <- pdyn(om_object1, stochastic = FALSE, initial_depletion = 0.3, use_rmax = TRUE)
 dynplot(om_object1)
 
-#diagnostics(om_object1)
-#objectives(om_object1)
+diagnostics(om_object1)
 ```

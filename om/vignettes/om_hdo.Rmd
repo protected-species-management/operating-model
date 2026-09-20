@@ -71,7 +71,7 @@ om_object <- om_object %>% update_pars(list(
 ))
 
 # estimate ref. points
-om_object <- om_object %>% shape(depletion = mnpl_default, stochastic = FALSE) %>% rp()
+om_object <- om_object %>% shape(depletion = 0.6, stochastic = FALSE) %>% rp()
 targets(om_object)$depletion
 
 # plot surplus production function

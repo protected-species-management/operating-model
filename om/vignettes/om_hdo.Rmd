@@ -28,6 +28,8 @@ library(ggplot2)
 library(ggpubr)
 ```
 
+# Operating model setup for Hector's dolphin
+
 ```{r}
 # set-up
 om_object <- om(ages = 0:12, samples = 30, time = 0:200)

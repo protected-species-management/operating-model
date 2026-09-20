@@ -2,7 +2,7 @@ name: Build site
 on:
   workflow_dispatch:
   push:
-    paths: ["R/**"]
+    paths: ["R/**", "vignettes/**"]
 
 permissions:
   contents: write
